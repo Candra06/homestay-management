@@ -774,11 +774,11 @@
                                 @endforeach
                             </ul>
                             @if ($i == 1)
-                                <a href="#booking" data-room="deluxe"
+                                <a href="#booking" data-room="{{ $room['name'] }}"
                                     class="room-cta mt-8 text-center bg-clay-600 hover:bg-clay-700 text-cream-50 text-sm uppercase tracking-wide px-5 py-3.5 rounded-full transition-colors">Pilih
                                     Paket</a>
                             @else
-                                <a href="#booking" data-room="standard"
+                                <a href="#booking" data-room="{{ $room['name'] }}"
                                     class="room-cta mt-8 text-center border border-olive-300 hover:border-olive-700 hover:bg-olive-800 hover:text-cream-50 text-olive-700 text-sm uppercase tracking-wide px-5 py-3.5 rounded-full transition-colors">Pilih
                                     Paket</a>
                             @endif
@@ -875,24 +875,25 @@
                                     <input id="bkCheckout" name="checkout" type="date" required
                                         class="w-full bg-white border border-olive-200 rounded-xl px-4 py-3 text-sm text-olive-800">
                                 </div>
-                                <div>
-                                    <label for="bkGuests"
-                                        class="block text-xs uppercase tracking-wide text-olive-500 mb-2">Jumlah
-                                        Tamu</label>
-                                    <input id="bkGuests" name="tamu" type="number" min="1"
-                                        max="10" value="2" required
-                                        class="w-full bg-white border border-olive-200 rounded-xl px-4 py-3 text-sm text-olive-800">
-                                </div>
+                                
                                 <div>
                                     <label for="bkRoom"
                                         class="block text-xs uppercase tracking-wide text-olive-500 mb-2">Tipe
                                         Kamar</label>
                                     <select id="bkRoom" name="tipe_kamar" required
                                         class="w-full bg-white border border-olive-200 rounded-xl px-4 py-3 text-sm text-olive-800">
-                                        <option value="standard">Kamar Standard</option>
-                                        <option value="deluxe">Kamar Deluxe</option>
-                                        <option value="suite">Suite Keluarga</option>
+                                        <option value="">Pilih tipe kamar</option>
+                                        @foreach ($data->rooms as $room)
+                                            <option value="{{ $room['name'] }}">{{ $room['name'] }}</option>
+                                        @endforeach
                                     </select>
+                                </div>
+                                <div>
+                                    <label for="bkGuests"
+                                        class="block text-xs uppercase tracking-wide text-olive-500 mb-2">Kode Voucher</label>
+                                    <input id="bkGuests" name="voucher" type="text" placeholder="Kode Voucher(Opsional)"
+                                        
+                                        class="w-full bg-white border border-olive-200 rounded-xl px-4 py-3 text-sm text-olive-800">
                                 </div>
                             </div>
 
@@ -911,7 +912,7 @@
                                     stroke-linejoin="round">
                                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                                 </svg>
-                                Kirim via WhatsApp
+                                Pesan via WhatsApp
                             </button>
                             <p id="bookingMsg" class="mt-4 text-sm text-clay-600 h-5" role="status"
                                 aria-live="polite"></p>
@@ -1269,44 +1270,9 @@
                 return String(n).padStart(2, '0');
             }
 
-            function tickCountdown() {
-                var now = new Date();
-                var diff = LAUNCH_DATE.getTime() - now.getTime();
-                if (diff <= 0) {
-                    elDays.textContent = '00';
-                    elHours.textContent = '00';
-                    elMinutes.textContent = '00';
-                    elSeconds.textContent = '00';
-                    return;
-                }
-                var days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                var hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-                var minutes = Math.floor((diff / (1000 * 60)) % 60);
-                var seconds = Math.floor((diff / 1000) % 60);
-                elDays.textContent = pad(days);
-                elHours.textContent = pad(hours);
-                elMinutes.textContent = pad(minutes);
-                elSeconds.textContent = pad(seconds);
-            }
-            tickCountdown();
-            setInterval(tickCountdown, 1000);
+            
 
-            /* ---------- Notify form ---------- */
-            var notifyForm = document.getElementById('notifyForm');
-            var notifyMsg = document.getElementById('notifyMsg');
-            notifyForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                var email = document.getElementById('notifyEmail').value.trim();
-                var valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-                if (!valid) {
-                    notifyMsg.textContent = 'Mohon masukkan alamat email yang valid.';
-                    notifyMsg.classList.add('text-red-300');
-                    return;
-                }
-                notifyMsg.classList.remove('text-red-300');
-                notifyMsg.textContent = 'Terima kasih! Kami akan mengabari kamu saat pembukaan tiba. 🌿';
-                notifyForm.reset();
-            });
+            
 
             /* ---------- Room CTA: scroll to booking + preselect ---------- */
             document.querySelectorAll('.room-cta').forEach(function(btn) {
@@ -1320,80 +1286,64 @@
             });
 
             /* ---------- Pricing toggle ---------- */
-            var toggleNightly = document.getElementById('toggleNightly');
-            var toggleWeekly = document.getElementById('toggleWeekly');
-            var priceValues = document.querySelectorAll('.price-value');
-            var priceUnits = document.querySelectorAll('.price-unit');
-
+            
+            
             function formatRupiah(n) {
                 return 'Rp ' + Number(n).toLocaleString('id-ID');
             }
 
-            function setPricing(mode) {
-                priceValues.forEach(function(el) {
-                    var val = mode === 'weekly' ? el.getAttribute('data-weekly') : el.getAttribute(
-                        'data-nightly');
-                    el.textContent = formatRupiah(val);
-                });
-                priceUnits.forEach(function(el) {
-                    el.textContent = mode === 'weekly' ? '/minggu' : '/malam';
-                });
-                var nightlyActive = mode !== 'weekly';
-                toggleNightly.classList.toggle('bg-olive-800', nightlyActive);
-                toggleNightly.classList.toggle('text-cream-50', nightlyActive);
-                toggleNightly.classList.toggle('text-olive-600', !nightlyActive);
-                toggleWeekly.classList.toggle('bg-olive-800', !nightlyActive);
-                toggleWeekly.classList.toggle('text-cream-50', !nightlyActive);
-                toggleWeekly.classList.toggle('text-olive-600', nightlyActive);
-            }
-            toggleNightly.addEventListener('click', function() {
-                setPricing('nightly');
-            });
-            toggleWeekly.addEventListener('click', function() {
-                setPricing('weekly');
-            });
+            
 
             /* ---------- Booking form -> WhatsApp ---------- */
             var bookingForm = document.getElementById('bookingForm');
             var bookingMsg = document.getElementById('bookingMsg');
-            var roomLabels = {
-                standard: 'Superior King',
-                deluxe: 'Deluxe King',
-                suite: 'Superior Twin'
-            };
 
-            bookingForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                var data = new FormData(bookingForm);
-                var nama = data.get('nama').trim();
-                var telepon = data.get('telepon').trim();
-                var checkin = data.get('checkin');
-                var checkout = data.get('checkout');
-                var tamu = data.get('tamu');
-                var tipeKamar = roomLabels[data.get('tipe_kamar')] || data.get('tipe_kamar');
-                var catatan = data.get('catatan').trim();
+            if (bookingForm) {
+                bookingForm.addEventListener('submit', function(e) {
+                    console.log('disubmit');
+                    
+                    e.preventDefault();
+                    var data = new FormData(bookingForm);
+                    var nama = (data.get('nama') || '').trim();
+                    var telepon = (data.get('telepon') || '').trim();
+                    var checkin = data.get('checkin') || '';
+                    var checkout = data.get('checkout') || '';
+                    var tipeKamar = data.get('tipe_kamar') || '';
+                    var voucher = (data.get('voucher') || '').trim();
+                    var catatan = (data.get('catatan') || '').trim();
 
-                if (!nama || !telepon || !checkin || !checkout) {
-                    bookingMsg.classList.add('text-red-500');
-                    bookingMsg.classList.remove('text-clay-600');
-                    bookingMsg.textContent = 'Mohon lengkapi nama, WhatsApp, dan tanggal menginap.';
-                    return;
-                }
-                bookingMsg.classList.remove('text-red-500');
-                bookingMsg.classList.add('text-clay-600');
+                    if (!nama || !telepon || !checkin || !checkout || !tipeKamar) {
+                        bookingMsg.classList.add('text-red-500');
+                        bookingMsg.classList.remove('text-clay-600');
+                        bookingMsg.textContent = 'Mohon lengkapi nama, WhatsApp, tanggal menginap, dan tipe kamar.';
+                        return;
+                    }
 
-                var pesan = 'Halo Ezzy Homestay, saya ingin reservasi awal:%0A' +
-                    '- Nama: ' + encodeURIComponent(nama) + '%0A' +
-                    '- Tipe Kamar: ' + encodeURIComponent(tipeKamar) + '%0A' +
-                    '- Check-in: ' + encodeURIComponent(checkin) + '%0A' +
-                    '- Check-out: ' + encodeURIComponent(checkout) + '%0A' +
-                    '- Jumlah Tamu: ' + encodeURIComponent(tamu) +
-                    (catatan ? '%0A- Catatan: ' + encodeURIComponent(catatan) : '');
+                    bookingMsg.classList.remove('text-red-500');
+                    bookingMsg.classList.add('text-clay-600');
+                    bookingMsg.textContent = 'Mengarahkan ke WhatsApp...';
 
-                var waUrl = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + pesan;
-                bookingMsg.textContent = 'Membuka WhatsApp untuk konfirmasi reservasi...';
-                window.open(waUrl, '_blank', 'noopener');
-            });
+                    var rawText = 'Halo Ezzy Homestay, saya ingin membuat reservasi kamar:\n\n' +
+                        '📌 *Data Pemesan*\n' +
+                        '• Nama: ' + nama + '\n' +
+                        '• No. WhatsApp: ' + telepon + '\n\n' +
+                        '🏨 *Detail Reservasi*\n' +
+                        '• Tipe Kamar: ' + tipeKamar + '\n' +
+                        '• Tanggal Check-in: ' + checkin + '\n' +
+                        '• Tanggal Check-out: ' + checkout +
+                        (voucher ? '\n• Kode Voucher: ' + voucher : '') +
+                        (catatan ? '\n\n📝 *Catatan Tambahan:*\n' + catatan : '') +
+                        '\n\nMohon informasi ketersediaan dan konfirmasi selengkapnya. Terima kasih!';
+
+                    var waUrl = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(rawText);
+console.log(waUrl);
+
+                    var win = window.open(waUrl, '_blank');
+                    if (!win || win.closed || typeof win.closed === 'undefined') {
+                        window.location.href = waUrl;
+                    }
+                });
+            }
 
             /* ---------- Footer year ---------- */
             document.getElementById('year').textContent = new Date().getFullYear();
