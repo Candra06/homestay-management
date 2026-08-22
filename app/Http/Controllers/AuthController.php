@@ -222,13 +222,13 @@ class AuthController extends Controller
             [
                 'name' => 'Deluxe King',
                 'price' => 280000,
-                'photo' => 'deluxe_king_bed.jpeg',
+                'photo' => 'bed_king_superior.jpeg',
                 'facility' => ['Teras', 'King Bed', 'Shower', 'Smart TV', 'WiFi', 'Aminities', 'Water Heater'],
             ],
             [
                 'name' => 'Superior King',
                 'price' => 250000,
-                'photo' => 'bed_king_superior.jpeg',
+                'photo' => 'deluxe_king_bed.jpeg',
                 'facility' => ['Teras', 'King Bed', 'Shower', 'Smart TV', 'WiFi', 'Aminities', 'Water Heater'],
             ],
         ];

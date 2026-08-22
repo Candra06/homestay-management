@@ -604,11 +604,6 @@
                                                 <path d="M20 6 9 17l-5-5" />
                                             </svg>{{ $f }}</li>
                                     @endforeach
-                                    <li class="flex items-center gap-2"><svg width="16" height="16"
-                                            viewBox="0 0 24 24" fill="none" stroke="#A5815F" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M20 6 9 17l-5-5" />
-                                        </svg>2 Tamu &middot; 18 m&sup2;</li>
 
                                 </ul>
                                 <div class="flex items-center justify-between mt-6 pt-6 border-t border-olive-100">
@@ -827,7 +822,7 @@
                                     <path
                                         d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.99.36 1.96.68 2.9a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.18-1.25a2 2 0 0 1 2.11-.45c.94.32 1.91.55 2.9.68A2 2 0 0 1 22 16.92Z" />
                                 </svg>
-                                <span class="text-olive-200">+62 812-3456-7890</span>
+                                <span class="text-olive-200">+62 823-7454-7179</span>
                             </li>
                             <li class="flex items-start gap-3">
                                 <svg class="shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24"
@@ -961,7 +956,7 @@
             <div>
                 <h4 class="text-cream-100 text-sm tracking-[0.15em] uppercase mb-5">Ikuti Kami</h4>
                 <div class="flex items-center gap-3">
-                    <a href="#" aria-label="Instagram"
+                    <a href="https://www.instagram.com/ezzyhomestay_jbr?igsi=MWRjYmQ1MGIxOTRsdg==" target="_blank" aria-label="Instagram"
                         class="h-10 w-10 rounded-full border border-olive-600 flex items-center justify-center hover:bg-clay-600 hover:border-clay-600 transition-colors">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="1.6">
@@ -970,12 +965,11 @@
                             <circle cx="17.5" cy="6.5" r="1" />
                         </svg>
                     </a>
-                    <a href="#" aria-label="WhatsApp"
+                    <a href="https://www.tiktok.com/@ezzy.homestayjember?_r=1&_t=ZS-995XAW8Qa3R" target="_blank" aria-label="TikTok"
                         class="h-10 w-10 rounded-full border border-olive-600 flex items-center justify-center hover:bg-clay-600 hover:border-clay-600 transition-colors">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="1.6">
-                            <path
-                                d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                            stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
                         </svg>
                     </a>
                     <a href="#" aria-label="Facebook"
