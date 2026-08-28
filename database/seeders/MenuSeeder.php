@@ -90,7 +90,7 @@ class MenuSeeder extends Seeder
                 'have_edit'   => 'Y',
                 'have_delete' => 'Y',
             ],
-            ],
+            
             [
                 'code'        => 'ADDITIONAL',
                 'group_menu_id' => 2,
