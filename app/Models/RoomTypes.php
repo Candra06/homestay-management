@@ -14,15 +14,16 @@ class RoomTypes extends Model
         "bed_type",
         "kapasitas",
         "base_price",
+        "slug",
     ];
-
-    public function rooms()
-    {
-        return $this->hasMany(Room::class, 'type_id');
-    }
 
     public function facilities()
     {
         return $this->hasMany(RoomFacilities::class, 'id_room', 'id')->whereNull('deleted_at');
+    }
+    
+    public function attachments()
+    {
+        return $this->hasMany(Attachment::class, 'reff_id', 'id')->where('reff_feature', 'room-types');
     }
 }

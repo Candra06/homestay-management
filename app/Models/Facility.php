@@ -24,5 +24,10 @@ class Facility extends Model
     public function rooms()
     {
         return $this->belongsToMany(Room::class, 'facility_room', 'facility_id', 'room_id');
-    }   
+    }
+    
+    public function attachments()
+    {
+        return $this->hasMany(Attachment::class, 'reff_id', 'id')->where('reff_feature', 'facility');
+    }
 }

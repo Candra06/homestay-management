@@ -583,7 +583,7 @@
                         <article
                             class="reveal group {{ $i == 1 ? 'bg-olive-900 text-cream-100' : 'bg-cream-50' }} rounded-[1.75rem] border border-olive-100 overflow-hidden shadow-card flex flex-col">
                             <div class="h-48 w-full overflow-hidden relative">
-                                <img src="{{ asset('assets/img/facility/' . $r['photo']) }}" alt="{{ $r['name'] }}"
+                                <img src="{{ $r['photo'] }}" alt="{{ $r['name'] }}"
                                     class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500">
                             </div>
                             <div class="p-7 flex flex-col flex-1">

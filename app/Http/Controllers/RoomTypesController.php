@@ -6,9 +6,12 @@ use App\Helper\Helpers;
 use App\Models\Facility;
 use App\Models\RoomFacilities;
 use App\Models\RoomTypes;
+use App\Models\Attachment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class RoomTypesController extends Controller
 {
@@ -19,7 +22,6 @@ class RoomTypesController extends Controller
                 'title' => 'Tipe Kamar',
                 'type' => 'text',
                 'required' => true,
-
                 'placeholder' => 'Tipe Kamar',
             ],
 
@@ -68,8 +70,8 @@ class RoomTypesController extends Controller
             'detail' => 'room-type.detail',
             'delete' => 'room-type.destroy',
         ],
-        'tableHead' => ['No', 'Tipe Kamar', 'Kapasitas', 'Jenis Bed', 'Harga', 'aksi'],
-        'tableColumns' => ['DT_RowIndex', 'type_name', 'kapasitas', 'bed_type', 'base_price', 'action'],
+        'tableHead' => ['No', 'Tipe Kamar', 'Kapasitas', 'Jenis Bed', 'Slug','Harga', 'aksi'],
+        'tableColumns' => ['DT_RowIndex', 'type_name', 'kapasitas', 'bed_type', 'slug', 'base_price', 'action'],
     ];
 
     /**
@@ -79,7 +81,8 @@ class RoomTypesController extends Controller
     {
         try {
             $dataPage = $this->dataPage;
-            $list = RoomTypes::get();
+            $list = RoomTypes::with('attachments')->get();
+            
             $akses = request()->attributes->get('hakAkses');
             if ($akses['access_edit'] != 'Y' && $akses['access_delete'] != 'Y') {
                 unset($dataPage['tableHead'][6]);
@@ -125,6 +128,16 @@ class RoomTypesController extends Controller
                 'placeholder' => '',
             ];
         }
+        $forms[] = [
+                'name' => 'image',
+                'title' => 'Foto Tipe Kamar',
+                'type' => 'file',
+                'custom-class-wrapper' => 'col-12',
+                'class_input' => 'dropify',
+                'other-attr' => ' multiple ',
+                'required' => false,
+                'placeholder' => 'Pilih Gambar',
+        ];
         $data = (object) [
             'title' => 'Tambah Data Tipe Kamar',
             'subtitle' => 'Tipe Kamar',
@@ -145,27 +158,70 @@ class RoomTypesController extends Controller
     {
         DB::beginTransaction();
         try {
+            $imagePaths = [];
+            $files = $request->file('image');
+            if (!empty($files)) {
+                if (!is_array($files)) {
+                    $files = [$files];
+                }
+                foreach ($files as $file) {
+                    if ($file && $file->isValid()) {
+                        $path = storage_path('app/public/room_types');
+                        $photo = 'room_types/' . $this->compress($file, $path, 50);
+                        $imagePaths[] = [
+                            'file_path'=>$photo,
+                            'file_name'=> basename($photo),
+                            'original_name'=>$file->getClientOriginalName(),
+                            'file_size'=>Storage::disk('public')->size($photo),
+                            'mime_type'=>Storage::disk('public')->mimeType($photo)
+                        ];
+                    }
+                }
+            }
+            
             $input = [
                 'type_name' => $request->type_name,
                 'kapasitas' => $request->kapasitas,
                 'bed_type' => $request->bed_type,
                 'base_price' => str_replace('.', '', $request->base_price),
+                'slug' => Str::slug($request->type_name).'-'.$request->bed_type,
             ];
+           
             $room = RoomTypes::create($input);
-            foreach ($request->facility as $key => $value) {
-                RoomFacilities::create([
-                    'id_room' => $room->id,
-                    'id_facility' => $value,
-                ]);
+    
+    
+            if ($request->has('facility') && is_array($request->facility)) {
+                $insertRoomFacilities = [];
+                foreach ($request->facility as $key => $value) {
+                    $insertRoomFacilities[] = [
+                        'id_room' => $room->id,
+                        'id_facility' => $value,
+                    ];
+                }
+                RoomFacilities::insert($insertRoomFacilities);
+            }
+            if (count($imagePaths) > 0) {
+                $insertAttachment = [];
+                foreach ($imagePaths as $key => $value) {
+                    $insertAttachment[] = [
+                        'reff_feature' => 'room-types',
+                        'file_url' => $value['file_path'],
+                        'file_name' => $value['file_name'],
+                        'original_name' => $value['original_name'],
+                        'mime_type' => $value['mime_type'],
+                        'reff_id' => $room->id,
+                        'file_size' => $value['file_size'],
+                    ];
+                }
+                Attachment::insert($insertAttachment);
             }
             DB::commit();
 
-            return redirect(route($this->dataPage['route']['index']))->with('success', 'Berhasil menambah data layanan tambahan');
+            return redirect(route($this->dataPage['route']['index']))->with('success', 'Berhasil menambah data tipe kamar');
         } catch (\Throwable $th) {
-            return $th;
             DB::rollback();
 
-            return back()->with('error', 'Gagal menambah data layanan tambahan');
+            return back()->with('error', 'Gagal menambah data tipe kamar: ' . $th->getMessage());
         }
     }
 
@@ -183,15 +239,12 @@ class RoomTypesController extends Controller
     public function edit(RoomTypes $room_type)
     {
         try {
-
             $page = $this->dataPage;
-            $dataForm = [];
-            $dataForm = $room_type->toArray();
+            $dataForm = $room_type->load('attachments')->toArray();
             $forms = $page['forms'];
             $facility = Facility::where('type', 'room')->get();
-            // return $room_type->facilities;
-            foreach ($facility as $f) {
 
+            foreach ($facility as $f) {
                 $forms[] = [
                     'name' => 'facility[]',
                     'title' => $f->nama_fasilitas,
@@ -203,6 +256,16 @@ class RoomTypesController extends Controller
                     'placeholder' => '',
                 ];
             }
+            $forms[] = [
+                'name' => 'image',
+                'title' => 'Foto Tipe Kamar',
+                'type' => 'file',
+                'custom-class-wrapper' => 'col-12',
+                'class_input' => 'dropify',
+                'other-attr' => ' multiple ',
+                'required' => false,
+                'placeholder' => 'Pilih Gambar',
+            ];
             
             $data = (object) [
                 'title' => 'Edit Data Tipe Kamar',
@@ -225,30 +288,89 @@ class RoomTypesController extends Controller
     public function update(Request $request, RoomTypes $room_type)
     {
         DB::beginTransaction();
-        // return $request;
         try {
             $input = [
                 'type_name' => $request->type_name,
                 'kapasitas' => $request->kapasitas,
                 'bed_type' => $request->bed_type,
                 'base_price' => str_replace('.', '', $request->base_price),
+                'slug' => Str::slug($request->type_name).'-'.$request->bed_type,
             ];
+
             RoomTypes::where('id', $room_type->id)->update($input);
+
             RoomFacilities::where('id_room', $room_type->id)->delete();
-            foreach ($request->facility as $key => $value) {
-                RoomFacilities::create([
-                    'id_room' => $room_type->id,
-                    'id_facility' => $value,
-                ]);
-            }   
+            if ($request->has('facility') && is_array($request->facility)) {
+                $insertRoomFacilities = [];
+                foreach ($request->facility as $key => $value) {
+                    $insertRoomFacilities[] = [
+                        'id_room' => $room_type->id,
+                        'id_facility' => $value,
+                    ];
+                }
+                RoomFacilities::insert($insertRoomFacilities);
+            }
+
+            $imagePaths = [];
+            $files = $request->file('image');
+            if (!empty($files)) {
+                if (!is_array($files)) {
+                    $files = [$files];
+                }
+                foreach ($files as $file) {
+                    if ($file && $file->isValid()) {
+                        $path = storage_path('app/public/room_types');
+                        $photo = 'room_types/' . $this->compress($file, $path, 50);
+                        $imagePaths[] = [
+                            'file_path' => $photo,
+                            'file_name' => basename($photo),
+                            'original_name' => $file->getClientOriginalName(),
+                            'file_size' => Storage::disk('public')->size($photo),
+                            'mime_type' => Storage::disk('public')->mimeType($photo)
+                        ];
+                    }
+                }
+            }
+
+            if (count($imagePaths) > 0) {
+                // Delete old physical files and attachment records
+                $oldAttachments = Attachment::where('reff_feature', 'room-types')
+                    ->where('reff_id', $room_type->id)
+                    ->get();
+
+                foreach ($oldAttachments as $old) {
+                    if ($old->file_url && Storage::disk('public')->exists($old->file_url)) {
+                        Storage::disk('public')->delete($old->file_url);
+                    }
+                }
+
+                Attachment::where('reff_feature', 'room-types')
+                    ->where('reff_id', $room_type->id)
+                    ->delete();
+
+                // Insert new attachment records
+                $insertAttachment = [];
+                foreach ($imagePaths as $key => $value) {
+                    $insertAttachment[] = [
+                        'reff_feature' => 'room-types',
+                        'file_url' => $value['file_path'],
+                        'file_name' => $value['file_name'],
+                        'original_name' => $value['original_name'],
+                        'mime_type' => $value['mime_type'],
+                        'reff_id' => $room_type->id,
+                        'file_size' => $value['file_size'],
+                    ];
+                }
+                Attachment::insert($insertAttachment);
+            }
+
             DB::commit();
 
-            return redirect(route($this->dataPage['route']['index']))->with('success', 'Berhasil menambah data layanan tambahan');
+            return redirect(route($this->dataPage['route']['index']))->with('success', 'Berhasil memperbarui data tipe kamar');
         } catch (\Throwable $th) {
-            return $th;
             DB::rollback();
 
-            return back()->with('error', 'Gagal menambah data tipe kamar');
+            return back()->with('error', 'Gagal memperbarui data tipe kamar: ' . $th->getMessage());
         }
     }
 
@@ -259,6 +381,21 @@ class RoomTypesController extends Controller
     {
         try {
             DB::beginTransaction();
+
+            $oldAttachments = Attachment::where('reff_feature', 'room-types')
+                ->where('reff_id', $room_type->id)
+                ->get();
+
+            foreach ($oldAttachments as $old) {
+                if ($old->file_url && Storage::disk('public')->exists($old->file_url)) {
+                    Storage::disk('public')->delete($old->file_url);
+                }
+            }
+
+            Attachment::where('reff_feature', 'room-types')
+                ->where('reff_id', $room_type->id)
+                ->delete();
+
             $room_type->delete();
             DB::commit();
 

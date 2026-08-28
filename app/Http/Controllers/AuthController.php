@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PaymentConfirmation;
 use App\Models\User;
+use App\Models\RoomTypes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Browsershot\Browsershot;
@@ -34,7 +35,7 @@ class AuthController extends Controller
             if (Auth::attempt($credential)) {
                 // Helpers::saveLog(date("d-m-Y"), "akun", "login");
 
-                return redirect('/');
+                return redirect('/dashboard');
             }
             $user = User::where('username', $request->email)->first();
 
@@ -51,66 +52,9 @@ class AuthController extends Controller
     public function dashboard()
     {
         try {
-
             $rolesCode = Auth::user()->roles;
-
-            // return $isSupplier;
             $data = (object) [];
-            // if ($isSupplier) {
-            //     $supplier = Supplier::where('user_id', Auth::user()->id)->first();
-
-            //     $count =  Winner::selectRaw('
-            //         COUNT(CASE WHEN status = "Paid" THEN 1 END) as total_sold,
-            //         COUNT(id) as total_product,
-            //         SUM(CASE WHEN status = "Paid" THEN price ELSE 0 END) as total_omset
-            //     ')->where('supplier_id', $supplier->id)->first();
-            //     $data = (object) [
-            //         'status' => $count,
-            //         'isSupplier' => $isSupplier,
-            //         'tableColumns' => [],
-            //     ];
-            // } else {
-            //     $count =  Winner::selectRaw('
-            //         COUNT(CASE WHEN status = "Waiting Payment" THEN 1 END) as waiting,
-            //         COUNT(CASE WHEN status = "Paid" THEN 1 END) as paid,
-            //         COUNT(CASE WHEN status = "No Bid" THEN 1 END) as nobid,
-            //         COUNT(CASE WHEN status = "BnR" THEN 1 END) as bnr,
-            //         COUNT(*) as total
-            //     ');
-            //     $totalPaid = Winner::where('status', 'Paid');
-            //     $totalKomisi = Winner::query();
-            //     $totalCustomer = Customer::count();
-            //     $list = Winner::select('customer_id', 'customer_name', DB::raw('COUNT(*) as total'))
-            //         ->groupBy('customer_id', 'customer_name')->orderBy('total', 'DESC')->where('customer_id', '!=', 'null');
-            //     if (request()->has("filter")) {
-            //         $query = self::filterData($list, $count, $totalPaid, $totalKomisi);
-            //         $list = $query['list'];
-            //         $count = $query['count'];
-            //         $totalPaid = $query['totalPaid'];
-            //         $totalKomisi = $query['totalKomisi'];
-            //     } else {
-            //         $list = $list->get();
-            //         $count = $count->first();
-            //         $totalPaid = $totalPaid->sum('price');
-            //         $totalKomisi = $totalKomisi->sum('fee');
-            //     }
-            //     // return $list;
-            //     $data = (object) [
-            //         'status' => $count,
-            //         'omset' => $totalPaid,
-            //         'komisi' => $totalKomisi,
-            //         'data' => $list,
-            //         'customer' => $totalCustomer,
-            //         'isSupplier' => $isSupplier,
-            //         "tableHead" => ["No", "Nama", "Total Win"],
-            //         "tableColumns" => Helpers::tableColumns(["DT_RowIndex", "customer_name", "total"]),
-            //     ];
-            //     if (request()->ajax()) {
-            //         // return request()->end;
-            //         return $this->ajax($list);
-            //     }
-            // }
-
+           
             return view('dashboard', compact('data'));
         } catch (\Throwable $th) {
             throw $th;
@@ -211,27 +155,22 @@ class AuthController extends Controller
                 'description' => '',
             ],
         ];
-        $rooms = [
-            [
-                'name' => 'Superior Twin',
-                'price' => 250000,
-                'photo' => 'superior_twin_bed.jpeg',
-                'facility' => ['Teras', 'King Bed', 'Shower', 'Smart TV', 'WiFi', 'Aminities', 'Water Heater'],
+        $roomData = RoomTypes::with('attachments', 'facilities.facility')->get();
+        $rooms = [];
+        foreach ($roomData as $key => $room) {
+            $fclt = [];
+            foreach ($room->facilities as $key => $f) {
+                $fclt[] = $f->facility->nama_fasilitas;
+            }
+            $rooms[] = [
+                'name' => $room->type_name,
+                'price' => $room->base_price,
+                'photo' => url('/').'/storage/'.$room->attachments[0]->file_url,
+                'facility' => $fclt,
 
-            ],
-            [
-                'name' => 'Deluxe King',
-                'price' => 280000,
-                'photo' => 'bed_king_superior.jpeg',
-                'facility' => ['Teras', 'King Bed', 'Shower', 'Smart TV', 'WiFi', 'Aminities', 'Water Heater'],
-            ],
-            [
-                'name' => 'Superior King',
-                'price' => 250000,
-                'photo' => 'deluxe_king_bed.jpeg',
-                'facility' => ['Teras', 'King Bed', 'Shower', 'Smart TV', 'WiFi', 'Aminities', 'Water Heater'],
-            ],
-        ];
+            ];
+        }
+        
         $data = (object) [
             'facility' => $facility,
             'rooms' => $rooms,

@@ -42,38 +42,9 @@
 
     <!---Skinmodes css-->
     <link href="{{ asset('assets') }}/css/skin-modes.css" rel="stylesheet" />
+    <link href="{{ asset('assets') }}/plugins/fileuploads/css/fileupload.css" rel="stylesheet" type="text/css"/>
+    <link href="{{ asset('assets') }}/plugins/fancyuploder/fancy_fileupload.css" rel="stylesheet" />
     <style>
-        .file-input-wrapper {
-            position: relative;
-            --content: "Tidak ada file yang dipilih";
-        }
-
-        .file-input-wrapper::after {
-            content: "Pilih File";
-            position: absolute;
-            left: 0;
-            top: 0;
-            background: #e9ecef;
-            height: 100%;
-            width: 110px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .file-input-wrapper::before {
-            content: var(--content);
-            position: absolute;
-            left: 110px;
-            top: 0;
-            padding-left: 5px;
-            background: white;
-            height: 100%;
-            width: calc(100% - 110px);
-            display: flex;
-            align-items: center;
-
-        }
 
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {

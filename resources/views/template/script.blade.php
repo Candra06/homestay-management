@@ -74,7 +74,7 @@
         });
     });
 
-    $('input[type="file"]').each(function() {
+    $('input[type="file"]:not(.dropify):not(#demo)').each(function() {
         $(this).change(function(e) {
             const fileInput = e.target;
             var fileName = '';
@@ -85,26 +85,10 @@
         });
     })
 
-    $('input[type="file"]:not(.d-none)').each(function() {
-        $(this).wrap(`<label class='file-input-wrapper d-block border'></label>`);
-    });
-</script>
-
-<script>
-
-    $('input[type="file"]').each(function() {
-        $(this).change(function(e) {
-            const fileInput = e.target;
-            var fileName = '';
-            if (fileInput.files.length > 0) {
-                fileName = fileInput.files[0].name;
-            }
-            $(fileInput).parent().css("--content", '"' + fileName + '"')
-        });
-    })
-
-    $('input[type="file"]:not(.d-none)').each(function() {
-        $(this).wrap(`<label class='file-input-wrapper d-block border'></label>`);
+    $('input[type="file"]:not(.d-none):not(.dropify):not(#demo)').each(function() {
+        if (!$(this).parent().hasClass('file-input-wrapper')) {
+            $(this).wrap(`<label class='file-input-wrapper d-block border'></label>`);
+        }
     });
 </script>
 
@@ -114,7 +98,7 @@
         $("input[type='number']").attr("type", "text").on("input", function() {
             $(this).val($(this).val().replace(/\D/g, ''));
         });
-        $("input,textarea").on("input", function() {
+        $("input:not([type='file']),textarea").on("input", function() {
             var cleaned = $(this).val().replace(/<[^>]+>/g, ''); // Menghapus semua tag HTML
             var output = cleaned.replace(/=[^=+\-/*^()A-Za-z0-9. ]+/g, '');
             $(this).val(output);

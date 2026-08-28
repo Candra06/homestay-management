@@ -6,8 +6,9 @@ use App\Helper\Helpers;
 use App\Models\Facility;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
-
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use App\Models\Attachment;
 
 class FacilityController extends Controller
 {
@@ -25,7 +26,7 @@ class FacilityController extends Controller
                 'name' => 'icon',
                 'title' => 'Icon',
                 'type' => 'text',
-                'required' => true,
+                'required' => false,
                 'placeholder' => 'Icon Fasilitas',
             ],
             [
@@ -50,8 +51,17 @@ class FacilityController extends Controller
                 'name' => 'deskripsi',
                 'title' => 'Deskripsi',
                 'type' => 'textarea',
-                'required' => true,
+                'required' => false,
                 'placeholder' => 'Deskripsi singkat fasilitas',
+            ],
+            [
+                'name' => 'image',
+                'title' => 'Foto Fasilitas',
+                'type' => 'file',
+                'custom-class-wrapper' => 'col-12',
+                'class_input' => 'dropify',
+                'required' => false,
+                'placeholder' => 'Pilih Gambar',
             ],
         ],
         "route" => [
@@ -67,6 +77,7 @@ class FacilityController extends Controller
         "tableHead" => ["No", "Nama Fasilitas", "Jenis Fasilitas", "Deskripsi Singkat","Icon","aksi"],
         "tableColumns" => ["DT_RowIndex", "nama_fasilitas", "type", "deskripsi","icon","action"],
     ];
+    
     /**
      * Display a listing of the resource.
      */
@@ -125,14 +136,39 @@ class FacilityController extends Controller
     public function store(Request $request)
     {
         DB::beginTransaction();
+        $imagePaths = '';
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $path = storage_path('app/public/facility');
+            $photo = 'facility/' . $this->compress($file, $path, 50);
+            $imagePaths = [
+                        'file_path'=>$photo,
+                        'file_name'=> basename($photo),
+                        'original_name'=>$file->getClientOriginalName(),
+                        'file_size'=>Storage::disk('public')->size($photo),
+                        'mime_type'=>Storage::disk('public')->mimeType($photo)
+                    ];
+        }
+        $input = [
+            'nama_fasilitas'=> $request->nama_fasilitas,
+            'type' =>$request->type,
+            'deskripsi' =>$request->deskripsi,
+            'icon' =>$request->icon,
+        ];
+        $facility = Facility::create($input);
+        if ($request->hasFile('image')) {
+            $inputAttachment = [
+                    'reff_feature' => 'facility',
+                    'file_url' => $imagePaths['file_path'],
+                    'file_name' => $imagePaths['file_name'],
+                    'original_name' => $imagePaths['original_name'],
+                    'mime_type' => $imagePaths['mime_type'],
+                    'reff_id' => $facility->id,
+                    'file_size' => $imagePaths['file_size'],
+                ];
+            Attachment::create($inputAttachment);
+        }
         try {
-            $input = [
-                'nama_fasilitas'=> $request->nama_fasilitas,
-                'type' =>$request->type,
-                'deskripsi' =>$request->deskripsi,
-                'icon' =>$request->icon,
-            ];
-            Facility::create($input);
             DB::commit();
             return redirect(route($this->dataPage['route']['index']))->with('success', 'Berhasil menambah data fasilitas');
         } catch (\Throwable $th) {
@@ -157,7 +193,8 @@ class FacilityController extends Controller
         try {
             $page = $this->dataPage;
             $dataForm = [];
-            $dataForm = $facility->toArray();
+            $dataForm = $facility->load('attachments')->toArray();
+            // return $dataForm;
             $data = (object) [
                 'title' => 'Data Fasilitas',
                 'subtitle' => 'Edit Data',
@@ -187,6 +224,45 @@ class FacilityController extends Controller
                 'icon' =>$request->icon,
             ];
             $facility->update($input);
+            if ($request->hasFile('image')) {
+                $imagePaths = '';
+                $file = $request->file('image');
+                $path = storage_path('app/public/facility');
+                $photo = 'facility/' . $this->compress($file, $path, 50);
+                $imagePaths = [
+                    'file_path'=>$photo,
+                    'file_name'=> basename($photo),
+                    'original_name'=>$file->getClientOriginalName(),
+                    'file_size'=>Storage::disk('public')->size($photo),
+                    'mime_type'=>Storage::disk('public')->mimeType($photo)
+                ];
+            }
+            if ($request->hasFile('image')) {
+                $oldAttachments = Attachment::where('reff_feature', 'facility')
+                    ->where('reff_id', $facility->id)
+                    ->get();
+
+                foreach ($oldAttachments as $old) {
+                    if ($old->file_url && Storage::disk('public')->exists($old->file_url)) {
+                        Storage::disk('public')->delete($old->file_url);
+                    }
+                }
+
+                Attachment::where('reff_feature', 'facility')
+                    ->where('reff_id', $facility->id)
+                    ->delete();
+
+                $inputAttachment = [
+                        'reff_feature' => 'facility',
+                        'file_url' => $imagePaths['file_path'],
+                        'file_name' => $imagePaths['file_name'],
+                        'original_name' => $imagePaths['original_name'],
+                        'mime_type' => $imagePaths['mime_type'],
+                        'reff_id' => $facility->id,
+                        'file_size' => $imagePaths['file_size'],
+                    ];
+                Attachment::create($inputAttachment);
+            }
             DB::commit();
             return redirect(route($this->dataPage['route']['index']))->with('success', 'Berhasil menambah data fasilitas');
         } catch (\Throwable $th) {
@@ -202,6 +278,20 @@ class FacilityController extends Controller
     {
          try {
             DB::beginTransaction();
+            $oldAttachments = Attachment::where('reff_feature', 'facility')
+                ->where('reff_id', $facility->id)
+                ->get();
+
+            foreach ($oldAttachments as $old) {
+                if ($old->file_url && Storage::disk('public')->exists($old->file_url)) {
+                    Storage::disk('public')->delete($old->file_url);
+                }
+            }
+
+            Attachment::where('reff_feature', 'facility')
+                ->where('reff_id', $facility->id)
+                ->delete();
+                
             $facility->delete();
             DB::commit();
             return redirect(route($this->dataPage['route']['index']))->with('success', 'Berhasil menghapus data fasilitas');
@@ -224,7 +314,7 @@ class FacilityController extends Controller
                 $editRoute = route($this->dataPage['route']['edit'], $row->id);
                 $detailRoute = route($this->dataPage['route']['show'], $row->id);
                 $deleteRoute = route($this->dataPage['route']['delete'], $row->id);
-                $message = 'Apakah Anda yakin untuk menghapus fasilitas ' . $row->name . ' ?';
+                $message = 'Apakah Anda yakin untuk menghapus fasilitas ' . $row->nama_fasilitas . ' ?';
 
                 $actionBtn = $akses["access_edit"] != 'Y'? '': '<a href="'. $editRoute .'"><button class="btn-sm me-2 btn" style="font-size:24px;"><span class="fe fe-edit"></span></button></a>';
                 $actionBtn  .= $akses["access_delete"] != 'Y'? '': '<button class="btn-sm mr-2 modal-effect btn" data-bs-effect="effect-scale" data-bs-toggle="modal" style="font-size:24px;" onclick="deleteData(\'' . $deleteRoute . '\', \'' . $message . '\')" href="#modal-delete"><span class="fe fe-trash"></span></button>' ;

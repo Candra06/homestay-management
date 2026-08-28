@@ -7,8 +7,9 @@
     <div class="breadcrumb-header justify-content-between">
         <div class="my-auto">
             <div class="d-flex">
-                 <span class="text-muted mt-1 tx-13 ms-2 mb-0">Dashboard / {{ $data->subtitle}} / <strong class="text-black">{{ $data->title }}</strong>
-                     </span>
+                <span class="text-muted mt-1 tx-13 ms-2 mb-0">Dashboard / {{ $data->subtitle }} / <strong
+                        class="text-black">{{ $data->title }}</strong>
+                </span>
 
             </div>
 
@@ -54,7 +55,6 @@
                                 'datetime-local',
                                 'label',
                                 'time',
-                                'file',
                             ]))
                             @if ($item['type'] != 'hidden')
                                 <label for="{{ $item['name'] }}">{{ $item['title'] }}</label>
@@ -113,6 +113,50 @@
                                     name="{{ $item['name'] }}" />
                                 <label class="form-check-label" for="{{ $item['name'] }}">{{ $item['title'] }}</label>
                             </div>
+                        @elseif(in_array($item['type'], ['file']))
+                            @php
+                                $isMultiple = isset($item['other-attr']) && str_contains($item['other-attr'], 'multiple');
+                                $classInput = $item['class_input'] ?? '';
+                                if ($isMultiple) {
+                                    $classInput = trim(str_replace('dropify', '', $classInput));
+                                }
+                            @endphp
+                            <label for="{{ $item['name'] }}">{{ $item['title'] }}</label><br>
+                            @if ($isMultiple)
+                                <small class="text-secondary">Anda dapat memilih lebih dari 1 file. Urutan pertama pada list akan dijadikan sebagai gambar utama.
+                                </small>
+                            @endif
+                            <input type="file" accept=".jpg, .png, image/jpeg, image/png" class="{{ $classInput }}"
+                                id="{{ $isMultiple ? 'demo' : $item['name'] }}" {{ $item['required'] ?? false ? ' required ' : '' }}
+                                {{ isset($item['other-attr']) ? $item['other-attr'] : '' }}
+                                @if(!$isMultiple && !empty($currentValue))
+                                    data-default-file="{{ asset($currentValue) }}"
+                                @endif
+                                name="{{ $item['name'] }}"
+                                {{ $item['readonly'] ?? false ? ' readonly' : '' }}
+                                placeholder="{{ $item['placeholder'] ?? '' }}" />
+
+                            @if(isset($dataarray['attachments']) && count($dataarray['attachments']) > 0)
+                                <div class="mt-3 mb-2 p-3 bg-light rounded border">
+                                    <label class="fw-semibold text-dark mb-2 d-block">Foto saat ini:</label>
+                                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                                        @foreach($dataarray['attachments'] as $idx => $att)
+                                            @php
+                                                $imgUrl = str_starts_with($att['file_url'], 'storage/') ? asset($att['file_url']) : asset('storage/' . $att['file_url']);
+                                            @endphp
+                                            <div class="position-relative d-inline-block border rounded bg-white p-1 me-2 mb-2 shadow-sm" style="width: 105px; height: 105px;">
+                                                <img src="{{ $imgUrl }}" class="rounded w-100 h-100" style="object-fit: cover;" alt="Preview foto {{ $idx + 1 }}">
+                                                @if($idx === 0)
+                                                    <span class="badge bg-primary position-absolute top-0 start-0 m-1 shadow-sm" style="font-size: 10px;">Utama</span>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <small class="text-muted d-block mt-1 tx-12">
+                                        <i class="fe fe-info me-1"></i> Upload foto baru di atas jika Anda ingin mengganti seluruh foto saat ini.
+                                    </small>
+                                </div>
+                            @endif
                         @endif
 
                         @error($item['name'])
@@ -151,11 +195,51 @@
                 pointer-events: none;
                 background-color: #eee;
                 }
+                .ff_fileupload_wrap .ff_fileupload_start_upload {
+                    display: none !important;
+                }
+                .ff_fileupload_wrap table.ff_fileupload_uploads td.ff_fileupload_actions {
+                    width: 50px !important;
+                    min-width: 50px !important;
+                    text-align: center !important;
+                    vertical-align: middle !important;
+                }
+                .ff_fileupload_wrap table.ff_fileupload_uploads button.ff_fileupload_remove_file,
+                .ff_fileupload_wrap .ff_fileupload_actions_mobile button.ff_fileupload_remove_file {
+                    display: inline-flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    width: 36px !important;
+                    min-width: 36px !important;
+                    max-width: 36px !important;
+                    height: 36px !important;
+                    min-height: 36px !important;
+                    max-height: 36px !important;
+                    border-radius: 6px !important;
+                    background-color: #fce8e6 !important;
+                    border: 1px solid #f8d7da !important;
+                    color: #dc3545 !important;
+                    font-size: 16px !important;
+                    line-height: 1 !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    box-sizing: border-box !important;
+                    opacity: 1 !important;
+                    cursor: pointer !important;
+                    outline: none !important;
+                }
+                .ff_fileupload_wrap table.ff_fileupload_uploads button.ff_fileupload_remove_file:hover,
+                .ff_fileupload_wrap .ff_fileupload_actions_mobile button.ff_fileupload_remove_file:hover {
+                    background-color: #dc3545 !important;
+                    color: #ffffff !important;
+                    border-color: #dc3545 !important;
+                }
                 `).appendTo('head');
 
         });
         const elmSelectWInnerSupplier = ".winner-select-supplier";
-        const elmSelectWInnerCodeBs = ".winner-select-code-bs";
+        const elmFloorNumber = ".floor_number";
+        const elmRoomNumber = ".room_number";
 
         async function initForm() {
             const elmSelectYear = ".get-year-container";
@@ -177,12 +261,10 @@
                         `<option value="${element}" ${selected}>${element}</option>`);
                 });
             }
-            $(document).on("change", elmSelectWInnerSupplier, async function() {
-                dataCodeBSbySupplier($(this).val(), true)
+            
+            $('.floor_number').on('change keyup', function() {
+                setRoomNumber();
             });
-            if ($(elmSelectWInnerSupplier).length > 0) {
-                dataCodeBSbySupplier($(elmSelectWInnerSupplier).val(), false)
-            }
 
             $('.select2').each(function() {
                 const $el = $(this);
@@ -246,34 +328,30 @@
             });
         }
 
-
-
-        async function dataCodeBSbySupplier(suppliedId, resetValue) {
-            if (suppliedId.length > 0) {
-                if (resetValue) {
-                    $(elmSelectWInnerCodeBs).val("");
-                }
+        async function setRoomNumber() {
+            if ($(elmFloorNumber).val() !== '') {
                 const response = await fetch(
-                    `{{ url('/api/') }}/data-code-bs?id_supplier=${suppliedId}`
+                    `{{ url('/room-number') }}/` + $(elmFloorNumber).val()
                 );
                 const data = await response.json();
-                if (typeof data.data != "undefined") {
-                    const valueSelect = $(elmSelectWInnerCodeBs).attr('value');
-                    const type = `{{ $data->type }}`;
+                if (data.status) {
+                    const max_number = data.data;
+                    const split = (max_number ?? 0).toString().split('');
+                    console.log(split);
 
-                    $(`${elmSelectWInnerCodeBs} option`).not(":first").remove();
-                    data?.data.forEach(d => {
-
-                        const selected = valueSelect == d.id ?
-                            "selected" : "";
-                        $(elmSelectWInnerCodeBs).append(
-                            `<option value="${d?.id}" ${selected}>${d?.code_bs}</option>`);
-                        if (valueSelect == d.id && d.status == 'Inactive' && type == 'edit') {
-                            $(elmSelectWInnerCodeBs).attr('disabled', true);
-                            // $(elmSelectWInnerSupplier).attr('disabled', true);
+                    var number = '0';
+                    if (split[2] > 0) {
+                        sequence = parseInt(split[2]);
+                        if (sequence > 0 && sequence < 9) {
+                            sequence = '0' + (sequence + 1);
+                        } else {
+                            sequence = (sequence + 1);
                         }
-                    });
-
+                        number = $(elmFloorNumber).val() + sequence;
+                    } else {
+                        number = $(elmFloorNumber).val() + '01';
+                    }
+                    $(elmRoomNumber).val(number);
                 }
             }
         }
@@ -337,4 +415,13 @@
             input[0].setSelectionRange(caret_pos, caret_pos);
         }
     </script>
+    <script src="{{ asset('assets')}}/plugins/fileuploads/js/fileupload.js"></script>
+    <script src="{{ asset('assets')}}/plugins/fileuploads/js/file-upload.js"></script>
+
+    <!--Internal Fancy uploader js-->
+    <script src="{{ asset('assets')}}/plugins/fancyuploder/jquery.ui.widget.js"></script>
+    <script src="{{ asset('assets')}}/plugins/fancyuploder/jquery.fileupload.js"></script>
+    <script src="{{ asset('assets')}}/plugins/fancyuploder/jquery.iframe-transport.js"></script>
+    <script src="{{ asset('assets')}}/plugins/fancyuploder/jquery.fancy-fileupload.js"></script>
+    <script src="{{ asset('assets')}}/plugins/fancyuploder/fancy-uploader.js"></script>
 @endsection
