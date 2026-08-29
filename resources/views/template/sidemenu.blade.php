@@ -84,13 +84,7 @@
                         <a class="side-menu__item" data-bs-toggle="slide" href="#">
                             @if (!empty($group['group_menu']->icon))
                                 <span class="side-menu__icon"><i class="{{ $group['group_menu']->icon }}"></i></span>
-                            @else
-                                <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 24 24">
-                                    <path d="M0 0h24v24H0V0z" fill="none" />
-                                    <path d="M12 4 4 8v8l8 4 8-4V8l-8-4zm0 2.18L18.09 9 12 11.82 5.91 9 12 6.18z"
-                                        opacity=".3" />
-                                    <path d="M12 2 2 7l10 5 10-5-10-5zm0 14.18L4 12v4l8 4 8-4v-4l-8 4.18z" />
-                                </svg>
+                           
                             @endif
 
                             <span class="side-menu__label">{{ $group['group_menu']->name }}</span>
