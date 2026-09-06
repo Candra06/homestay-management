@@ -57,7 +57,7 @@
                                 'time',
                             ]))
                             @if ($item['type'] != 'hidden')
-                                <label for="{{ $item['name'] }}">{{ $item['title'] }}</label>
+                                <label for="{{ $item['name'] }}">{{ $item['title'] }} {!! $item['required']?'<span class="tx-danger">*</span>':''!!}</label>
                             @endif
                             @if ($item['type'] == 'label')
                                 <p lass="text-blacktext-sm font-medium inline-block mb-2">{{ $currentValue }}</p>
@@ -71,7 +71,7 @@
                                     placeholder="{{ $item['placeholder'] ?? '' }}" />
                             @endif
                         @elseif(in_array($item['type'], ['password']))
-                            <label for="{{ $item['name'] }}">{{ $item['title'] }}</label>
+                            <label for="{{ $item['name'] }}">{{ $item['title'] }} {!! $item['required']?'<span class="tx-danger">*</span>':''!!}</label>
                             <input type="password" class="form-control {{ $item['class_input'] ?? '' }}"
                                 id="{{ $item['name'] }}" {{ $item['required'] ?? false ? ' required ' : '' }}
                                 {{ isset($item['other-attr']) ? $item['other-attr'] : '' }} value="{{ $currentValue }}"
@@ -80,7 +80,7 @@
                                 {{ $item['readonly'] ?? false ? ' readonly' : '' }}
                                 placeholder="{{ $item['placeholder'] ?? '' }}" />
                         @elseif (in_array($item['type'], ['textarea', 'editor']))
-                            <label for="{{ $item['name'] }}">{{ $item['title'] }}</label>
+                            <label for="{{ $item['name'] }}">{{ $item['title'] }} {!! $item['required']?'<span class="tx-danger">*</span>':''!!}</label>
                             <textarea class="form-control {{ $item['class_input'] ?? '' }}" id="{{ $item['name'] }}"
                                 {{ $item['readonly'] ?? false ? ' readonly' : '' }} placeholder="{{ $item['placeholder'] ?? '' }}"
                                 {{ $item['required'] ?? false ? ' required ' : '' }} {{ isset($item['other-attr']) ? $item['other-attr'] : '' }}
@@ -90,7 +90,7 @@
                             @php
                                 $value = $dataarray[$item['name']] ?? old($item['name']);
                             @endphp
-                            <label for="{{ $item['name'] }}">{{ $item['title'] }}</label>
+                            <label for="{{ $item['name'] }}">{{ $item['title'] }} {!! $item['required']?'<span class="tx-danger">*</span>':''!!}</label>
                             <select name="{{ $item['name'] }}" class="form-control {{ $item['class'] }}"
                                 {{ $item['required'] ?? false ? ' required ' : '' }}
                                 {{ $item['readonly'] ?? false ? ' readonly' : '' }}

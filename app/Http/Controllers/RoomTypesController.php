@@ -26,12 +26,20 @@ class RoomTypesController extends Controller
             ],
 
             [
-                'name' => 'base_price',
-                'title' => 'Harga',
+                'name' => 'original_price',
+                'title' => 'Harga Normal',
                 'type' => 'currency',
                 'other-attr' => ' data-type=currency ',
                 'required' => true,
-                'placeholder' => 'Harga per malam',
+                'placeholder' => 'Harga Normal',
+            ],
+            [
+                'name' => 'base_price',
+                'title' => 'Harga Pemesanan',
+                'type' => 'currency',
+                'other-attr' => ' data-type=currency ',
+                'required' => true,
+                'placeholder' => 'Harga Pemesanan',
             ],
             [
                 'name' => 'kapasitas',
@@ -40,6 +48,14 @@ class RoomTypesController extends Controller
                 'other-attr' => ' min=0 ',
                 'required' => true,
                 'placeholder' => 'Kapasitas Tamu',
+            ],
+            [
+                'name' => 'wide',
+                'title' => 'Luas Kamar',
+                'type' => 'number',
+                'other-attr' => ' min=0 ',
+                'required' => true,
+                'placeholder' => 'Luas Kamar (m2)',
             ],
             [
                 'name' => 'bed_type',
@@ -59,6 +75,21 @@ class RoomTypesController extends Controller
                     ],
                 ],
             ],
+            [
+                'name' => 'tagline',
+                'title' => 'Tagline',
+                'type' => 'textarea',
+                'required' => false,
+                'placeholder' => 'Opsional (Ditampilkan pada informasi kamar)',
+            ],
+            [
+                'name' => 'description',
+                'title' => 'Deskripsi Kamar',
+                'type' => 'textarea',
+                'required' => false,
+                'placeholder' => 'Opsional (Ditampilkan pada informasi kamar)',
+            ],
+            
         ],
         'route' => [
             'index' => 'room-type.index',

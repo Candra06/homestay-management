@@ -11,6 +11,8 @@ use App\Http\Controllers\FacilityController;
 use App\Http\Controllers\AdditionalController;
 use App\Http\Controllers\RoomTypesController;
 use App\Http\Controllers\RoomsController;
+use App\Http\Controllers\VoucherController;
+use App\Http\Controllers\PromoController;
 use App\Http\Middleware\CheckAccessMidleware;
 
 /*
@@ -25,6 +27,7 @@ use App\Http\Middleware\CheckAccessMidleware;
 */
 
 Route::get('/', [AuthController::class,'landingPage']);
+Route::get('/room-detail/{slug}', [AuthController::class,'roomDetail']);
 Route::get('/backoffice', [AuthController::class,'login']);
 Route::get('/print', [AuthController::class,'showReceipt']);
 Route::post('/login',[AuthController::class,'submitLogin']);
@@ -41,6 +44,8 @@ Route::group(["prefix" => "/", "middleware" => ["auth", CheckAccessMidleware::cl
     Route::resource('additional', AdditionalController::class);
     Route::resource('room-type', RoomTypesController::class);
     Route::resource('room', RoomsController::class);
+    Route::resource('voucher', VoucherController::class);
+    Route::resource('promo', PromoController::class);
 });
 Route::get('room-number/{floor}', [RoomsController::class, 'generateRoomNumber']);
 

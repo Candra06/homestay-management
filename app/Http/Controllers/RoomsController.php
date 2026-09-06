@@ -70,6 +70,7 @@ class RoomsController extends Controller
                 'name' => 'remarks',
                 'title' => 'Remarks',
                 'type' => 'textarea',
+                'required' => false,
                 'placeholder' => 'Remarks',
             ],
         ],

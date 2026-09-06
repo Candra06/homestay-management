@@ -21,13 +21,25 @@ class MenuController extends Controller
                 'title' => 'Kode Menu',
                 'type' => 'text',
                 'required' => true,
+                'custom-class-wrapper' => 'col-4',
                 'placeholder' => 'Masukkan Kode Menu',
+            ],
+            [
+                'name' => 'group_menu_id',
+                'title' => 'Grup Menu',
+                'type' => 'select',
+                'required' => true,
+                'custom-class-wrapper' => 'col-4',
+                'class' => 'select2-no-search',
+                'placeholder' => 'Pilih grup menu',
+                 'data' => [],
             ],
             [
                 'name' => 'name',
                 'title' => 'Nama',
                 'type' => 'text',
                 'required' => true,
+                'custom-class-wrapper' => 'col-4',
                 'placeholder' => 'Nama Menu',
             ],
             [
@@ -35,6 +47,7 @@ class MenuController extends Controller
                 'title' => 'Icon Menu',
                 'type' => 'text',
                 'required' => true,
+                'custom-class-wrapper' => 'col-6',
                 'placeholder' => 'Masukkan class icon menu',
             ],
             [
@@ -42,16 +55,8 @@ class MenuController extends Controller
                 'title' => 'Url Menu',
                 'type' => 'text',
                 'required' => true,
+                'custom-class-wrapper' => 'col-6',
                 'placeholder' => 'Masukkan url menu',
-            ],
-            [
-                'name' => 'group_menu_id',
-                'title' => 'Grup Menu',
-                'type' => 'select',
-                'required' => true,
-                'class' => 'select2-no-search',
-                'placeholder' => 'Pilih grup menu',
-                 'data' => [],
             ],
             [
                 'name' => 'have_list',
@@ -139,7 +144,7 @@ class MenuController extends Controller
     {
         $forms = $this->dataPage['forms'];
         $parent = GroupMenu::get();
-        $forms[4]['data'] = $parent->map(function($item) {
+        $forms[1]['data'] = $parent->map(function($item) {
             return [
                 'id' => $item->id,
                 'val' => $item->name,
@@ -173,6 +178,7 @@ class MenuController extends Controller
                 'name' =>$request->name,
                 'icon' =>$request->icon,
                 'url' =>$request->url,
+                'group_menu_id' =>$request->group_menu_id,
                 'have_list' => $request->has("have_list") ? 'Y' : 'N',
                 'have_create' => $request->has("have_create") ? 'Y' : 'N',
                 'have_edit' => $request->has("have_edit") ? 'Y' : 'N',
@@ -185,6 +191,7 @@ class MenuController extends Controller
                 $ins = [
                     'id_role' => $rl->id,
                     'id_menu' => $menu->id,
+                    'group_menu_id' => $menu->group_menu_id,
                     'access_list' => $menu->have_list,
                     'access_create' => $menu->have_create,
                     'access_edit' => $menu->have_edit,
@@ -215,13 +222,21 @@ class MenuController extends Controller
     public function edit(Menu $menu)
     {
         $page = $this->dataPage;
+        $forms = $page['forms'];
+        $parent = GroupMenu::get();
+        $forms[1]['data'] = $parent->map(function($item) {
+            return [
+                'id' => $item->id,
+                'val' => $item->name,
+            ];
+        });
         $data = (object) [
             'title' => 'Data Menu',
             'subtitle' => 'Edit Data',
             'type' => 'edit',
             'action' => route($page['route']['update'], ['menu' => $menu]),
             'data' => $menu->toArray(),
-            'forms' => $page['forms'],
+            'forms' => $forms,
         ];
         // return $data;
         return view('template.form', compact('data'));
@@ -239,6 +254,7 @@ class MenuController extends Controller
                 'name' =>$request->name,
                 'icon' =>$request->icon,
                 'url' =>$request->url,
+                'group_menu_id' =>$request->group_menu_id,
                 'have_list' => $request->has("have_list") ? 'Y' : 'N',
                 'have_create' => $request->has("have_create") ? 'Y' : 'N',
                 'have_edit' => $request->has("have_edit") ? 'Y' : 'N',

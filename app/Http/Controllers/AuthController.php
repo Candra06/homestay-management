@@ -163,6 +163,7 @@ class AuthController extends Controller
                 $fclt[] = $f->facility->nama_fasilitas;
             }
             $rooms[] = [
+                'slug' => $room->slug,
                 'name' => $room->type_name,
                 'price' => $room->base_price,
                 'photo' => url('/').'/storage/'.$room->attachments[0]->file_url,
@@ -178,5 +179,25 @@ class AuthController extends Controller
         // return $data;
 
         return view('frontend.index', compact('data'));
+    }
+
+    public function roomDetail($slug) {
+        
+        try {
+            $detail = RoomTypes::with('attachments', 'facilities.facility')->where('slug', $slug)->first();
+            if ($detail) {
+                $data = (object) [
+                    'rooms' => $detail,
+                ];
+                // return $data;
+
+                return view('frontend.rooms-detail', compact('data'));
+            } else {
+                # code...
+            }
+            
+        } catch (\Throwable $th) {
+            throw $th;
+        }
     }
 }

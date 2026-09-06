@@ -105,7 +105,7 @@
                         <span class="text-white">Superior Twin Bed</span>
                         <h2 class="text-white mb-0">10</h2>
                     </div>
-                    
+
                 </div>
             </div>
         </div>
@@ -116,7 +116,7 @@
                         <span class="text-white">Superior King Bed</span>
                         <h2 class="text-white mb-0">10</h2>
                     </div>
-                    
+
                 </div>
             </div>
         </div>
@@ -127,7 +127,7 @@
                         <span class="text-white">Deluxe</span>
                         <h2 class="text-white mb-0">15</h2>
                     </div>
-                    
+
                 </div>
             </div>
         </div>
@@ -157,6 +157,9 @@
     <script src="{{ url('assets') }}/js/fullcalendar.js"></script>
 
     <script type="text/javascript">
+        $(document).ready(function() {
+            $('.table-view').hide();
+        });
         $('#view-mode-toggle').on('click', function() {
             $(this).toggleClass('on');
 
@@ -164,7 +167,7 @@
             const isON = $(this).hasClass('on');
 
             if (isON) {
-                $text.text('Tabel');
+                $text.text('List');
                 $('.calendar-view').hide();
                 $('.table-view').show();
                 // Panggil fungsi atau render ulang tampilan tabel di sini
@@ -172,7 +175,6 @@
                 $text.text('Kalender');
                 $('.table-view').hide();
                 $('.calendar-view').show();
-                console.log('Mode saat ini: KALENDER (OFF)');
                 // Panggil fungsi atau render ulang tampilan kalender di sini
             }
         });

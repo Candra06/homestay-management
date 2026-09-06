@@ -14,7 +14,11 @@ class RoomTypes extends Model
         "bed_type",
         "kapasitas",
         "base_price",
+        "original_price",
+        "wide",
         "slug",
+        "tagline",
+        "description",
     ];
 
     public function facilities()

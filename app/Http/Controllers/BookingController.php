@@ -22,7 +22,6 @@ class BookingController extends Controller
         ];
         // $bookings = Booking::all();
         return view('pages.booking.index', compact('data'));
-        // return view('booking.index', compact('bookings'));
     }
 
     /**
