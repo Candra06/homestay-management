@@ -6,6 +6,7 @@ use App\Helper\Helpers;
 use App\Models\Facility;
 use App\Models\RoomFacilities;
 use App\Models\RoomTypes;
+use App\Models\Rooms;
 use App\Models\Attachment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -463,5 +464,23 @@ class RoomTypesController extends Controller
             })
             ->rawColumns(['action'])
             ->make(true);
+    }
+
+    public function getRoomByType($id) {
+        try {
+            $room = Rooms::where('id_room_type', $id)->where('status','Tersedia')->get();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Data berhasil diambil',
+                'data' => $room
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Data gagal diambil : ' . $th->getMessage(),
+                'data' => []
+            ], 500);
+        }
     }
 }

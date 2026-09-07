@@ -3,7 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\Facility;
+use App\Models\RoomTypes;
+use App\Models\Room;
+use App\Models\Additional;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
+use App\Helper\Helpers;
+use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\DB;
+use App\Models\Attachment;
+use Illuminate\Support\Facades\Validator;
 
 class BookingController extends Controller
 {
@@ -29,12 +39,29 @@ class BookingController extends Controller
      */
     public function create()
     {
+        $roomType = RoomTypes::get();
+        $additional = Additional::get();
+        $roomAdd = [];
+        $generalAdd = [];
+        foreach ($additional as $key => $add) {
+            if ($add->type == 1) {
+                $roomAdd[] = $add;
+            }else {
+                $generalAdd[] = $add;
+            }
+        }
+        $bookingCode = $this->generateBookingCode();
         $data=(object)[
             'title' => 'Booking',
             'subtitle' => 'Reservasi',
             'active' => 'booking',
             'formAction' => route('booking.store'),
+            'bookcode' => $bookingCode,
+            'roomType' => $roomType,
+            'additionalRoom' => $roomAdd,
+            'generalAdd' => $generalAdd,
         ];
+        
         return view('pages.booking.form', compact('data'));
     }
 
@@ -43,7 +70,58 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        DB::beginTransaction();
+        try {
+            $inputAttachment= [];
+            $rules = [
+                'nama_lengkap' => 'required',
+                'email' => 'required',
+                'no_telp' => 'required',
+                'identity_type' => 'required',
+                'identity_number' => 'required',
+                'address' => 'required', // guest
+                'book_reff' => 'required', // booking source
+                'payment_method' => 'required',
+                'room_type_id' => 'required|array', // rooms
+                'room_type_id.*' => 'required|exists:room_types,id',
+                'room_id' => 'required|array',
+                'room_id.*' => 'required|exists:rooms,id',
+                'total_guest' => 'required|array',
+                'total_guest.*' => 'required|numeric',
+                'check_in' => 'required|array',
+                'check_in.*' => 'required|date',
+                'check_out' => 'required|array',
+                'check_out.*' => 'required|date',
+                'payment_type' => 'required', // payment
+                'payment_amount' => 'required|numeric',
+            ];
+            $validate = Validator::make($request->all(), $rules);
+            if ($validate->fails()) {
+                return redirect()->back()->with('error', 'Data gagal divalidasi : ' . $validate->errors()->first());
+            }
+            $inputData=[];
+            $booking = Booking::create($inputData);
+            if ($request->hasFile('ktp_kk')) {
+                $file = $request->file('ktp_kk');
+                $path = storage_path('app/public/booking');
+                $photo = 'booking/' . $this->compress($file, $path, 50);
+                $inputAttachment[] = [
+                            'reff_feature' => 'booking',
+                            'file_url' => $photo,
+                            'file_name' => basename($photo),
+                            'original_name' => $file->getClientOriginalName(),
+                            'mime_type' => Storage::disk('public')->mimeType($photo),
+                            'reff_id' => $booking->id,
+                            'file_size' => Storage::disk('public')->size($photo),
+                        ];
+            }
+            DB::commit();
+            return redirect(route('booking.index'))->with('success', 'Berhasil menambah data booking');
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollback();
+            return redirect()->back()->with('error', 'Data gagal disimpan : ' . $th->getMessage());
+        }
     }
 
     /**
@@ -77,4 +155,30 @@ class BookingController extends Controller
     {
         //
     }
+
+    private function generateBookingCode()
+    {
+        
+        $now = Carbon::now();
+        $dateFormatted = $now->format('dmy'); 
+        $alfabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $randomChar = substr(str_shuffle($alfabet), 0, 3);
+        $prefix = 'RSV-' . $randomChar. $dateFormatted;
+
+        $lastBooking = Booking::whereDate('created_at', $now->toDateString())
+            ->orderBy('id', 'desc')
+            ->first();
+        if (!$lastBooking) {
+            $sequence = 1;
+        } else {
+            $lastCode = $lastBooking->booking_code;
+            $lastSequence = (int) substr($lastCode, -3);
+            $sequence = $lastSequence + 1;
+        }
+        $sequenceFormatted = str_pad($sequence, 3, '0', STR_PAD_LEFT);
+        
+        return $prefix .$sequenceFormatted;
+    }
+
+    
 }

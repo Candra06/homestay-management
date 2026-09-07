@@ -46,6 +46,8 @@ Route::group(["prefix" => "/", "middleware" => ["auth", CheckAccessMidleware::cl
     Route::resource('room', RoomsController::class);
     Route::resource('voucher', VoucherController::class);
     Route::resource('promo', PromoController::class);
+
+    
 });
 Route::get('room-number/{floor}', [RoomsController::class, 'generateRoomNumber']);
 
