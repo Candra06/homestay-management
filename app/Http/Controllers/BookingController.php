@@ -44,7 +44,7 @@ class BookingController extends Controller
         $roomAdd = [];
         $generalAdd = [];
         foreach ($additional as $key => $add) {
-            if ($add->type == 1) {
+            if ($add->type == 'room') {
                 $roomAdd[] = $add;
             }else {
                 $generalAdd[] = $add;
@@ -161,9 +161,7 @@ class BookingController extends Controller
         
         $now = Carbon::now();
         $dateFormatted = $now->format('dmy'); 
-        $alfabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        $randomChar = substr(str_shuffle($alfabet), 0, 3);
-        $prefix = 'RSV-' . $randomChar. $dateFormatted;
+        $prefix = 'EZ-RSV' . $dateFormatted;
 
         $lastBooking = Booking::whereDate('created_at', $now->toDateString())
             ->orderBy('id', 'desc')

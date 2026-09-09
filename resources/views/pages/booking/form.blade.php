@@ -7,10 +7,10 @@
     <div class="breadcrumb-header justify-content-between">
         <div class="my-auto">
             <div class="d-flex">
-                <span class="text-muted mt-1 tx-13 ms-2 mb-0">Dashboard/
-                </span><span class="text-muted mt-1 tx-13 ms-2 mb-0">/
-                    {{ $data->subtitle }} </span>
-                <h5 class="content-title mb-0 my-auto">{{ $data->title }}</h5>
+                <span class="text-muted mt-1 tx-13 ms-2 mb-0">Dashboard
+                    <span class="text-muted mt-1 tx-13 ms-2 mb-0">/ {{ $data->subtitle }} </span> /
+                </span>
+                <span class="content-title ms-2 tx-13 mb-0 mt-1"> {{ $data->title }}</span>
 
             </div>
         </div>
@@ -28,266 +28,353 @@
         </div>
 
         <div class="card-body pd-r-0">
-            <form action="" method="POST" class="form-horizontal row " enctype="multipart/form-data">
+            <form action="" method="POST" class="form-horizontal" enctype="multipart/form-data">
                 @csrf
-                {{-- @include('pages.booking.form-input') --}}
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header pb-0">
-                                <h4 class="card-title mg-b-0">Data Pemesan</h4>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col form-group">
-                                        <label for="name">Nama Pemesan</label>
-                                        <input type="text" name="name" id="name" class="form-control"
-                                            placeholder="Masukkan Nama Pemesan" required>
-                                    </div>
-                                    <div class="col form-group">
-                                        <label for="email">Email</label>
-                                        <input type="email" name="email" id="email" class="form-control"
-                                            placeholder="Masukkan Email Pemesan" required>
-                                    </div>
-                                    <div class="col form-group">
-                                        <label for="phone">Telepon/Whatsapp</label>
-                                        <input type="text" name="phone" id="phone" class="form-control"
-                                            placeholder="Masukkan Telepon/Whatsapp" required>
-                                    </div>
-                                    <div class="col form-group">
-                                        <label for="identity_type">Tipe Identitas</label>
-                                        <select name="identity_type" id="identity_type" class="form-control" required>
-                                            <option value="">Pilih Tipe Identitas</option>
-                                            <option value="KTP">KTP</option>
-                                            <option value="SIM">SIM</option>
-                                            <option value="Passport">Passport</option>
-                                        </select>
-                                    </div>
-                                    <div class="col form-group">
-                                        <label for="identity_number">Nomor Identitas</label>
-                                        <input type="text" name="identity_number" id="identity_number"
-                                            class="form-control" placeholder="Masukkan Nomor Identitas" required>
-                                    </div>
+                <div id="booking-container" class="d-block row">
+                    {{-- Guest --}}
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header pb-0">
+                                    <h4 class="card-title mg-b-0">Data Tamu</h4>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row" id="room-container">
-                    <div class="col-md-6 card-room">
-                        <div class="card">
-                            <div class="card-header pb-0 d-flex justify-content-between">
-                                <h4 class="card-title mg-b-0 room-title">Kamar <span class="room-number">1</span></h4>
-                                <button class="btn btn-outline-primary btn-sm btn-add-room" type="button">
-                                    <i class="fas fa-plus"></i> Tambah
-                                </button>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label for="name">Tipe Kamar</label>
-                                            <select name="room_type[]" class="form-control room-type" required>
-                                                <option value="">Pilih Tipe Kamar</option>
-                                                @foreach ($data->roomType as $item)
-                                                    <option value="{{ $item->id }}">{{ $item->type_name }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label for="email">Nomor Kamar</label>
-                                            <select name="room_number[]" class="form-control room-number" required>
-                                                <option value="">Pilih Nomor Kamar</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label for="phone">Jumlah Tamu</label>
-                                            <input type="number" name="total_guest[]" id="total_guest" class="form-control"
-                                                placeholder="Masukkan Jumlah Tamu" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="check_in">Tanggal Check-in</label>
-                                            <input type="date" name="check_in[]" id="check_in" class="form-control"
-                                                placeholder="Masukkan Tanggal Check-in" required>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="check_out">Tanggal Check-out</label>
-                                            <input type="date" name="check_out[]" id="check_out" class="form-control"
-                                                placeholder="Masukkan Tanggal Check-out" required>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12">
-
-                                        <div class="form-group">
-                                            <label for="name">Layanan Tambahan</label>
-                                            <select class="form-control select2" name="additional_services[]"
-                                                multiple="multiple" data-placeholder="Pilih Layanan Tambahan">
-                                                @if (count($data->additionalRoom) > 0)
-                                                    @foreach ($data->additionalRoom as $add)
-                                                        <option value="{{ $add->id }}">
-                                                            {{ $add->name }}</option>
-                                                    @endforeach
-                                                @endif
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header pb-0">
-                                <h4 class="card-title mg-b-0">Informasi Tambahan</h4>
-                            </div>
-                            <div class="card-body">
-
-                                <div class="form-group">
-                                    <label for="name">Layanan Tambahan</label>
-                                    <select class="form-control select2" name="additional_services[]"
-                                        multiple="multiple">
-                                        @if (count($data->generalAdd) > 0)
-                                            @foreach ($data->generalAdd as $add)
-                                                <option value="{{ $add->id }}">
-                                                    {{ $add->name }}</option>
-                                            @endforeach
-                                        @endif
-                                    </select>
-                                    <div class="form-group mt-2">
-                                        <label for="book_reff">Sumber Reservasi</label>
-                                        <select name="book_reff" id="book_reff" class="form-control" required>
-                                            <option value="">Pilih Sumber Reservasi</option>
-                                            <option value="direct_walkin">Walk-In</option>
-                                            <option value="direct_wa">Direct</option>
-                                            <option value="ota">OTA</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group mt-2 ota_container">
-                                        <label for="book_reff">External Booking ID</label>
-                                        <input type="text" name="external_booking_id" id="external_booking_id"
-                                            class="form-control" placeholder="Masukkan External Booking ID" required>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header pb-0">
-                                <h4 class="card-title mg-b-0">Detail Pembayaran</h4>
-                            </div>
-                            <div class="card-body">
-                                <div class="rowpd-l-20 pd-r-0">
+                                <div class="card-body">
                                     <div class="row">
-                                        <div class="col-md-4">
-                                            <label for="name">Metode Pembayaran</label>
+                                        <div class="col form-group">
+                                            <label class="tx-12" for="name">Nama Tamu<span
+                                                    class="tx-danger">*</span></label>
+                                            <input type="text" name="guest_name" id="guest_name"
+                                                class="form-control form-control-sm" placeholder="Masukkan Nama Tamu"
+                                                required>
                                         </div>
-                                        <div class="col-md-8">
+                                        <div class="col form-group">
+                                            <label class="tx-12" for="email">Email<span
+                                                    class="tx-danger">*</span></label>
+                                            <input type="email" value="" name="guest_email"
+                                                id="guest_email" class="form-control form-control-sm"
+                                                placeholder="Masukkan Email Tamu" required>
+                                        </div>
+                                        <div class="col form-group">
+                                            <label class="tx-12" for="phone">Telepon/Whatsapp<span
+                                                    class="tx-danger">*</span></label>
+                                            <input type="text" value="" name="phone" id="phone"
+                                                class="form-control form-control-sm" placeholder="Masukkan Telepon/Whatsapp"
+                                                required>
+                                        </div>
+                                        <div class="col form-group">
+                                            <label class="tx-12" for="identity_type">Tipe Identitas<span
+                                                    class="tx-danger">*</span></label>
+                                            <select name="identity_type" id="identity_type"
+                                                class="form-control form-control-sm" required>
+                                                <option value="">Pilih Tipe Identitas</option>
+                                                <option value="ktp">KTP</option>
+                                                <option value="sim">SIM</option>
+                                                <option value="passport">Passport</option>
+                                                <option value="other">Lainnya</option>
+                                            </select>
+                                        </div>
+                                        <div class="col form-group">
+                                            <label class="tx-12" for="identity_number">Nomor Identitas<span
+                                                    class="tx-danger">*</span></label>
+                                            <input type="text" value="" name="identity_number"
+                                                id="identity_number" class="form-control form-control-sm"
+                                                placeholder="Masukkan Nomor Identitas" required>
+                                        </div>
+
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6 form-group">
+                                            <label class="tx-12" for="identity_number">Alamat<span
+                                                    class="tx-danger">*</span></label>
+                                            <textarea class="form-control form-control-sm" name="address" id="address" placeholder="Masukkan Alamat"></textarea>
+                                        </div>
+                                        {{-- <div class="col form-group">
+                                            <label class="tx-12" for="identity_number">Foto Identitas<span
+                                                    class="tx-danger">*</span></label>
+                                            <input type="file" name="identity_image" id="identity_image"
+                                                class="form-control form-control-sm" placeholder="Masukkan Foto Identitas"
+                                                required>
+                                        </div> --}}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {{-- Room --}}
+                    <div class="row" id="room-container">
+                        <div class="col-md-6 card-room">
+                            <div class="card">
+                                <div class="card-header pb-0 d-flex justify-content-between">
+                                    <h4 class="card-title mg-b-0 room-title">Kamar <span class="room-number">1</span></h4>
+                                    <button class="btn btn-outline-primary btn-sm btn-add-room" type="button">
+                                        <i class="fas fa-plus"></i> Tambah
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
                                             <div class="form-group">
-                                                <select name="payment_method" id="payment_method" class="form-control"
+                                                <label class="tx-12" for="name">Tipe Kamar<span
+                                                        class="tx-danger">*</span></label>
+                                                <select name="room_type[]" class="form-control form-control-sm room-type"
                                                     required>
-                                                    <option value="">Pilih Metode Pembayaran</option>
-                                                    <option value="Bank Transfer">Transfer Bank</option>
-                                                    <option value="Cash">Tunai</option>
-                                                    <option value="QRIS">QRIS</option>
+                                                    <option value="">Pilih Tipe Kamar</option>
+                                                    @foreach ($data->roomType as $item)
+                                                        <option value="{{ $item->id }}"
+                                                            data-price="{{ $item->base_price }}"
+                                                            data-name="{{ $item->type_name }}">{{ $item->type_name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="tx-12" for="email">Nomor Kamar<span
+                                                        class="tx-danger">*</span></label>
+                                                <select name="room_number[]"
+                                                    class="form-control form-control-sm room-number" required>
+                                                    <option value="">Pilih Nomor Kamar</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="tx-12" for="check_in">Tanggal Check-in<span
+                                                        class="tx-danger">*</span></label>
+                                                <input type="date" name="check_in[]"
+                                                    class="form-control form-control-sm check_in"
+                                                    placeholder="Masukkan Tanggal Check-in" required>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="tx-12" for="check_out">Tanggal Check-out<span
+                                                        class="tx-danger">*</span></label>
+                                                <input type="date" name="check_out[]"
+                                                    class="form-control form-control-sm check_out"
+                                                    placeholder="Masukkan Tanggal Check-out" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+
+                                            <div class="form-group">
+                                                <label class="tx-12" for="name">Layanan Tambahan</label>
+                                                <select class="form-control form-control-sm select2 additional_room"
+                                                    name="additional_services[]" multiple="multiple"
+                                                    data-placeholder="Pilih Layanan Tambahan">
+                                                    @if (count($data->additionalRoom) > 0)
+                                                        @foreach ($data->additionalRoom as $add)
+                                                            <option value="{{ $add->id }}"
+                                                                data-price="{{ $add->price }}"
+                                                                data-name="{{ $add->name }}">
+                                                                {{ $add->name }}</option>
+                                                        @endforeach
+                                                    @endif
                                                 </select>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <label for="name">Voucher</label>
+
+
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+                        {{-- Information --}}
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header pb-0">
+                                    <h4 class="card-title mg-b-0">Informasi Tambahan</h4>
+                                </div>
+                                <div class="card-body">
+
+                                    <div class="form-group">
+                                        <label class="tx-12" for="name">Layanan Tambahan</label>
+                                        <select class="form-control form-control-sm select2 additional_services"
+                                            id="additional_services" name="additional_services" multiple="multiple">
+                                            @if (count($data->generalAdd) > 0)
+                                                @foreach ($data->generalAdd as $add)
+                                                    <option value="{{ $add->id }}">
+                                                        {{ $add->name }}</option>
+                                                @endforeach
+                                            @endif
+                                        </select>
+                                        <div class="form-group mt-2">
+                                            <label class="tx-12" for="book_reff">Sumber Reservasi<span
+                                                    class="tx-danger">*</span></label>
+                                            <select name="book_reff" id="book_reff" class="form-control form-control-sm"
+                                                required>
+                                                <option value="">Pilih Sumber Reservasi</option>
+                                                <option value="direct_walkin">Direct Walk-In</option>
+                                                <option value="direct_wa">Direct Whatsapp</option>
+                                                <option value="ota">OTA</option>
+                                            </select>
                                         </div>
-                                        <div class="col-md-8">
-                                            <div class="form-group">
-                                                <div class="input-group">
-                                                    <input class="form-control" placeholder="Masukkan Kode Voucher"
-                                                        type="text" name="voucher_code" id="voucher_code" />
-                                                    <span class="input-group-btn"><button class="btn btn-primary"
-                                                            type="button">
-                                                            <span class="input-group-btn">Periksa</span></button></span>
+                                        <div class="form-group mt-2 ota_container">
+                                            <label class="tx-12" for="book_reff">External Booking ID<span
+                                                    class="tx-danger">*</span></label>
+                                            <input type="text" name="external_booking_id" id="external_booking_id"
+                                                class="form-control form-control-sm"
+                                                placeholder="Masukkan External Booking ID" required>
+                                        </div>
+                                        <div class="form-group mt-2 ">
+                                            <label class="tx-12" for="book_reff">Catatan Tambahan</label>
+                                            <textarea type="text" name="additional_notes" id="additional_notes" class="form-control form-control-sm"
+                                                placeholder="Masukkan Catatan Tambahan" required></textarea>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        {{-- Payment  --}}
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header pb-0">
+                                    <h4 class="card-title mg-b-0">Detail Pembayaran</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="rowpd-l-20 pd-r-0">
+
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label for="name" class="tx-12">PPN (11%)</label>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="form-group ms-4">
+                                                    <input type="checkbox" name="tax" id="tax"
+                                                        class="custom-control-input">
+                                                    <label class="custom-control-label tx-12" for="tax">Aktifkan
+                                                        PPN</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label class="tx-12" for="name">Total</label>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="form-group">
+                                                    <input type="number" name="total_payment" id="total_payment"
+                                                        class="form-control form-control-sm" value="0" readonly
+                                                        placeholder="Masukkan Jumlah Pembayaran">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label class="tx-12" for="name">Metode Pembayaran<span
+                                                        class="tx-danger">*</span></label>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="form-group">
+                                                    <select name="payment_method" id="payment_method"
+                                                        class="form-control form-control-sm" required>
+                                                        <option value="">Pilih Metode Pembayaran</option>
+                                                        <option value="Bank Transfer">Transfer Bank</option>
+                                                        <option value="Cash">Tunai</option>
+                                                        <option value="QRIS">QRIS</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label class="tx-12" for="name">Jumlah Pembayaran<span
+                                                        class="tx-danger">*</span></label>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="form-group">
+                                                    <input type="number" name="payment_amount" id="payment_amount"
+                                                        class="form-control form-control-sm"
+                                                        placeholder="Masukkan Jumlah Pembayaran" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label class="tx-12" for="name">Jumlah DP</label>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="form-group">
+                                                    <input type="number" name="dp_amount" id="dp_amount"
+                                                        class="form-control form-control-sm"
+                                                        placeholder="Masukkan Jumlah DP">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label class="tx-12" for="name">Voucher</label>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="form-group">
+                                                    <div class="input-group">
+                                                        <input class="form-control form-control-sm"
+                                                            placeholder="Masukkan Kode Voucher" type="text"
+                                                            name="voucher_code" id="voucher_code" />
+                                                        <span class="input-group-btn"><button
+                                                                class="btn btn-sm btn-primary" type="button">
+                                                                <span
+                                                                    class="input-group-btn">Periksa</span></button></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label for="name" class="tx-12">Jumlah Diskon</label>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="form-group">
+                                                    <input type="number" name="discount" id="discount"
+                                                        class="form-control form-control-sm"
+                                                        placeholder="Masukkan Jumlah Diskon">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label for="name" class="tx-12">Tanggal Pembayaran<span
+                                                        class="tx-danger">*</span></label>
+
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="form-group">
+                                                    <input type="date" name="payment_date" id="payment_date"
+                                                        class="form-control form-control-sm"
+                                                        placeholder="Masukkan Tanggal Pembayaran" required>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <label for="name">Jumlah Pembayaran</label>
 
-                                        </div>
-                                        <div class="col-md-8">
-                                            <div class="form-group">
-                                                <input type="number" name="payment_amount" id="payment_amount"
-                                                    class="form-control" placeholder="Masukkan Jumlah Pembayaran"
-                                                    required>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <label for="name">Jumlah Diskon</label>
-
-                                        </div>
-                                        <div class="col-md-8">
-                                            <div class="form-group">
-                                                <input type="number" name="discount" id="discount"
-                                                    class="form-control" placeholder="Masukkan Jumlah Diskon" required>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <label for="name">Tanggal Pembayaran</label>
-
-                                        </div>
-                                        <div class="col-md-8">
-                                            <div class="form-group">
-                                                <input type="date" name="payment_date" id="payment_date"
-                                                    class="form-control" placeholder="Masukkan Tanggal Pembayaran"
-                                                    required>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <label for="name">Catatan Tambahan</label>
-
-                                        </div>
-                                        <div class="col-md-8">
-                                            <div class="form-group">
-                                                <input type="text" name="additional_notes" id="additional_notes"
-                                                    class="form-control" placeholder="Masukkan Catatan Tambahan" required>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
-
                             </div>
                         </div>
                     </div>
-                    <div class="form-group has-success col-12 mb-0 mt-3 d-flex justify-content-end">
-                        <div class="d-flex justify-content-end"></div>
-                        <div>
 
-                            <button type="submit" class="btn btn-primary">PROSES</button>
+                </div>
+                @include('pages.booking.confirm')
+                <div class="form-group has-success col-12 mb-0 mt-3 pe-4 d-flex justify-content-end">
+                    <div class="d-flex justify-content-end"></div>
+                    <div>
+                        <button type="button" class="btn btn-primary d-block" id="next-booking">PROSES</button>
+                        <div class="d-flex justify-content-end">
+                            <button type="button" id="back-process" class="btn btn-secondary d-none me-2"
+                                id="back-process">Kembali</button>
+                            <button type="submit" class="btn btn-primary d-none"
+                                id="save-booking-submit">SIMPAN</button>
                         </div>
                     </div>
                 </div>
@@ -295,6 +382,8 @@
             </form>
         </div>
     </div>
+    {{-- @include('pages.booking.form-input') --}}
+
 @endsection
 @section('script')
     <script src="{{ url('assets') }}/js/form-elements.js"></script>
@@ -305,6 +394,9 @@
                 $('.select2').select2();
             }
         };
+        var guest = {};
+        var rooms = [];
+        var payment = {};
 
         $(document).ready(function() {
 
@@ -347,7 +439,9 @@
                             // Asumsi struktur JSON dari API: [{ "id": 1, "room_number": "101" }, ...]
                             $.each(response.data, function(key, room) {
                                 $roomNumberDropdown.append(
-                                    '<option value="' + room.id + '">' + room
+                                    '<option value="' + room.id +
+                                    '" data-number="' + room.room_number + '">' +
+                                    room
                                     .room_number + '</option>'
                                 );
                             });
@@ -359,7 +453,7 @@
                         },
                         error: function(xhr) {
                             console.log(xhr);
-                            
+
                             console.error("Terjadi kesalahan saat mengambil nomor kamar.");
                             $roomNumberDropdown.empty().append(
                                 '<option value="">Pilih Nomor Kamar</option>');
@@ -417,11 +511,35 @@
                 // Update penomoran
                 updateRoomNumbers();
             });
+
+            $('#next-booking').on('click', function(e) {
+                // Jika semua validasi lolos
+                $('#booking-container').removeClass('d-block').addClass('d-none');
+                $('#back-process').removeClass('d-none').addClass('d-block');
+                $('#save-booking-submit').removeClass('d-none').addClass('d-block');
+                $('#next-booking').removeClass('d-block').addClass('d-none');
+                $('#confirm-container').removeClass('d-none').addClass(
+                    'd-block'); // Tampilkan detail pembayaran
+
+                processBooking();
+            });
+
+            $('#back-process').on('click', function() {
+                $('#confirm-container').removeClass('d-block').addClass('d-none');
+                $('#back-process').removeClass('d-block').addClass('d-none');
+                $('#save-booking-submit').removeClass('d-block').addClass('d-none');
+                $('#next-booking').removeClass('d-none').addClass('d-block');
+                $('#booking-container').removeClass('d-none').addClass('d-block');
+            });
+
+            $(document).on('change',
+                '.room-type, .check_in, .check_out, .additional_room',
+                function() {
+
+                    calculateTotalPayment();
+                });
         });
 
-
-        // Event ketika tombol Hapus diklik
-        // Menggunakan event delegation $(document).on(...) agar elemen dinamis bisa terdeteksi
         $(document).on('click', '.btn-remove-room', function(e) {
             e.preventDefault();
             // Hapus elemen kamar yang tombol hapusnya diklik
@@ -429,12 +547,241 @@
 
             // Update penomoran
             updateRoomNumbers();
+            setTimeout(function() {
+                calculateTotalPayment();
+            }, 100);
+        });
+
+        $(document).on('change', '#additional_services', function() {
+            calculateTotalPayment();
+        });
+        $(document).on('change', '#tax', function() {
+            calculateTotalPayment();
         });
 
         // Fungsi untuk mengurutkan ulang angka pada judul "Kamar 1, Kamar 2, dst"
         function updateRoomNumbers() {
             $('.card-room').each(function(index) {
                 $(this).find('.room-number').text(index + 1);
+            });
+        }
+
+        function calculateTotalPayment() {
+            let subtotal = 0;
+            let grandTotal = 0;
+
+            $('.card-room').each(function() {
+                let $roomCard = $(this);
+
+                let roomPrice = parseFloat($roomCard.find('.room-type option:selected').data('price')) || 0;
+
+                let checkin = $roomCard.find('.check_in').val();
+                let checkout = $roomCard.find('.check_out').val();
+
+                let totalMalam = 0;
+                if (checkin && checkout) {
+                    let diffTime = new Date(checkout).getTime() - new Date(checkin).getTime();
+                    totalMalam = diffTime / (1000 * 3600 * 24);
+                }
+
+                let subtotalRoom = roomPrice * totalMalam;
+
+
+                let subtotalAddRoom = 0;
+                $roomCard.find('.additional_room option:selected').each(function() {
+                    let addPrice = parseFloat($(this).data('price')) || 0;
+                    subtotalAddRoom += addPrice;
+                });
+
+                subtotal += (subtotalRoom + subtotalAddRoom);
+            });
+
+            $('#additional_services option:selected').each(function() {
+                let generalPrice = parseFloat($(this).data('price')) || 0;
+                subtotal += generalPrice;
+            });
+            let ppnAmount = 0;
+            if ($('#tax').is(':checked')) {
+                ppnAmount = subtotal * 0.11;
+            }
+            grandTotal = subtotal + ppnAmount;
+            $('#total_payment').val(rupiah(grandTotal));
+        }
+
+        function handleVoucher() {}
+
+        function processBooking() {
+            guest = {
+                name: $('#guest_name').val(),
+                no_hp: $('#phone').val(),
+                email: $('#guest_email').val(),
+                address: $('#address').val(),
+            };
+
+            rooms = [];
+
+            $('.card-room').each(function(index) {
+                let additional = [];
+                $(this).find('.additional_room').find('option:selected').each(function() {
+                    additional.push({
+                        name: $(this).data('name'),
+                        price: parseFloat($(this).data('price')) || 0,
+                    });
+                });
+
+                let date = {
+                    check_in: $(this).find('.check_in').val(),
+                    check_out: $(this).find('.check_out').val()
+                }
+
+                let timeDifference = new Date(date.check_out).getTime() - new Date(date.check_in).getTime();
+                let dayDifference = timeDifference / (1000 * 3600 * 24);
+
+                rooms.push({
+                    room_type: $(this).find('.room-type').find('option:selected').data('name'),
+                    room_number: $(this).find('.room-number').find('option:selected').data('number'),
+                    night_price: parseFloat($(this).find('.room-type').find('option:selected').data(
+                        'price')) || 0,
+                    check_in: date.check_in,
+                    check_out: date.check_out,
+                    total_night: isNaN(dayDifference) ? 0 : dayDifference,
+                    additional: additional,
+                });
+            });
+
+            // Ambil Additional General (Layanan tambahan umum di luar kamar)
+            let generalAdditional = [];
+            $('#general_additional').find('option:selected').each(function() {
+                generalAdditional.push({
+                    name: $(this).data('name'),
+                    price: parseFloat($(this).data('price')) || 0,
+                });
+            });
+
+            console.log(guest);
+            console.log(rooms);
+            console.log(generalAdditional);
+
+            let bookData = [];
+            let totalPrice = 0;
+            let itemBooking = '';
+
+            // 1. Looping untuk Kamar & Additional Room-nya
+            for (const rm in rooms) {
+                let roomData = rooms[rm];
+                let subTotalPrice = roomData.total_night * roomData.night_price;
+
+                // Render baris Kamar Utama
+                itemBooking += `
+            <tr>
+                <td>Kamar</td>
+                <td>${roomData.room_type} (${roomData.room_number})</td>
+                <td>${rupiah(roomData.night_price)}</td>
+                <td>${formatTanggal(roomData.check_in)}</td>
+                <td>${formatTanggal(roomData.check_out)}</td>
+                <td class="tx-center">${roomData.total_night}</td>
+                <td class="tx-right">${rupiah(subTotalPrice)}</td>
+            </tr>
+        `;
+                totalPrice += subTotalPrice;
+
+                // Jika kamar ini memiliki Additional Room, render baris tambahannya di bawahnya
+                if (roomData.additional.length > 0) {
+                    for (const addIdx in roomData.additional) {
+                        let addItem = roomData.additional[addIdx];
+                        itemBooking += `
+                    <tr>
+                        <td>Additional (Room)</td>
+                        <td>${addItem.name} (${roomData.room_number})</td>
+                        <td>${rupiah(addItem.price)}</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td class="tx-center">-</td>
+                        <td class="tx-right">${rupiah(addItem.price)}</td>
+                    </tr>
+                `;
+                        totalPrice += addItem.price;
+                    }
+                }
+
+                bookData.push(roomData);
+            }
+
+            // 2. Looping untuk Additional General (Layanan Umum)
+            if (generalAdditional.length > 0) {
+                for (const genIdx in generalAdditional) {
+                    let genItem = generalAdditional[genIdx];
+                    itemBooking += `
+                <tr>
+                    <td>Additional</td>
+                    <td>${genItem.name}</td>
+                    <td>${rupiah(genItem.price)}</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="tx-center">-</td>
+                    <td class="tx-right">${rupiah(genItem.price)}</td>
+                </tr>
+            `;
+                    totalPrice += genItem.price;
+                }
+            }
+
+            let additionalNotes = $('#additional_notes').val();
+            $('#dt-booking').html(itemBooking);
+            $('#total_price').val(totalPrice);
+            $('#cfrm_guest_name').html(guest.name);
+            $('#cfrm_guest_telp').html(guest.no_hp);
+            $('#cfrm_guest_email').html(guest.email);
+            $('#cfrm_guest_address').html(guest.address);
+            $('#additional_notes_cfrm').html(additionalNotes);
+
+            //payment information
+            let ppnAmount = 0;
+            if ($('#tax').is(':checked')) {
+                ppnAmount = totalPrice * 0.11;
+            }
+            let downPayment = $('#dp_amount').val();
+            let grandTotal = (totalPrice + ppnAmount) - downPayment;
+            let payment_date = $('#payment_date').val();
+            $('#total_sub').html(rupiah(totalPrice));
+            $('#total_tax').html(rupiah(ppnAmount));
+            $('#total_discount').html(rupiah(0));
+            $('#total_dp').html(rupiah(downPayment));
+            $('#total_remaining').html(rupiah(grandTotal));
+            $('#total_all').html(rupiah(grandTotal));
+            $('#cfrm_payment_date').html(formatTanggal(payment_date));
+
+            let payment = {
+                total_price: totalPrice,
+                payment_method: $('#payment_method').val(),
+            };
+
+        }
+
+        function rupiah(angka) {
+            if (!angka && angka !== 0) return 'Rp 0';
+
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0, // Ubah ke 2 jika ingin menampilkan desimal (sen)
+                maximumFractionDigits: 0
+            }).format(angka);
+        }
+
+        function formatTanggal(tanggal) {
+            if (!tanggal) return '-';
+
+            let dateObj = new Date(tanggal);
+
+            // Validasi jika tanggal tidak valid
+            if (isNaN(dateObj.getTime())) return 'Tanggal tidak valid';
+
+            // Format: 09 September 2026 (menggunakan locale Indonesia)
+            return dateObj.toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric'
             });
         }
     </script>
