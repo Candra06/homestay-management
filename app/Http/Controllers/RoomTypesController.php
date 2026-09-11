@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helper\Helpers;
 use App\Models\Facility;
 use App\Models\RoomFacilities;
+use App\Models\BookingRoom;
 use App\Models\RoomTypes;
 use App\Models\Rooms;
 use App\Models\Attachment;
@@ -466,9 +467,23 @@ class RoomTypesController extends Controller
             ->make(true);
     }
 
-    public function getRoomByType($id) {
+    public function getRoomByType(Request $request, $id) {
         try {
-            $room = Rooms::where('id_room_type', $id)->where('status','Tersedia')->get();
+            $checkIn   = $request->check_in;
+            $checkOut  = $request->check_out;
+
+            
+
+            $bookedRoomIds = BookingRoom::where(function ($query) use ($checkIn, $checkOut) {
+                $query->where('checkin_date', '<', $checkOut)
+                      ->where('checkout_date', '>', $checkIn);
+            })
+            ->pluck('room_id')
+            ->toArray();
+
+            $room = Rooms::where('id_room_type', $id)
+                        ->where('status','Tersedia')
+                        ->whereNotIn('id', $bookedRoomIds)->get();
 
             return response()->json([
                 'status' => true,

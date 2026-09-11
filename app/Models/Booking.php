@@ -3,26 +3,44 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Booking extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'bookings';
 
     protected $fillable = [
-        'code',
-        'checkin_date',
-        'checkout_date',
-        'total_days',
-        'total_guest',
-        'room_type_id',
-        'total_price',
-        'deposit',
-        'status',
+        'booking_code',
         'guest_id',
+        'book_reff',
+        'ota_name',
+        'external_booking_id',
         'payment_status',
         'payment_method',
-        'payment_at',
-        'notes',
+        'booking_status',
+        'subtotal',
+        'tax',
+        'total_payment',
+        'grand_total',
+        'amount_paid',
+        'amount_refunded',
+        'down_payment',
+        'discount_amount',
+        'paid_at',
+        'down_payment_paid_at',
+        'note',
+        'promo_id',
+        'voucher_id',
+        'created_by',
+        'updated_by',
+    ];
+
+    protected $casts = [
+        'paid_at' => 'datetime',
+        'down_payment_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     public function guest()
@@ -59,6 +77,7 @@ class Booking extends Model
     {
         return $this->hasMany(Invoice::class);
     }
+    
 
     public function scopeActive($query)
     {
@@ -68,5 +87,15 @@ class Booking extends Model
     public function scopeCompleted($query)
     {
         return $query->where('status', 'completed');
+    }
+
+    public function userCreate()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function userUpdate()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }

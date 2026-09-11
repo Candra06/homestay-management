@@ -3,8 +3,24 @@
 @section('title')
     {{ $data->title }}
 @endsection
-@section('main')
-    <div class="breadcrumb-header justify-content-between">
+@section('css')
+    <style>
+        #toast-container.toast-top-center {
+            top: 15% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            margin: 0 !important;
+        }
+
+        /* Mengatur tingkat opacity (transparansi) kotak toast */
+        #toast-container>.toast {
+            opacity: 0.90 !important;
+            /* Ubah angka sesuai keinginan (0.0 - 1.0) */
+            filter: alpha(opacity=90) !important;
+        }
+    </style>
+@endsection
+@section('main') <div class="breadcrumb-header justify-content-between">
         <div class="my-auto">
             <div class="d-flex">
                 <span class="text-muted mt-1 tx-13 ms-2 mb-0">Dashboard
@@ -17,6 +33,7 @@
 
     </div>
 
+
     <x-alert />
 
     <div class="card box-shadow">
@@ -28,7 +45,7 @@
         </div>
 
         <div class="card-body pd-r-0">
-            <form action="" method="POST" class="form-horizontal" enctype="multipart/form-data">
+            <form action="{{ url('/booking') }}" method="POST" class="form-horizontal" enctype="multipart/form-data">
                 @csrf
                 <div id="booking-container" class="d-block row">
                     {{-- Guest --}}
@@ -50,14 +67,14 @@
                                         <div class="col form-group">
                                             <label class="tx-12" for="email">Email<span
                                                     class="tx-danger">*</span></label>
-                                            <input type="email" value="" name="guest_email"
-                                                id="guest_email" class="form-control form-control-sm"
+                                            <input type="email" name="guest_email" id="guest_email"
+                                                class="form-control form-control-sm"
                                                 placeholder="Masukkan Email Tamu" required>
                                         </div>
                                         <div class="col form-group">
                                             <label class="tx-12" for="phone">Telepon/Whatsapp<span
                                                     class="tx-danger">*</span></label>
-                                            <input type="text" value="" name="phone" id="phone"
+                                            <input type="text" name="phone" id="phone"
                                                 class="form-control form-control-sm" placeholder="Masukkan Telepon/Whatsapp"
                                                 required>
                                         </div>
@@ -67,7 +84,7 @@
                                             <select name="identity_type" id="identity_type"
                                                 class="form-control form-control-sm" required>
                                                 <option value="">Pilih Tipe Identitas</option>
-                                                <option value="ktp">KTP</option>
+                                                <option value="ktp" selected>KTP</option>
                                                 <option value="sim">SIM</option>
                                                 <option value="passport">Passport</option>
                                                 <option value="other">Lainnya</option>
@@ -76,8 +93,8 @@
                                         <div class="col form-group">
                                             <label class="tx-12" for="identity_number">Nomor Identitas<span
                                                     class="tx-danger">*</span></label>
-                                            <input type="text" value="" name="identity_number"
-                                                id="identity_number" class="form-control form-control-sm"
+                                            <input type="text" name="identity_number" id="identity_number"
+                                                class="form-control form-control-sm"
                                                 placeholder="Masukkan Nomor Identitas" required>
                                         </div>
 
@@ -112,6 +129,27 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="row">
+
+
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="tx-12" for="check_in">Tanggal Check-in<span
+                                                        class="tx-danger">*</span></label>
+                                                <input type="date" name="check_in[]"
+                                                    class="form-control form-control-sm check_in"
+                                                    placeholder="Masukkan Tanggal Check-in" required>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="tx-12" for="check_out">Tanggal Check-out<span
+                                                        class="tx-danger">*</span></label>
+                                                <input type="date" name="check_out[]"
+                                                    class="form-control form-control-sm check_out"
+                                                    placeholder="Masukkan Tanggal Check-out" required>
+                                            </div>
+                                        </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label class="tx-12" for="name">Tipe Kamar<span
@@ -136,26 +174,6 @@
                                                     class="form-control form-control-sm room-number" required>
                                                     <option value="">Pilih Nomor Kamar</option>
                                                 </select>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="tx-12" for="check_in">Tanggal Check-in<span
-                                                        class="tx-danger">*</span></label>
-                                                <input type="date" name="check_in[]"
-                                                    class="form-control form-control-sm check_in"
-                                                    placeholder="Masukkan Tanggal Check-in" required>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="tx-12" for="check_out">Tanggal Check-out<span
-                                                        class="tx-danger">*</span></label>
-                                                <input type="date" name="check_out[]"
-                                                    class="form-control form-control-sm check_out"
-                                                    placeholder="Masukkan Tanggal Check-out" required>
                                             </div>
                                         </div>
                                     </div>
@@ -223,12 +241,23 @@
                                                     class="tx-danger">*</span></label>
                                             <input type="text" name="external_booking_id" id="external_booking_id"
                                                 class="form-control form-control-sm"
-                                                placeholder="Masukkan External Booking ID" required>
+                                                placeholder="Masukkan External Booking ID">
+                                        </div>
+                                        <div class="form-group mt-2 ota_container">
+                                            <label class="tx-12" for="ota_name">OTA Name<span
+                                                    class="tx-danger">*</span></label>
+                                            <select name="ota_name" id="ota_name" class="form-control form-control-sm">
+                                                <option value="">Pilih OTA Name</option>
+                                                <option value="Agoda">Agoda</option>
+                                                <option value="Booking.com">Booking.com</option>
+                                                <option value="Traveloka">Traveloka</option>
+                                                <option value="Airbnb">Airbnb</option>
+                                            </select>
                                         </div>
                                         <div class="form-group mt-2 ">
                                             <label class="tx-12" for="book_reff">Catatan Tambahan</label>
                                             <textarea type="text" name="additional_notes" id="additional_notes" class="form-control form-control-sm"
-                                                placeholder="Masukkan Catatan Tambahan" required></textarea>
+                                                placeholder="Masukkan Catatan Tambahan" required>Lorem Ipsum</textarea>
                                         </div>
                                     </div>
 
@@ -244,6 +273,21 @@
                                 <div class="card-body">
                                     <div class="rowpd-l-20 pd-r-0">
 
+
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label class="tx-12" for="name">Subtotal</label>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="form-group">
+                                                    <input type="hidden" name="subtotal_value" id="subtotal_value"
+                                                        value="0">
+                                                    <input type="number" name="subtotal" id="subtotal"
+                                                        class="form-control form-control-sm" value="0" readonly
+                                                        placeholder="Masukkan Jumlah Pembayaran">
+                                                </div>
+                                            </div>
+                                        </div>
                                         <div class="row">
                                             <div class="col-md-4">
                                                 <label for="name" class="tx-12">PPN (11%)</label>
@@ -252,66 +296,14 @@
                                                 <div class="form-group ms-4">
                                                     <input type="checkbox" name="tax" id="tax"
                                                         class="custom-control-input">
+                                                    <input type="hidden" name="tax_value" id="tax_value"
+                                                        value="0">
                                                     <label class="custom-control-label tx-12" for="tax">Aktifkan
                                                         PPN</label>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-md-4">
-                                                <label class="tx-12" for="name">Total</label>
-                                            </div>
-                                            <div class="col-md-8">
-                                                <div class="form-group">
-                                                    <input type="number" name="total_payment" id="total_payment"
-                                                        class="form-control form-control-sm" value="0" readonly
-                                                        placeholder="Masukkan Jumlah Pembayaran">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-4">
-                                                <label class="tx-12" for="name">Metode Pembayaran<span
-                                                        class="tx-danger">*</span></label>
-                                            </div>
-                                            <div class="col-md-8">
-                                                <div class="form-group">
-                                                    <select name="payment_method" id="payment_method"
-                                                        class="form-control form-control-sm" required>
-                                                        <option value="">Pilih Metode Pembayaran</option>
-                                                        <option value="Bank Transfer">Transfer Bank</option>
-                                                        <option value="Cash">Tunai</option>
-                                                        <option value="QRIS">QRIS</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
 
-                                        <div class="row">
-                                            <div class="col-md-4">
-                                                <label class="tx-12" for="name">Jumlah Pembayaran<span
-                                                        class="tx-danger">*</span></label>
-                                            </div>
-                                            <div class="col-md-8">
-                                                <div class="form-group">
-                                                    <input type="number" name="payment_amount" id="payment_amount"
-                                                        class="form-control form-control-sm"
-                                                        placeholder="Masukkan Jumlah Pembayaran" required>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-4">
-                                                <label class="tx-12" for="name">Jumlah DP</label>
-                                            </div>
-                                            <div class="col-md-8">
-                                                <div class="form-group">
-                                                    <input type="number" name="dp_amount" id="dp_amount"
-                                                        class="form-control form-control-sm"
-                                                        placeholder="Masukkan Jumlah DP">
-                                                </div>
-                                            </div>
-                                        </div>
                                         <div class="row">
                                             <div class="col-md-4">
                                                 <label class="tx-12" for="name">Voucher</label>
@@ -342,7 +334,64 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label for="name" class="tx-12">Grand Total</label>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="form-group">
+                                                    <input type="hidden" name="grand_total_value" id="grand_total_value"
+                                                        value="0">
+                                                    <input type="number" name="grand_total" id="grand_total"
+                                                        class="form-control form-control-sm"
+                                                        placeholder="Masukkan Jumlah Diskon" value="0" readonly>
+                                                </div>
+                                            </div>
+                                        </div>
 
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label class="tx-12" for="name">Jumlah Pembayaran<span
+                                                        class="tx-danger">*</span></label>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="form-group">
+                                                    <input type="number" name="payment_amount" id="payment_amount"
+                                                        class="form-control form-control-sm" value="0"
+                                                        placeholder="Masukkan Jumlah Pembayaran" required>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label class="tx-12" for="name">Jumlah DP</label>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="form-group">
+                                                    <input type="number" name="dp_amount" id="dp_amount"
+                                                        class="form-control form-control-sm" value="100000"
+                                                        placeholder="Masukkan Jumlah DP">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label class="tx-12" for="name">Metode Pembayaran<span
+                                                        class="tx-danger">*</span></label>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="form-group">
+                                                    <select name="payment_method" id="payment_method"
+                                                        class="form-control form-control-sm" required>
+                                                        <option value="">Pilih Metode Pembayaran</option>
+                                                        <option value="Bank Transfer" selected>Transfer Bank</option>
+                                                        <option value="Cash">Tunai</option>
+                                                        <option value="QRIS">QRIS</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
                                         <div class="row">
                                             <div class="col-md-4">
                                                 <label for="name" class="tx-12">Tanggal Pembayaran<span
@@ -352,7 +401,7 @@
                                             <div class="col-md-8">
                                                 <div class="form-group">
                                                     <input type="date" name="payment_date" id="payment_date"
-                                                        class="form-control form-control-sm"
+                                                        class="form-control form-control-sm" value="2026-09-11"
                                                         placeholder="Masukkan Tanggal Pembayaran" required>
                                                 </div>
                                             </div>
@@ -399,7 +448,14 @@
         var payment = {};
 
         $(document).ready(function() {
-
+            toastr.options = {
+                "positionClass": "toast-top-center",
+                "timeOut": "3000", // Durasi tampil (3 detik)
+                "extendedTimeOut": "1000",
+                "fadeIn": 300,
+                "fadeOut": 1000,
+                "progressBar": true
+            };
             $('.select2').select2();
 
             $('.ota_container').hide();
@@ -407,14 +463,20 @@
             $('#book_reff').on('change', function() {
                 if ($(this).val() == 'ota') {
                     $('.ota_container').show();
+                    $('#external_booking_id').prop('required', true);
+                    $('#ota_name').prop('required', true);
                 } else {
                     $('.ota_container').hide();
+                    $('#external_booking_id').prop('required', false);
+                    $('#ota_name').prop('required', false);
                 }
             });
 
             $(document).on('change', '.room-type', function() {
 
                 let typeId = $(this).val(); // Ambil value Tipe Kamar yang dipilih
+                let checkIn = $(this).closest('.row').find('.check_in').val();
+                let checkOut = $(this).closest('.row').find('.check_out').val();
 
                 // Cari dropdown Nomor Kamar yang berada di baris (.row) yang sama
                 let $roomNumberDropdown = $(this).closest('.row').find('.room-number');
@@ -427,6 +489,10 @@
                     $.ajax({
                         // GANTI URL INI sesuai dengan endpoint API Laravel Anda
                         url: '/api/get-room-numbers/' + typeId,
+                        data: {
+                            check_in: checkIn,
+                            check_out: checkOut
+                        },
                         type: 'GET',
                         dataType: 'json',
                         success: function(response) {
@@ -512,7 +578,32 @@
                 updateRoomNumbers();
             });
 
+            $(document).on('change', '.check_in', function() {
+                let checkInVal = $(this).val(); 
+                let $row = $(this).closest('.card-room'); 
+                let $checkOutInput = $row.find('.check_out'); 
+
+                if (checkInVal) {
+                    let checkInDate = new Date(checkInVal);                    
+                    checkInDate.setDate(checkInDate.getDate() + 1);                    
+                    let minCheckOut = checkInDate.toISOString().split('T')[0];                    
+                    $checkOutInput.attr('min', minCheckOut);                    
+                    if ($checkOutInput.val() && $checkOutInput.val() < minCheckOut) {
+                        $checkOutInput.val('');
+                        toastr.warning(
+                            'Tanggal check-out otomatis disesuaikan karena minimal 1 hari setelah check-in.',
+                            'Informasi');
+                    }
+                } else {
+                    
+                    $checkOutInput.removeAttr('min');
+                }
+            });
+
             $('#next-booking').on('click', function(e) {
+                if (!validateInput()) {
+                    return false;
+                }
                 // Jika semua validasi lolos
                 $('#booking-container').removeClass('d-block').addClass('d-none');
                 $('#back-process').removeClass('d-none').addClass('d-block');
@@ -556,7 +647,23 @@
             calculateTotalPayment();
         });
         $(document).on('change', '#tax', function() {
+            if ($(this).val() == 1) {
+                $('#tax_value').val(11);
+            } else {
+                $('#tax_value').val(0);
+            }
             calculateTotalPayment();
+        });
+
+        $(document).ready(function() {
+            let today = new Date().toISOString().split('T')[0];
+
+            $('.check_in').attr('min', today);
+
+            $(document).on('click', '.btn-add', function() {
+                let $lastCard = $('.card-room').last();
+                $lastCard.find('.check_in').attr('min', today);
+            });
         });
 
         // Fungsi untuk mengurutkan ulang angka pada judul "Kamar 1, Kamar 2, dst"
@@ -603,14 +710,20 @@
             let ppnAmount = 0;
             if ($('#tax').is(':checked')) {
                 ppnAmount = subtotal * 0.11;
+                $('#tax_value').val(ppnAmount);
             }
             grandTotal = subtotal + ppnAmount;
-            $('#total_payment').val(rupiah(grandTotal));
+            $('#subtotal').val(rupiah(subtotal));
+            $('#subtotal_value').val(subtotal);
+            $('#grand_total').val(rupiah(grandTotal));
+            $('#grand_total_value').val(grandTotal);
+            // $('#total_payment').val(rupiah(grandTotal));
         }
 
         function handleVoucher() {}
 
         function processBooking() {
+
             guest = {
                 name: $('#guest_name').val(),
                 no_hp: $('#phone').val(),
@@ -658,10 +771,6 @@
                 });
             });
 
-            console.log(guest);
-            console.log(rooms);
-            console.log(generalAdditional);
-
             let bookData = [];
             let totalPrice = 0;
             let itemBooking = '';
@@ -673,16 +782,16 @@
 
                 // Render baris Kamar Utama
                 itemBooking += `
-            <tr>
-                <td>Kamar</td>
-                <td>${roomData.room_type} (${roomData.room_number})</td>
-                <td>${rupiah(roomData.night_price)}</td>
-                <td>${formatTanggal(roomData.check_in)}</td>
-                <td>${formatTanggal(roomData.check_out)}</td>
-                <td class="tx-center">${roomData.total_night}</td>
-                <td class="tx-right">${rupiah(subTotalPrice)}</td>
-            </tr>
-        `;
+                <tr>
+                    <td>Kamar</td>
+                    <td>${roomData.room_type} (${roomData.room_number})</td>
+                    <td>${rupiah(roomData.night_price)}</td>
+                    <td>${formatTanggal(roomData.check_in)}</td>
+                    <td>${formatTanggal(roomData.check_out)}</td>
+                    <td class="tx-center">${roomData.total_night}</td>
+                    <td class="tx-right">${rupiah(subTotalPrice)}</td>
+                </tr>
+            `;
                 totalPrice += subTotalPrice;
 
                 // Jika kamar ini memiliki Additional Room, render baris tambahannya di bawahnya
@@ -690,16 +799,16 @@
                     for (const addIdx in roomData.additional) {
                         let addItem = roomData.additional[addIdx];
                         itemBooking += `
-                    <tr>
-                        <td>Additional (Room)</td>
-                        <td>${addItem.name} (${roomData.room_number})</td>
-                        <td>${rupiah(addItem.price)}</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td class="tx-center">-</td>
-                        <td class="tx-right">${rupiah(addItem.price)}</td>
-                    </tr>
-                `;
+                        <tr>
+                            <td>Additional (Room)</td>
+                            <td>${addItem.name} (${roomData.room_number})</td>
+                            <td>${rupiah(addItem.price)}</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td class="tx-center">-</td>
+                            <td class="tx-right">${rupiah(addItem.price)}</td>
+                        </tr>
+                    `;
                         totalPrice += addItem.price;
                     }
                 }
@@ -712,16 +821,16 @@
                 for (const genIdx in generalAdditional) {
                     let genItem = generalAdditional[genIdx];
                     itemBooking += `
-                <tr>
-                    <td>Additional</td>
-                    <td>${genItem.name}</td>
-                    <td>${rupiah(genItem.price)}</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td class="tx-center">-</td>
-                    <td class="tx-right">${rupiah(genItem.price)}</td>
-                </tr>
-            `;
+                    <tr>
+                        <td>Additional</td>
+                        <td>${genItem.name}</td>
+                        <td>${rupiah(genItem.price)}</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td class="tx-center">-</td>
+                        <td class="tx-right">${rupiah(genItem.price)}</td>
+                    </tr>
+                `;
                     totalPrice += genItem.price;
                 }
             }
@@ -740,15 +849,18 @@
             if ($('#tax').is(':checked')) {
                 ppnAmount = totalPrice * 0.11;
             }
+            let discount = $('#discount').val();
             let downPayment = $('#dp_amount').val();
             let grandTotal = (totalPrice + ppnAmount) - downPayment;
+            let totalPayment = (totalPrice + ppnAmount) - discount;
             let payment_date = $('#payment_date').val();
             $('#total_sub').html(rupiah(totalPrice));
             $('#total_tax').html(rupiah(ppnAmount));
             $('#total_discount').html(rupiah(0));
             $('#total_dp').html(rupiah(downPayment));
             $('#total_remaining').html(rupiah(grandTotal));
-            $('#total_all').html(rupiah(grandTotal));
+            $('#total_discount').html(rupiah(discount));
+            $('#total_all').html(rupiah(totalPayment));
             $('#cfrm_payment_date').html(formatTanggal(payment_date));
 
             let payment = {
@@ -783,6 +895,151 @@
                 month: 'long',
                 year: 'numeric'
             });
+        }
+
+        function validateInput() {
+            if (validateRoom() == false) {
+                return false;
+            }
+            var guestName = $('#guest_name').val();
+            if (!guestName) {
+                toastr.warning('Masukkan nama tamu');
+                return false;
+            }
+            var guestTelp = $('#phone').val();
+            if (!guestTelp) {
+                toastr.warning('Masukkan nomor telepon');
+                return false;
+            }
+            var guestEmail = $('#guest_email').val();
+            if (!guestEmail) {
+                toastr.warning('Masukkan email');
+                return false;
+            }
+            var guestAddress = $('#address').val();
+            if (!guestAddress) {
+                toastr.warning('Masukkan alamat');
+                return false;
+            }
+            var idType = $('#identity_type').val();
+            if (!idType) {
+                toastr.warning('Pilih tipe identitas');
+                return false;
+            }
+            var idNo = $('#identity_number').val();
+            if (!idNo) {
+                toastr.warning('Masukkan nomor identitas');
+                return false;
+            }
+            var paymentDate = $('#payment_date').val();
+            if (!paymentDate) {
+                toastr.warning('Masukkan tanggal pembayaran');
+                return false;
+            }
+            var paymentMethod = $('#payment_method').val();
+            if (!paymentMethod) {
+                toastr.warning('Masukkan metode pembayaran');
+                return false;
+            }
+            var bookReff = $('#book_reff').val();
+            if (!bookReff) {
+                toastr.warning('Pilih sumber reservasi');
+                return false;
+            }
+            var otaExternalBookingId = $('#external_booking_id').val();
+            console.log(otaExternalBookingId);
+
+            if (bookReff === 'ota' && !otaExternalBookingId) {
+                toastr.warning('Masukkan nomor booking OTA');
+                return false;
+            }
+            var otaName = $('#ota_name').val();
+            if (bookReff === 'ota' && !otaName) {
+                toastr.warning('Masukkan nama OTA');
+                return false;
+            }
+            var paymentAmount = parseInt($('#payment_amount').val());
+            var dpAmount = parseInt($('#dp_amount').val());
+            if (paymentAmount == '' && dpAmount == '') {
+                toastr.warning('Masukkan jumlah pembayaran atau down payment');
+                return false;
+            }
+
+            return true;
+        }
+
+        function validateRoom() {
+            let isValid = true;
+            let today = new Date();
+            today.setHours(0, 0, 0, 0); // Reset jam ke 00:00:00 agar perbandingan tanggal akurat
+
+            $('.card-room').each(function(index) {
+                let roomNum = index + 1; // Label kamar (Kamar 1, Kamar 2, dst.)
+                let card = $(this);
+
+                let roomTypeSelect = card.find('.room-type');
+                let roomNumberSelect = card.find('.room-number');
+                let checkInInput = card.find('.check_in');
+                let checkOutInput = card.find('.check_out');
+
+                let roomTypeId = roomTypeSelect.val();
+                let roomNumberVal = roomNumberSelect.find('option:selected').val();
+                let checkInVal = checkInInput.val();
+                let checkOutVal = checkOutInput.val();
+
+                if (!roomTypeId) {
+                    toastr.warning(`Silakan pilih Tipe Kamar pada Kamar ${roomNum}!`, 'Peringatan');
+                    roomTypeSelect.focus();
+                    isValid = false;
+                    return false;
+                }
+
+                if (!roomNumberVal) {
+                    toastr.warning(`Silakan pilih Nomor Kamar pada Kamar ${roomNum}!`, 'Peringatan');
+                    roomNumberSelect.focus();
+                    isValid = false;
+                    return false;
+                }
+
+                if (!checkInVal) {
+                    toastr.warning(`Tanggal Check-in pada Kamar ${roomNum} belum diisi!`, 'Peringatan');
+                    checkInInput.focus();
+                    isValid = false;
+                    return false;
+                }
+
+                if (!checkOutVal) {
+                    toastr.warning(`Tanggal Check-out pada Kamar ${roomNum} belum diisi!`, 'Peringatan');
+                    checkOutInput.focus();
+                    isValid = false;
+                    return false;
+                }
+
+                let checkInDate = new Date(checkInVal);
+                let checkOutDate = new Date(checkOutVal);
+
+                if (checkInDate < today) {
+                    toastr.warning(`Tanggal Check-in pada Kamar ${roomNum} tidak boleh lewat dari hari ini!`,
+                        'Peringatan');
+                    checkInInput.focus();
+                    isValid = false;
+                    return false;
+                }
+
+                if (checkOutDate <= checkInDate) {
+                    toastr.warning(
+                        `Tanggal Check-out pada Kamar ${roomNum} harus lebih besar dari tanggal Check-in!`,
+                        'Peringatan');
+                    checkOutInput.focus();
+                    isValid = false;
+                    return false;
+                }
+
+            });
+
+            if (!isValid) {
+                return;
+            }
         }
     </script>
 @endsection

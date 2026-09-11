@@ -30,4 +30,8 @@ class RoomTypes extends Model
     {
         return $this->hasMany(Attachment::class, 'reff_id', 'id')->where('reff_feature', 'room-types');
     }
+    public function rooms()
+    {
+        return $this->hasMany(Rooms::class, 'id_room_type', 'id')->whereNull('deleted_at');
+    }
 }

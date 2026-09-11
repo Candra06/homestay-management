@@ -42,10 +42,17 @@
 
     <!---Skinmodes css-->
     <link href="{{ asset('assets') }}/css/skin-modes.css" rel="stylesheet" />
-    <link href="{{ asset('assets') }}/plugins/fileuploads/css/fileupload.css" rel="stylesheet" type="text/css"/>
+    <link href="{{ asset('assets') }}/plugins/fileuploads/css/fileupload.css" rel="stylesheet" type="text/css" />
     <link href="{{ asset('assets') }}/plugins/fancyuploder/fancy_fileupload.css" rel="stylesheet" />
-    <style>
+    <!-- CSS Toastr -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 
+    <!-- jQuery (Wajib ada sebelum Toastr) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!-- JS Toastr -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <style>
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
             -webkit-appearance: none;
@@ -76,15 +83,19 @@
             text-transform: capitalize !important;
         }
 
-        select{
-            appearance: none; /* Remove default browser arrow */
-            -webkit-appearance: none; /* Safari & Chrome */
-            -moz-appearance: none; /* Firefox */
+        select {
+            appearance: none;
+            /* Remove default browser arrow */
+            -webkit-appearance: none;
+            /* Safari & Chrome */
+            -moz-appearance: none;
+            /* Firefox */
             background: url('data:image/svg+xml;utf8,<svg fill="black" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat;
             background-position: right 10px center;
             background-size: 20px;
             padding-right: 35px;
         }
+
         /* .select::after {
         font-family: "Font Awesome 5 Free";
         content: "\f078";

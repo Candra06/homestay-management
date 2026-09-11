@@ -55,9 +55,13 @@ class Helpers {
                 $format[] = ["data" => $value, "name" => $value, "searchable" => true, "orderable" => true, "width" => '15%'];
             } else if ($value == "status"){
                 $format[] = ["data" => $value, "name" => $value, "searchable" => true, "orderable" => true, "width" => '10%'];
+            }else if ($value == "booking_status"){
+                $format[] = ["data" => $value, "name" => $value, "searchable" => true, "orderable" => false, "width" => '10%'];
+            }else if ($value == "payment_status"){
+                $format[] = ["data" => $value, "name" => $value, "searchable" => true, "orderable" => false, "width" => '10%'];
             }else {
                 if ($value == "DT_RowIndex" || $value == "select") {
-                    $format[] = ["data" => $value, "name" => $value, "width" => '7%'];
+                    $format[] = ["data" => $value, "name" => $value, "width" => '4%'];
                 } else {
                     $format[] = ["data" => $value, "name" => $value,];
                 }
@@ -194,7 +198,7 @@ class Helpers {
         return $phone;
     }
 
-    public static function rupiah($angka, $currency = "$ ")
+    public static function rupiah($angka, $currency = "Rp. ")
     {
         $hasil_rupiah = $currency . number_format($angka, 0, ',', '.');
         return $hasil_rupiah;
@@ -207,43 +211,43 @@ class Helpers {
 
     public static function generateStatus($status) {
         switch ($status) {
-            case 'Waiting Payment':
-                return '<span class="status-tag bg-warning">'.$status.'</span>';
+            case 'Pending':
+                return '<button class=" btn btn-sm btn-warning">'.$status.'</button>';
                 break;
-            case 'Paid':
-                return '<span class="status-tag bg-success">'.$status.'</span>';
+            case 'Approved':
+                return '<button class=" btn btn-sm btn-primary">'.$status.'</button>';
                 break;
-            case 'No Bid':
-                return '<span class="status-tag bg-secondary">'.$status.'</span>';
+            case 'Cancelled':
+                return '<button class="btn btn-sm btn-danger">'.$status.'</button>';
                 break;
-            case 'BnR':
-                return '<span class="status-tag bg-danger">'.$status.'</span>';
+            case 'Completed':
+                return '<button class="btn btn-sm btn-success">'.$status.'</button>';
                 break;
             default:
-                return '<span class="status-tag bg-warning">'.$status.'</span>';
+                return '<button class="btn btn-sm btn-warning">'.$status.'</button>';
                 break;
         }
     }
 
     public static function generateStatusPayment($status) {
         switch ($status) {
-            case 'Verifying':
-                return '<span class="status-tag bg-warning">'.$status.'</span>';
+            case 'Pending':
+                return '<span class="btn btn-sm btn-warning">'.$status.'</span>';
                 break;
-            case 'Done':
-                return '<span class="status-tag bg-success">'.$status.'</span>';
+            case 'Part Paid':
+                return '<span class="btn btn-sm btn-info">'.$status.'</span>';
                 break;
-            case 'Waiting':
-                return '<span class="status-tag bg-secondary">'.$status.'</span>';
+            case 'Unpaid':
+                return '<span class="btn btn-sm btn-danger">'.$status.'</span>';
                 break;
-            case 'Expired':
-                return '<span class="status-tag bg-danger">'.$status.'</span>';
+            case 'Paid':
+                return '<span class="btn btn-sm btn-success">'.$status.'</span>';
                 break;
-            case 'Packing':
-                return '<span class="status-tag bg-info">'.$status.'</span>';
+            case 'Refund':
+                return '<span class="btn btn-sm btn-info">'.$status.'</span>';
                 break;
             default:
-                return '<span class="status-tag bg-secondary">'.$status.'</span>';
+                return '<span class="btn btn-sm btn-secondary">'.$status.'</span>';
                 break;
         }
     }

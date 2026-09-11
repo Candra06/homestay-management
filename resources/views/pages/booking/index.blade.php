@@ -98,39 +98,27 @@
     <x-alert />
 
     <div class="row">
-        <div class="col-lg-4 col-xl-4 col-md-4 col-12">
-            <div class="card bg-primary-gradient text-white ">
-                <div class="card-body">
-                    <div class="mt-0 text-center">
-                        <span class="text-white">Superior Twin Bed</span>
-                        <h2 class="text-white mb-0">10</h2>
-                    </div>
+        @php
+            $bg = ['bg-primary-gradient', 'bg-danger-gradient', 'bg-success-gradient'];
+        @endphp
+        @foreach ($data->availableRooms as $item)
+            @php
+                $randomKey = array_rand($bg);
+            @endphp
+            <div class="col-lg-4 col-xl-4 col-md-4 col-12">
+                <div class="card {{ $bg[$randomKey] }} text-white ">
+                    <div class="card-body">
+                        <div class="mt-0 text-center">
+                            <span class="text-white">{{ $item->type_name }}</span>
+                            <h2 class="text-white mb-0">{{ $item->rooms_count }}</h2>
+                        </div>
 
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-lg-4 col-xl-4 col-md-4 col-12">
-            <div class="card bg-danger-gradient text-white">
-                <div class="card-body">
-                    <div class="mt-0 text-center">
-                        <span class="text-white">Superior King Bed</span>
-                        <h2 class="text-white mb-0">10</h2>
-                    </div>
+        @endforeach
 
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4 col-xl-4 col-md-4 col-12">
-            <div class="card bg-success-gradient text-white">
-                <div class="card-body">
-                    <div class="mt-0 text-center">
-                        <span class="text-white">Deluxe</span>
-                        <h2 class="text-white mb-0">15</h2>
-                    </div>
-
-                </div>
-            </div>
-        </div>
+    </div>
     </div>
 
 
@@ -139,7 +127,7 @@
             <div class="d-flex justify-content-between">
                 <h4 class="card-title mg-b-0">Reservasi</h4>
                 <div class="custom-toggle" id="view-mode-toggle">
-                    <span class="toggle-text">Kalender</span>
+                    <span class="toggle-text">List</span>
                     <span class="toggle-slider"></span>
                 </div>
             </div>
@@ -158,7 +146,7 @@
 
     <script type="text/javascript">
         $(document).ready(function() {
-            $('.table-view').hide();
+            $('.calendar-view').hide();
         });
         $('#view-mode-toggle').on('click', function() {
             $(this).toggleClass('on');
@@ -167,16 +155,33 @@
             const isON = $(this).hasClass('on');
 
             if (isON) {
-                $text.text('List');
-                $('.calendar-view').hide();
-                $('.table-view').show();
-                // Panggil fungsi atau render ulang tampilan tabel di sini
-            } else {
                 $text.text('Kalender');
                 $('.table-view').hide();
                 $('.calendar-view').show();
+                // Panggil fungsi atau render ulang tampilan tabel di sini
+            } else {
+                $text.text('List');
+                $('.calendar-view').hide();
+                $('.table-view').show();
                 // Panggil fungsi atau render ulang tampilan kalender di sini
             }
         });
+    </script>
+    <script>
+        $("#table").DataTable({
+            ajax: '{{ $data->routeData }}',
+            processing: true,
+            serverSide: true,
+            stateSave: true,
+            columns: JSON.parse(`{!! json_encode($data->tableColumns) !!}`)
+        });
+    </script>
+
+
+    <script>
+        function deleteData(route, message) {
+            $("#modal-delete").find("form").attr("action", route)
+            $("#modal-delete").find(".message").text(message)
+        }
     </script>
 @endsection
