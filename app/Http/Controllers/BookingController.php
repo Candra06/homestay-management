@@ -198,11 +198,6 @@ class BookingController extends Controller
                     'checkout_date' => $request->check_out[$i],
                 ]);
                 if ($roomIns) {
-                    if ($booking->booking_status == 'Approved') {
-                        Rooms::where('id', $request->room_number[$i])->update([
-                            'status' => 'Terisi',
-                        ]);
-                    }
                         
                     foreach ($additionalAddOn as $key => $add) {
                         $addInfo = Additional::where('id', $add)->first();
