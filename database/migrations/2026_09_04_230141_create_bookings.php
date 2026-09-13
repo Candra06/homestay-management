@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('ota_name')->nullable();
             $table->string('external_booking_id')->nullable();
             $table->enum('payment_method',["Cash","Bank Transfer", "QRIS"])->default('Cash');
-            $table->enum('booking_status',["Pending", "Approved", "Cancelled", "Completed"])->default('Pending');
+            $table->enum('booking_status',["Pending", "Approved", "Cancelled", "Completed","Checked-In"])->default('Pending');
             $table->enum('payment_status',["Pending", "Unpaid", "Paid", "Refund","Part Paid"])->default('Unpaid');
             $table->double("subtotal")->default(0);
             $table->double("tax")->default(0);

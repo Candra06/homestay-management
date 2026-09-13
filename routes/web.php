@@ -35,6 +35,9 @@ Route::group(["prefix" => "/", "middleware" => ["auth", CheckAccessMidleware::cl
     Route::get('/dashboard', [AuthController::class,'dashboard']);
     Route::get('/logout', [AuthController::class,'logout']);
 
+    Route::post('booking/payment/{id}', [BookingController::class, 'paymentBooking'])->name('booking.payment');
+    Route::get('booking/process/{id}/{type}', [BookingController::class, 'checkInProcess'])->name('booking.process');
+
     Route::resource('menu', MenuController::class);
     Route::resource('role', RoleUserController::class);
     Route::resource('role-akses', RoleAksesController::class);

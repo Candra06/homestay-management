@@ -277,6 +277,7 @@ class MenuController extends Controller
         try {
             DB::beginTransaction();
             $menu->delete();
+            RoleUserHasMenu::where('id_menu', $menu->id)->delete();
             DB::commit();
             return redirect(route($this->dataPage['route']['index']))->with('success', 'Berhasil menghapus data menu');
         } catch (\Throwable $th) {

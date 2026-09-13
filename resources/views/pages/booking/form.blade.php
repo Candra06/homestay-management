@@ -68,15 +68,15 @@
                                             <label class="tx-12" for="email">Email<span
                                                     class="tx-danger">*</span></label>
                                             <input type="email" name="guest_email" id="guest_email"
-                                                class="form-control form-control-sm"
-                                                placeholder="Masukkan Email Tamu" required>
+                                                class="form-control form-control-sm" placeholder="Masukkan Email Tamu"
+                                                required>
                                         </div>
                                         <div class="col form-group">
                                             <label class="tx-12" for="phone">Telepon/Whatsapp<span
                                                     class="tx-danger">*</span></label>
-                                            <input type="text" name="phone" id="phone"
-                                                class="form-control form-control-sm" placeholder="Masukkan Telepon/Whatsapp"
-                                                required>
+                                            <input type="tel" name="phone" id="phone"
+                                                class="form-control form-control-sm input-number"
+                                                placeholder="Masukkan Telepon/Whatsapp" required>
                                         </div>
                                         <div class="col form-group">
                                             <label class="tx-12" for="identity_type">Tipe Identitas<span
@@ -84,7 +84,7 @@
                                             <select name="identity_type" id="identity_type"
                                                 class="form-control form-control-sm" required>
                                                 <option value="">Pilih Tipe Identitas</option>
-                                                <option value="ktp" selected>KTP</option>
+                                                <option value="ktp">KTP</option>
                                                 <option value="sim">SIM</option>
                                                 <option value="passport">Passport</option>
                                                 <option value="other">Lainnya</option>
@@ -94,7 +94,7 @@
                                             <label class="tx-12" for="identity_number">Nomor Identitas<span
                                                     class="tx-danger">*</span></label>
                                             <input type="text" name="identity_number" id="identity_number"
-                                                class="form-control form-control-sm"
+                                                class="form-control form-control-sm input-number"
                                                 placeholder="Masukkan Nomor Identitas" required>
                                         </div>
 
@@ -105,13 +105,13 @@
                                                     class="tx-danger">*</span></label>
                                             <textarea class="form-control form-control-sm" name="address" id="address" placeholder="Masukkan Alamat"></textarea>
                                         </div>
-                                        {{-- <div class="col form-group">
+                                        <div class="col form-group">
                                             <label class="tx-12" for="identity_number">Foto Identitas<span
                                                     class="tx-danger">*</span></label>
                                             <input type="file" name="identity_image" id="identity_image"
                                                 class="form-control form-control-sm" placeholder="Masukkan Foto Identitas"
                                                 required>
-                                        </div> --}}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -250,6 +250,7 @@
                                                 <option value="">Pilih OTA Name</option>
                                                 <option value="Agoda">Agoda</option>
                                                 <option value="Booking.com">Booking.com</option>
+                                                <option value="Ticket.com">Ticket.com</option>
                                                 <option value="Traveloka">Traveloka</option>
                                                 <option value="Airbnb">Airbnb</option>
                                             </select>
@@ -257,7 +258,7 @@
                                         <div class="form-group mt-2 ">
                                             <label class="tx-12" for="book_reff">Catatan Tambahan</label>
                                             <textarea type="text" name="additional_notes" id="additional_notes" class="form-control form-control-sm"
-                                                placeholder="Masukkan Catatan Tambahan" required>Lorem Ipsum</textarea>
+                                                placeholder="Masukkan Catatan Tambahan"></textarea>
                                         </div>
                                     </div>
 
@@ -326,11 +327,24 @@
                                             <div class="col-md-4">
                                                 <label for="name" class="tx-12">Jumlah Diskon</label>
                                             </div>
-                                            <div class="col-md-8">
+                                            <div class="col-md-4">
                                                 <div class="form-group">
-                                                    <input type="number" name="discount" id="discount"
-                                                        class="form-control form-control-sm"
+                                                    <select class="form-control form-control-sm" name="disc_type" id="disc_type">
+                                                        <option value="">Pilih Tipe Diskon</option>
+                                                        <option value="nominal">Nominal</option>
+                                                        <option value="percentage">Persentase</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <input type="text" name="discount_display" id="discount_display"
+                                                        class="form-control form-control-sm input-display"
                                                         placeholder="Masukkan Jumlah Diskon">
+                                                    <input type="hidden" name="discount" id="discount"
+                                                        class="input-raw">
+                                                    <input type="hidden" name="discount_amount_value" id="discount_amount_value"
+                                                        class="input-raw">
                                                 </div>
                                             </div>
                                         </div>
@@ -356,9 +370,11 @@
                                             </div>
                                             <div class="col-md-8">
                                                 <div class="form-group">
-                                                    <input type="number" name="payment_amount" id="payment_amount"
-                                                        class="form-control form-control-sm" value="0"
+                                                    <input type="text" name="payment_amount_display" id="payment_amount_display"
+                                                        class="form-control form-control-sm input-display" value=""
                                                         placeholder="Masukkan Jumlah Pembayaran" required>
+                                                    <input type="hidden" class="input-raw" name="payment_amount" id="payment_amount"
+                                                        value="" required>
                                                 </div>
                                             </div>
                                         </div>
@@ -369,9 +385,11 @@
                                             </div>
                                             <div class="col-md-8">
                                                 <div class="form-group">
-                                                    <input type="number" name="dp_amount" id="dp_amount"
-                                                        class="form-control form-control-sm" value="100000"
-                                                        placeholder="Masukkan Jumlah DP">
+                                                    <input type="text" name="dp_amount_masking" id="dp_amount_masking"
+                                                        class="form-control form-control-sm input-display"
+                                                        value="{{ old('dp_amount') }}" placeholder="Masukkan Jumlah DP">
+                                                    <input type="hidden" class="input-raw" name="dp_amount" id="dp_amount"
+                                                        value="{{ old('dp_amount') }}">
                                                 </div>
                                             </div>
                                         </div>
@@ -385,7 +403,7 @@
                                                     <select name="payment_method" id="payment_method"
                                                         class="form-control form-control-sm" required>
                                                         <option value="">Pilih Metode Pembayaran</option>
-                                                        <option value="Bank Transfer" selected>Transfer Bank</option>
+                                                        <option value="Bank Transfer">Transfer Bank</option>
                                                         <option value="Cash">Tunai</option>
                                                         <option value="QRIS">QRIS</option>
                                                     </select>
@@ -401,7 +419,7 @@
                                             <div class="col-md-8">
                                                 <div class="form-group">
                                                     <input type="date" name="payment_date" id="payment_date"
-                                                        class="form-control form-control-sm" value="2026-09-11"
+                                                        class="form-control form-control-sm" value=""
                                                         placeholder="Masukkan Tanggal Pembayaran" required>
                                                 </div>
                                             </div>
@@ -497,12 +515,9 @@
                         dataType: 'json',
                         success: function(response) {
 
-                            // Kembalikan ke teks default
                             $roomNumberDropdown.empty().append(
                                 '<option value="">Pilih Nomor Kamar</option>');
 
-                            // Looping data dari API dan masukkan sebagai tag <option>
-                            // Asumsi struktur JSON dari API: [{ "id": 1, "room_number": "101" }, ...]
                             $.each(response.data, function(key, room) {
                                 $roomNumberDropdown.append(
                                     '<option value="' + room.id +
@@ -511,8 +526,6 @@
                                     .room_number + '</option>'
                                 );
                             });
-
-                            // (Opsional) Jika pakai Select2, update tampilannya
                             if ($roomNumberDropdown.hasClass('select2-hidden-accessible')) {
                                 $roomNumberDropdown.trigger('change');
                             }
@@ -532,12 +545,8 @@
             });
 
             $(document).on('click', '.btn-add-room', function(e) {
-                e.preventDefault(); // Mencegah form tersubmit tidak sengaja
-
-                // Ambil elemen kamar pertama sebagai cetakan
+                e.preventDefault();
                 let $firstCard = $('.card-room').first();
-
-                // Clone elemen tanpa mengcopy event listener bawaannya
                 let $clone = $firstCard.clone();
 
                 // --- MULAI PROSES PEMBERSIHAN JEJAK SELECT2 DI HASIL CLONE ---
@@ -579,15 +588,15 @@
             });
 
             $(document).on('change', '.check_in', function() {
-                let checkInVal = $(this).val(); 
-                let $row = $(this).closest('.card-room'); 
-                let $checkOutInput = $row.find('.check_out'); 
+                let checkInVal = $(this).val();
+                let $row = $(this).closest('.card-room');
+                let $checkOutInput = $row.find('.check_out');
 
                 if (checkInVal) {
-                    let checkInDate = new Date(checkInVal);                    
-                    checkInDate.setDate(checkInDate.getDate() + 1);                    
-                    let minCheckOut = checkInDate.toISOString().split('T')[0];                    
-                    $checkOutInput.attr('min', minCheckOut);                    
+                    let checkInDate = new Date(checkInVal);
+                    checkInDate.setDate(checkInDate.getDate() + 1);
+                    let minCheckOut = checkInDate.toISOString().split('T')[0];
+                    $checkOutInput.attr('min', minCheckOut);
                     if ($checkOutInput.val() && $checkOutInput.val() < minCheckOut) {
                         $checkOutInput.val('');
                         toastr.warning(
@@ -595,7 +604,7 @@
                             'Informasi');
                     }
                 } else {
-                    
+
                     $checkOutInput.removeAttr('min');
                 }
             });
@@ -655,6 +664,10 @@
             calculateTotalPayment();
         });
 
+        $(document).on('change', '#discount_display', function() {
+            calculateTotalPayment();
+        });
+
         $(document).ready(function() {
             let today = new Date().toISOString().split('T')[0];
 
@@ -666,10 +679,12 @@
             });
         });
 
-        // Fungsi untuk mengurutkan ulang angka pada judul "Kamar 1, Kamar 2, dst"
         function updateRoomNumbers() {
             $('.card-room').each(function(index) {
-                $(this).find('.room-number').text(index + 1);
+                let number = index+1;
+                $(this).find('.room-number').text(number);
+                $(this).find('.additional_room').prop('name', 'additional_room-'+index+'[]');
+                
             });
         }
 
@@ -697,7 +712,8 @@
                 let subtotalAddRoom = 0;
                 $roomCard.find('.additional_room option:selected').each(function() {
                     let addPrice = parseFloat($(this).data('price')) || 0;
-                    subtotalAddRoom += addPrice;
+                    let subtotalPriceAdd = addPrice * totalMalam
+                    subtotalAddRoom += subtotalPriceAdd;
                 });
 
                 subtotal += (subtotalRoom + subtotalAddRoom);
@@ -712,11 +728,27 @@
                 ppnAmount = subtotal * 0.11;
                 $('#tax_value').val(ppnAmount);
             }
-            grandTotal = subtotal + ppnAmount;
+
+            let discType = $("#disc_type").val();
+            let discValue = $("#discount").val();
+            let discDisplayValue = $("#discount_display").val();
+            let discountAmount = 0;
+            if (discValue != '' && discType != '') {
+                if (discType == 'percentage') {
+                    discountAmount = subtotal * (discValue / 100);
+                } else if (discType == 'nominal') {
+                    discountAmount = discValue;
+                }
+            }
+            console.log(`amount`,discountAmount);
+            
+            grandTotal = subtotal + ppnAmount - discountAmount;
             $('#subtotal').val(rupiah(subtotal));
             $('#subtotal_value').val(subtotal);
             $('#grand_total').val(rupiah(grandTotal));
             $('#grand_total_value').val(grandTotal);
+            $('#discount_amount_value').val(discountAmount);
+            $('#total_discount').val(rupiah(discountAmount));
             // $('#total_payment').val(rupiah(grandTotal));
         }
 
@@ -849,14 +881,13 @@
             if ($('#tax').is(':checked')) {
                 ppnAmount = totalPrice * 0.11;
             }
-            let discount = $('#discount').val();
+            let discount = $('#discount_amount_value').val();
             let downPayment = $('#dp_amount').val();
-            let grandTotal = (totalPrice + ppnAmount) - downPayment;
+            let grandTotal = (totalPrice + ppnAmount) - downPayment - discount;
             let totalPayment = (totalPrice + ppnAmount) - discount;
             let payment_date = $('#payment_date').val();
             $('#total_sub').html(rupiah(totalPrice));
             $('#total_tax').html(rupiah(ppnAmount));
-            $('#total_discount').html(rupiah(0));
             $('#total_dp').html(rupiah(downPayment));
             $('#total_remaining').html(rupiah(grandTotal));
             $('#total_discount').html(rupiah(discount));
@@ -947,7 +978,6 @@
                 return false;
             }
             var otaExternalBookingId = $('#external_booking_id').val();
-            console.log(otaExternalBookingId);
 
             if (bookReff === 'ota' && !otaExternalBookingId) {
                 toastr.warning('Masukkan nomor booking OTA');
@@ -1041,5 +1071,46 @@
                 return;
             }
         }
+
+        $(document).on('input', '.input-number', function() {
+            let value = $(this).val().replace(/[^0-9]/g, '');
+            $(this).val(value);
+        });
+
+        function formatNumber(n) {
+            return n.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+        }
+
+        function formatRibuan(angka) {
+            if (!angka) return '';
+            let numberString = angka.toString().replace(/[^,\d]/g, '');
+            let split = numberString.split(',');
+            let sisa = split[0].length % 3;
+            let rupiah = split[0].substr(0, sisa);
+            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if (ribuan) {
+                let separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+
+            return split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+        }
+
+        $(document).on('input', '.input-display', function() {
+            let $displayInput = $(this);
+            let typedValue = $displayInput.val();
+
+            let rawValue = typedValue.replace(/[^0-9]/g, '');
+
+            let $rawInput = $displayInput.closest('.form-group').find('.input-raw');
+            $rawInput.val(rawValue);
+
+            if (rawValue) {
+                $displayInput.val(formatRibuan(rawValue));
+            } else {
+                $displayInput.val('');
+            }
+        });
     </script>
 @endsection

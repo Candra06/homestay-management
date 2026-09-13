@@ -15,7 +15,7 @@ class FinancialAccount extends Model
         'account_name',
         'type',
         'balance',
-        'is_active'
+        'is_active',
         'created_by',
         'updated_by',
     ];
