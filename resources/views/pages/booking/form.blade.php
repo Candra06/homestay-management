@@ -665,6 +665,13 @@
         });
 
         $(document).on('change', '#discount_display', function() {
+            $('#payment_amount_display').val(0);
+            $('#payment_amount').val(0);
+            calculateTotalPayment();
+        });
+        $(document).on('change', '#payment_amount_display', function() {
+            $('#discount_display').val(0);
+            $('#discount').val(0);
             calculateTotalPayment();
         });
 

@@ -125,6 +125,7 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
+        
         // return $request;
         DB::beginTransaction();
         try {
@@ -282,7 +283,6 @@ class BookingController extends Controller
             return redirect(route('booking.index'))->with('success', 'Berhasil menambah data booking');
         } catch (\Throwable $th) {
             DB::rollback();
-            throw $th;
             return redirect()->back()->with('error', 'Data gagal disimpan : ' . $th->getMessage());
         }
     }
@@ -408,6 +408,7 @@ class BookingController extends Controller
 
         $lastInvoice = Invoice::whereDate('created_at', $now->toDateString())
             ->orderBy('id', 'desc')
+            ->withTrashed()
             ->first();
         if (!$lastInvoice) {
             $sequence = 1;
