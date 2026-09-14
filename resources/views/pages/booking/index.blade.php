@@ -105,16 +105,18 @@
             @php
                 $randomKey = array_rand($bg);
             @endphp
-            <div class="col-lg-4 col-xl-4 col-md-4 col-12">
-                <div class="card {{ $bg[$randomKey] }} text-white ">
-                    <div class="card-body">
-                        <div class="mt-0 text-center">
-                            <span class="text-white">{{ $item->type_name }}</span>
-                            <h2 class="text-white mb-0">{{ $item->rooms_count }}</h2>
-                        </div>
+                <div class="col-lg-4 col-xl-4 col-md-4 col-12">
+                    <a href="{{ url('room/list/'.$item->id) }}">
+                    <div class="card {{ $bg[$randomKey] }} text-white ">
+                        <div class="card-body">
+                            <div class="mt-0 text-center">
+                                <span class="text-white">{{ $item->type_name }}</span>
+                                <h2 class="text-white mb-0">{{ $item->rooms_count }}</h2>
+                            </div>
 
+                        </div>
                     </div>
-                </div>
+                </a>
             </div>
         @endforeach
 

@@ -472,8 +472,6 @@ class RoomTypesController extends Controller
             $checkIn   = $request->check_in;
             $checkOut  = $request->check_out;
 
-            
-
             $bookedRoomIds = BookingRoom::where(function ($query) use ($checkIn, $checkOut) {
                 $query->where('checkin_date', '<', $checkOut)
                       ->where('checkout_date', '>', $checkIn);
@@ -496,6 +494,68 @@ class RoomTypesController extends Controller
                 'message' => 'Data gagal diambil : ' . $th->getMessage(),
                 'data' => []
             ], 500);
+        }
+    }
+
+    function roomList($id) {
+        try {
+            $type = RoomTypes::where('id', $id)->first();
+             $dataPage = $this->dataPage;
+            $data = (object) [
+                'title' => 'Ketersediaan Kamar '.$type->type_name,
+                'routeData' => route($dataPage['route']['index']),
+                'data' => $type,
+            ];
+
+
+            // return $data;
+            return view('pages.room-types.list-room', compact('data'));
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+    }
+
+    public function getRoomAvailableByType(Request $request, $id) {
+        try {
+            $date   = $request->date;
+            $targetDate = $request->input('date'); // Contoh: '2026-09-15'
+
+            $rooms = Rooms::where('id_room_type', $id)->with(['bookings', 'roomType'])
+                ->get()
+                ->map(function ($room) use ($targetDate) {
+                    // Cek apakah ada booking aktif di tanggal tersebut
+                    $activeBooking = $room->bookings()
+                        ->whereHas('booking', function($q) {
+                            $q->whereIn('booking_status', ['Approved', 'Checked-In']);
+                        })
+                ->where(function($query) use ($targetDate) {
+                    // Kondisi: target date berada di antara check_in dan check_out 
+                    // (check_out menggunakan tanda '<' karena hari check-out kamar sudah kosong untuk tamu berikutnya)
+                    $query->where('checkin_date', '<=', $targetDate)
+                          ->where('checkout_date', '>', $targetDate);
+                })
+                ->with('booking')
+                ->first();
+
+                if ($activeBooking) {
+                    $room->status = 'Booked';
+                    $room->booking_code = $activeBooking->booking->booking_code ?? '-';
+                    $room->booking_status = $activeBooking->booking->booking_status ?? '-';
+                } else {
+                    $room->status = $room->status;
+                    $room->booking_code = null;
+                    $room->booking_status = null;
+                }
+
+                return $room;
+            });
+            
+            return response()->json([
+                'status' => true,
+                'data' => $rooms
+            ], 200);
+        } catch (\Throwable $th) {
+            throw $th;
         }
     }
 }

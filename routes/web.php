@@ -38,6 +38,9 @@ Route::group(["prefix" => "/", "middleware" => ["auth", CheckAccessMidleware::cl
     Route::post('booking/payment/{id}', [BookingController::class, 'paymentBooking'])->name('booking.payment');
     Route::get('booking/process/{id}/{type}', [BookingController::class, 'checkInProcess'])->name('booking.process');
 
+    Route::get('room/list/{id}', [RoomTypesController::class, 'roomList']);
+    Route::get('room/availability/{id}', [RoomTypesController::class, 'getRoomAvailableByType']);
+
     Route::resource('menu', MenuController::class);
     Route::resource('role', RoleUserController::class);
     Route::resource('role-akses', RoleAksesController::class);
