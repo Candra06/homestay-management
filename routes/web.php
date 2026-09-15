@@ -13,6 +13,7 @@ use App\Http\Controllers\RoomTypesController;
 use App\Http\Controllers\RoomsController;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\PromoController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Middleware\CheckAccessMidleware;
 
 /*
@@ -41,6 +42,7 @@ Route::group(["prefix" => "/", "middleware" => ["auth", CheckAccessMidleware::cl
     Route::get('room/list/{id}', [RoomTypesController::class, 'roomList']);
     Route::get('room/availability/{id}', [RoomTypesController::class, 'getRoomAvailableByType']);
 
+    Route::resource('employee', EmployeeController::class);
     Route::resource('menu', MenuController::class);
     Route::resource('role', RoleUserController::class);
     Route::resource('role-akses', RoleAksesController::class);

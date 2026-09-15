@@ -517,7 +517,6 @@ class RoomTypesController extends Controller
 
     public function getRoomAvailableByType(Request $request, $id) {
         try {
-            $date   = $request->date;
             $targetDate = $request->input('date'); // Contoh: '2026-09-15'
 
             $rooms = Rooms::where('id_room_type', $id)->with(['bookings', 'roomType'])
@@ -542,7 +541,7 @@ class RoomTypesController extends Controller
                     $room->booking_code = $activeBooking->booking->booking_code ?? '-';
                     $room->booking_status = $activeBooking->booking->booking_status ?? '-';
                 } else {
-                    $room->status = $room->status;
+                    $room->status = $room->status != 'Maintenance' ? 'Tersedia' : 'Maintenance';
                     $room->booking_code = null;
                     $room->booking_status = null;
                 }
