@@ -664,14 +664,14 @@
             calculateTotalPayment();
         });
 
-        $(document).on('change', '#discount_display', function() {
+        $(document).on('change', '#dp_amount_masking', function() {
             $('#payment_amount_display').val(0);
             $('#payment_amount').val(0);
             calculateTotalPayment();
         });
         $(document).on('change', '#payment_amount_display', function() {
-            $('#discount_display').val(0);
-            $('#discount').val(0);
+            $('#dp_amount_masking').val(0);
+            $('#dp_amount').val(0);
             calculateTotalPayment();
         });
 
