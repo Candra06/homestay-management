@@ -5,6 +5,8 @@
 @section('css')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@7.12.15/dist/sweetalert2.all.min.js"></script>
 
+    <script src="{{ url('assets') }}/plugins/fullcalendar/fullcalendar.min.js"></script>
+
     <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/sweetalert2@7.12.15/dist/sweetalert2.min.css'>
     <!-- FULL CALENDAR CSS -->
     <link href='{{ url('assets') }}/plugins/fullcalendar/fullcalendar.css' rel='stylesheet' />
@@ -99,15 +101,18 @@
 
     <div class="row">
         @php
-            $bg = ['bg-primary-gradient', 'bg-danger-gradient', 'bg-success-gradient'];
+            $bg = [
+                'bg-primary-gradient',
+                'bg-success-gradient',
+                'bg-warning-gradient',
+                'bg-warning-gradient',
+                'bg-info-gradient',
+            ];
         @endphp
-        @foreach ($data->availableRooms as $item)
-            @php
-                $randomKey = array_rand($bg);
-            @endphp
-                <div class="col-lg-4 col-xl-4 col-md-4 col-12">
-                    <a href="{{ url('room/list/'.$item->id) }}">
-                    <div class="card {{ $bg[$randomKey] }} text-white ">
+        @foreach ($data->availableRooms as $key => $item)
+            <div class="col-lg-4 col-xl-4 col-md-4 col-12">
+                <a href="{{ url('room/list/' . $item->id) }}">
+                    <div class="card {{ $bg[$key] }} text-white ">
                         <div class="card-body">
                             <div class="mt-0 text-center">
                                 <span class="text-white">{{ $item->type_name }}</span>
@@ -124,7 +129,7 @@
     </div>
 
 
-    <div class="card">
+    <div class="card ms-4 me-4">
         <div class="card-header pb-0">
             <div class="d-flex justify-content-between">
                 <h4 class="card-title mg-b-0">Reservasi</h4>
@@ -135,7 +140,7 @@
             </div>
         </div>
 
-        <div class="card-body">
+        <div class="card-body ">
             @include('pages.booking.calendar')
             @include('pages.booking.list')
         </div>
@@ -143,12 +148,11 @@
 @endsection
 @section('script')
     <!-- FULL CALENDAR JS -->
-    <script src="{{ url('assets') }}/plugins/fullcalendar/fullcalendar.min.js"></script>
-    <script src="{{ url('assets') }}/js/fullcalendar.js"></script>
 
     <script type="text/javascript">
         $(document).ready(function() {
             $('.calendar-view').hide();
+
         });
         $('#view-mode-toggle').on('click', function() {
             $(this).toggleClass('on');
@@ -168,8 +172,96 @@
                 // Panggil fungsi atau render ulang tampilan kalender di sini
             }
         });
-    </script>
-    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar-booking');
+            if (!calendarEl) return;
+            let today = new Date().toISOString().split('T')[0];
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+                },
+                initialDate: today,
+                navLinks: true,
+                selectable: true,
+                selectMirror: true,
+                droppable: false,
+
+                select: function(arg) {
+                    // Logika select tanggal
+                },
+
+                eventClick: function(arg) {
+                    console.log('eventClick', arg.event);
+                },
+                editable: false,
+                dayMaxEvents: true,
+                fixedWeekCount: false,
+                contentHeight: 650,
+                events: function(fetchInfo, successCallback, failureCallback) {
+                    let url = "{{ url('booking/booked-rooms') }}";
+                    let startDate = fetchInfo.start;
+                    let baseDate = new Date(startDate);
+                    let tanggal = new Date(baseDate.setDate(baseDate.getDate() + 15)).toISOString()
+                        .split('T')[0];
+
+                    let tahun = tanggal.split('-')[0];
+                    let bulan = tanggal.split('-')[1];
+                    let firstDayOfMonth = `${tahun}-${bulan}-01`;
+
+                    let data = {
+                        date: firstDayOfMonth,
+                    };
+
+                    $.ajax({
+                        url: url,
+                        type: "GET",
+                        data: data,
+                        dataType: 'json',
+                        success: function(response) {
+                            // PENTING: Gunakan array lokal penampung data (jangan pakai variabel global tanpa di-reset)
+                            let listRoom = [];
+
+                            if (response && response.data && Array.isArray(response.data)) {
+                                response.data.forEach(function(item) {
+                                    listRoom.push({
+                                        title: `${item.room.room_number}-${item.room.room_type.type_name}(${item.booking.booking_code})`,
+                                        start: item.checkin_date,
+                                        end: item.checkout_date,
+                                        color: item.room.room_type
+                                            .type_name == 'Superior Twin' ?
+                                            '#0161e9' : item.room.room_type
+                                            .type_name == 'Deluxe King' ?
+                                            '#059969' : '#f76d2f',
+                                    });
+                                });
+                            }
+
+                            // Berikan data yang sudah bersih ke FullCalendar
+                            successCallback(listRoom);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Gagal memuat data booking:", error);
+                            failureCallback(error);
+                            successCallback([]);
+                        }
+                    });
+
+                },
+            });
+            calendar.render();
+
+            if (window.ResizeObserver) {
+                const resizeObserver = new ResizeObserver(function(entries) {
+                    // Paksa kalender merapikan ulang bentuknya setiap kali ukuran kontainer berubah / muncul
+                    calendar.updateSize();
+                });
+
+                // Mulai pantau elemen kalender
+                resizeObserver.observe(calendarEl);
+            }
+        });
         $("#table").DataTable({
             ajax: '{{ $data->routeData }}',
             processing: true,
@@ -177,10 +269,7 @@
             stateSave: true,
             columns: JSON.parse(`{!! json_encode($data->tableColumns) !!}`)
         });
-    </script>
 
-
-    <script>
         function deleteData(route, message) {
             $("#modal-delete").find("form").attr("action", route)
             $("#modal-delete").find(".message").text(message)

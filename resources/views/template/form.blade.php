@@ -57,7 +57,7 @@
                                 'time',
                             ]))
                             @if ($item['type'] != 'hidden')
-                                <label for="{{ $item['name'] }}">{{ $item['title'] }} {!! $item['required']?'<span class="tx-danger">*</span>':''!!}</label>
+                                <label for="{{ $item['name'] }}">{{ $item['title'] }} {!! $item['required'] ? '<span class="tx-danger">*</span>' : '' !!}</label>
                             @endif
                             @if ($item['type'] == 'label')
                                 <p lass="text-blacktext-sm font-medium inline-block mb-2">{{ $currentValue }}</p>
@@ -71,7 +71,7 @@
                                     placeholder="{{ $item['placeholder'] ?? '' }}" />
                             @endif
                         @elseif(in_array($item['type'], ['password']))
-                            <label for="{{ $item['name'] }}">{{ $item['title'] }} {!! $item['required']?'<span class="tx-danger">*</span>':''!!}</label>
+                            <label for="{{ $item['name'] }}">{{ $item['title'] }} {!! $item['required'] ? '<span class="tx-danger">*</span>' : '' !!}</label>
                             <input type="password" class="form-control {{ $item['class_input'] ?? '' }}"
                                 id="{{ $item['name'] }}" {{ $item['required'] ?? false ? ' required ' : '' }}
                                 {{ isset($item['other-attr']) ? $item['other-attr'] : '' }} value="{{ $currentValue }}"
@@ -80,7 +80,7 @@
                                 {{ $item['readonly'] ?? false ? ' readonly' : '' }}
                                 placeholder="{{ $item['placeholder'] ?? '' }}" />
                         @elseif (in_array($item['type'], ['textarea', 'editor']))
-                            <label for="{{ $item['name'] }}">{{ $item['title'] }} {!! $item['required']?'<span class="tx-danger">*</span>':''!!}</label>
+                            <label for="{{ $item['name'] }}">{{ $item['title'] }} {!! $item['required'] ? '<span class="tx-danger">*</span>' : '' !!}</label>
                             <textarea class="form-control {{ $item['class_input'] ?? '' }}" id="{{ $item['name'] }}"
                                 {{ $item['readonly'] ?? false ? ' readonly' : '' }} placeholder="{{ $item['placeholder'] ?? '' }}"
                                 {{ $item['required'] ?? false ? ' required ' : '' }} {{ isset($item['other-attr']) ? $item['other-attr'] : '' }}
@@ -90,7 +90,7 @@
                             @php
                                 $value = $dataarray[$item['name']] ?? old($item['name']);
                             @endphp
-                            <label for="{{ $item['name'] }}">{{ $item['title'] }} {!! $item['required']?'<span class="tx-danger">*</span>':''!!}</label>
+                            <label for="{{ $item['name'] }}">{{ $item['title'] }} {!! $item['required'] ? '<span class="tx-danger">*</span>' : '' !!}</label>
                             <select name="{{ $item['name'] }}" class="form-control {{ $item['class'] }}"
                                 {{ $item['required'] ?? false ? ' required ' : '' }}
                                 {{ $item['readonly'] ?? false ? ' readonly' : '' }}
@@ -115,7 +115,8 @@
                             </div>
                         @elseif(in_array($item['type'], ['file']))
                             @php
-                                $isMultiple = isset($item['other-attr']) && str_contains($item['other-attr'], 'multiple');
+                                $isMultiple =
+                                    isset($item['other-attr']) && str_contains($item['other-attr'], 'multiple');
                                 $classInput = $item['class_input'] ?? '';
                                 if ($isMultiple) {
                                     $classInput = trim(str_replace('dropify', '', $classInput));
@@ -123,37 +124,43 @@
                             @endphp
                             <label for="{{ $item['name'] }}">{{ $item['title'] }}</label><br>
                             @if ($isMultiple)
-                                <small class="text-secondary">Anda dapat memilih lebih dari 1 file. Urutan pertama pada list akan dijadikan sebagai gambar utama.
+                                <small class="text-secondary">Anda dapat memilih lebih dari 1 file. Urutan pertama pada list
+                                    akan dijadikan sebagai gambar utama.
                                 </small>
                             @endif
                             <input type="file" accept=".jpg, .png, image/jpeg, image/png" class="{{ $classInput }}"
-                                id="{{ $isMultiple ? 'demo' : $item['name'] }}" {{ $item['required'] ?? false ? ' required ' : '' }}
+                                id="{{ $isMultiple ? 'demo' : $item['name'] }}"
+                                {{ $item['required'] ?? false ? ' required ' : '' }}
                                 {{ isset($item['other-attr']) ? $item['other-attr'] : '' }}
-                                @if(!$isMultiple && !empty($currentValue))
-                                    data-default-file="{{ asset($currentValue) }}"
-                                @endif
-                                name="{{ $item['name'] }}"
-                                {{ $item['readonly'] ?? false ? ' readonly' : '' }}
+                                @if (!$isMultiple && !empty($currentValue)) data-default-file="{{ asset($currentValue) }}" @endif
+                                name="{{ $item['name'] }}" {{ $item['readonly'] ?? false ? ' readonly' : '' }}
                                 placeholder="{{ $item['placeholder'] ?? '' }}" />
 
-                            @if(isset($dataarray['attachments']) && count($dataarray['attachments']) > 0)
+                            @if (isset($dataarray['attachments']) && count($dataarray['attachments']) > 0)
                                 <div class="mt-3 mb-2 p-3 bg-light rounded border">
                                     <label class="fw-semibold text-dark mb-2 d-block">Foto saat ini:</label>
                                     <div class="d-flex flex-wrap gap-2 align-items-center">
-                                        @foreach($dataarray['attachments'] as $idx => $att)
+                                        @foreach ($dataarray['attachments'] as $idx => $att)
                                             @php
-                                                $imgUrl = str_starts_with($att['file_url'], 'storage/') ? asset($att['file_url']) : asset('storage/' . $att['file_url']);
+                                                $imgUrl = str_starts_with($att['file_url'], 'storage/')
+                                                    ? asset($att['file_url'])
+                                                    : asset('storage/' . $att['file_url']);
                                             @endphp
-                                            <div class="position-relative d-inline-block border rounded bg-white p-1 me-2 mb-2 shadow-sm" style="width: 105px; height: 105px;">
-                                                <img src="{{ $imgUrl }}" class="rounded w-100 h-100" style="object-fit: cover;" alt="Preview foto {{ $idx + 1 }}">
-                                                @if($idx === 0)
-                                                    <span class="badge bg-primary position-absolute top-0 start-0 m-1 shadow-sm" style="font-size: 10px;">Utama</span>
+                                            <div class="position-relative d-inline-block border rounded bg-white p-1 me-2 mb-2 shadow-sm"
+                                                style="width: 105px; height: 105px;">
+                                                <img src="{{ $imgUrl }}" class="rounded w-100 h-100"
+                                                    style="object-fit: cover;" alt="Preview foto {{ $idx + 1 }}">
+                                                @if ($idx === 0)
+                                                    <span
+                                                        class="badge bg-primary position-absolute top-0 start-0 m-1 shadow-sm"
+                                                        style="font-size: 10px;">Utama</span>
                                                 @endif
                                             </div>
                                         @endforeach
                                     </div>
                                     <small class="text-muted d-block mt-1 tx-12">
-                                        <i class="fe fe-info me-1"></i> Upload foto baru di atas jika Anda ingin mengganti seluruh foto saat ini.
+                                        <i class="fe fe-info me-1"></i> Upload foto baru di atas jika Anda ingin mengganti
+                                        seluruh foto saat ini.
                                     </small>
                                 </div>
                             @endif
@@ -261,7 +268,7 @@
                         `<option value="${element}" ${selected}>${element}</option>`);
                 });
             }
-            
+
             $('.floor_number').on('change keyup', function() {
                 setRoomNumber();
             });
@@ -415,13 +422,13 @@
             input[0].setSelectionRange(caret_pos, caret_pos);
         }
     </script>
-    <script src="{{ asset('assets')}}/plugins/fileuploads/js/fileupload.js"></script>
-    <script src="{{ asset('assets')}}/plugins/fileuploads/js/file-upload.js"></script>
+    <script src="{{ asset('assets') }}/plugins/fileuploads/js/fileupload.js"></script>
+    <script src="{{ asset('assets') }}/plugins/fileuploads/js/file-upload.js"></script>
 
     <!--Internal Fancy uploader js-->
-    <script src="{{ asset('assets')}}/plugins/fancyuploder/jquery.ui.widget.js"></script>
-    <script src="{{ asset('assets')}}/plugins/fancyuploder/jquery.fileupload.js"></script>
-    <script src="{{ asset('assets')}}/plugins/fancyuploder/jquery.iframe-transport.js"></script>
-    <script src="{{ asset('assets')}}/plugins/fancyuploder/jquery.fancy-fileupload.js"></script>
-    <script src="{{ asset('assets')}}/plugins/fancyuploder/fancy-uploader.js"></script>
+    <script src="{{ asset('assets') }}/plugins/fancyuploder/jquery.ui.widget.js"></script>
+    <script src="{{ asset('assets') }}/plugins/fancyuploder/jquery.fileupload.js"></script>
+    <script src="{{ asset('assets') }}/plugins/fancyuploder/jquery.iframe-transport.js"></script>
+    <script src="{{ asset('assets') }}/plugins/fancyuploder/jquery.fancy-fileupload.js"></script>
+    <script src="{{ asset('assets') }}/plugins/fancyuploder/fancy-uploader.js"></script>
 @endsection

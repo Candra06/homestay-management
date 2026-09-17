@@ -90,8 +90,8 @@ class EmployeeController extends Controller
             'detail' => 'employee.detail',
             'delete' => 'employee.destroy',
         ],
-        "tableHead" => ["No", "Nama", "No. Telepon", "Email","Jabatan","Aksi"],
-        "tableColumns" =>["DT_RowIndex", "nama_lengkap", "no_telp", "email", "jabatan", "action"],
+        "tableHead" => ["No", "Nama", "No. Telepon", "Email","Jabatan", "Status","Aksi"],
+        "tableColumns" =>["DT_RowIndex", "nama_lengkap", "no_telp", "email", "jabatan", "status", "action"],
     ];
     /**
      * Display a listing of the resource.
@@ -206,7 +206,46 @@ class EmployeeController extends Controller
      */
     public function edit(Employee $employee)
     {
-        //
+        // return $employee;
+         try {
+            $page = $this->dataPage;
+            // return  $page['forms'];
+            // [
+            //     'name' => 'password',
+            //     'title' => 'Password',
+            //     'type' => 'password',
+            //     'required' => false,
+            //     'placeholder' => 'Password',
+            // ],
+            // [
+            //     'name' => 'can_login',
+            //     'title' => 'Dapat Akses Sistem?',
+            //     'type' => 'checkbox',
+            //     'required' => false,
+            //     'custom-class-wrapper' => 'col-md-3 col-3',
+            //     'value' => 'Y',
+            //     'placeholder' => '',
+            // ],
+            $dataForm = [];
+            $dataForm = $employee->load('user')->toArray();
+            if ($dataForm['user_id'] != null) {
+                $page['forms'][6]['other-attr'] = 'checked';
+            }
+            $page['forms'][5]['placeholder'] = 'Kosongkan jika tidak ingin merubah password';
+            // return $dataForm;
+            $data = (object) [
+                'title' => 'Data Karyawan',
+                'subtitle' => 'Edit Data',
+                'type' => 'edit',
+                'action' => route($page['route']['update'], ['employee' => $employee]),
+                'data' => $dataForm,
+                'forms' => $page['forms'],
+            ];
+            // return $data;
+            return view('template.form', compact('data'));
+       } catch (\Throwable $th) {
+        throw $th;
+       }
     }
 
     /**
@@ -214,15 +253,64 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, Employee $employee)
     {
-        //
+        
+        DB::beginTransaction();
+        $validate = $request->validate([
+                'nama_lengkap' => 'required',
+                'email' => 'required|email',
+                'no_telp' => 'required',
+                'jabatan' => 'required',
+                'status' => 'required',
+            ]);
+        try {
+            $inputEmployee = [
+                'nama_lengkap' => $request->nama_lengkap,
+                'jabatan' => $request->jabatan,
+                'status' => $request->status,
+                'no_telp' => $request->no_telp,
+                'email' => $request->email,
+            ];
+            if ($request->has('can_login') && $request->can_login == 'Y' && $employee->user_id != null) {
+                $userInput = [
+                    'name' => $request->nama_lengkap,
+                    'username' => $request->email,
+                    'role' => in_array($request->jabatan,['SPV', 'Manajer']) ? 'Admin' : 'Front Office',
+                    'role_id' =>in_array($request->jabatan,['SPV', 'Manajer']) ? 'Admin' : 'Front Office',
+                ];
+                if ($request->has('password') && $request->password != null) {
+                    $userInput['password'] = bcrypt($request->password);
+                }
+                $user = User::where('id', $employee->user_id)->update($userInput);
+            }
+            $employee->update($inputEmployee);
+            DB::commit();
+            return redirect()->route('employee.index')->with('success', 'Data berhasil diupdate');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
+            return redirect()->back()->with('error', $th->getMessage())->withInput(request()->all());
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
+
     public function destroy(Employee $employee)
     {
-        //
+         try {
+            DB::beginTransaction();
+            $userId= $employee->user_id;
+            $employee->delete();
+            if ($employee->user_id != null) {
+                User::where('id', $userId)->delete();
+            }
+            DB::commit();
+            return redirect(route($this->dataPage['route']['index']))->with('success', 'Berhasil menghapus data karyawan');
+        } catch (\Throwable $th) {
+            DB::rollback();
+            return back()->with('error', 'Gagal menghapus data karyawan. Err : '.$th->getMessage());
+        }
     }
 
     function ajax($list)
@@ -242,7 +330,11 @@ class EmployeeController extends Controller
 
                 return $actionBtn;
             })
-            ->rawColumns(["action"])
+            ->addColumn("status", function($row){
+                $html = '<span class="badge '.($row->status == 'aktif' ? 'bg-success' : 'bg-danger').'">'.($row->status == 'aktif' ? 'Aktif' : 'Tidak Aktif').'</span>';
+                return $html;
+            })
+            ->rawColumns(["action", "status"])
             ->make(true);
     }
 }

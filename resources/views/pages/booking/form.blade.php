@@ -747,7 +747,6 @@
                     discountAmount = discValue;
                 }
             }
-            console.log(`amount`,discountAmount);
             
             grandTotal = subtotal + ppnAmount - discountAmount;
             $('#subtotal').val(rupiah(subtotal));

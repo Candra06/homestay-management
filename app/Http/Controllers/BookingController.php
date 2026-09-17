@@ -589,4 +589,41 @@ class BookingController extends Controller
         }
         
     }
+
+    public function getBookedRooms(Request $request) {
+       try {
+        DB::enableQueryLog();
+            $month = Carbon::parse($request->date)->format('m');
+            $year = Carbon::parse($request->date)->format('Y');
+            $booking = BookingRoom::with([
+                                'booking' => function($query) {
+                                    $query->select('id','booking_code','guest_id');
+                                },
+                                'booking.guest' => function($query) {
+                                    $query->select('id','nama_lengkap');
+                                },
+                                'room' => function($query) {
+                                    $query->select('id','room_number','id_room_type');
+                                },
+                                'room.roomType' => function($query) {
+                                    $query->select('id','type_name');
+                                },
+                                ])
+                            ->whereRaw("MONTH(checkin_date) = ".$month)
+                            ->whereRaw("YEAR(checkin_date) = ".$year)
+                            ->orderBy('checkin_date', 'asc')
+                            ->get();
+            return response()->json([
+                'success' =>true,
+                'data' => $booking,
+            ]);
+       } catch (\Throwable $th) {
+            return response()->json([
+                'success' =>false,
+                'data' => [],
+                'message' => 'Gagal mengambil data',
+                'error' => $th->getMessage(),
+            ]);
+       }
+    }
 }

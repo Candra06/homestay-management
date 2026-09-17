@@ -537,7 +537,7 @@ class RoomTypesController extends Controller
                 ->first();
 
                 if ($activeBooking) {
-                    $room->status = 'Booked';
+                    $room->status = $room->status =='Approved'? 'Booked': 'Check-In';
                     $room->booking_code = $activeBooking->booking->booking_code ?? '-';
                     $room->booking_status = $activeBooking->booking->booking_status ?? '-';
                 } else {

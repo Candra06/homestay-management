@@ -107,10 +107,13 @@
                         bgCard = "bg-success";
                         break;
                     case 'Booked':
+                        bgCard = "bg-warning";
+                        break;
+                    case 'Check-In':
                         bgCard = "bg-danger";
                         break;
                     case 'Cleaning':
-                        bgCard = "bg-warning";
+                        bgCard = "bg-primary";
                         break;
                     case 'Maintenance':
                         bgCard = "bg-secondary";
