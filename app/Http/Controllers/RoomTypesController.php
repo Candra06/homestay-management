@@ -543,7 +543,7 @@ class RoomTypesController extends Controller
                             // $room->latest_booking_status = $latestBooking?->booking?->booking_status; // misal: 'Completed'
                             $activeBooking = $room->bookings()
                                 ->whereHas('booking', function($q) {
-                                    $q->whereIn('booking_status', ['Approved', 'Checked-In']);
+                                    $q->whereIn('booking_status', ['Pending','Approved', 'Checked-In']);
                                 })
                             ->where(function($query) use ($targetDate) {
                                 $query->where('checkin_date', '<=', $targetDate)
@@ -560,9 +560,9 @@ class RoomTypesController extends Controller
                                 $status = '';
                                 if (($target <= $checkin || $target > $checkout) && $activeBooking->booking->booking_code == null) {
                                     $status = 'Tersedia';
-                                } else if($bookingStatus == 'Approved'){
+                                } else if($bookingStatus == 'Approved' || $bookingStatus == 'Pending'){
                                     $status = 'Booked';
-                                } else {
+                                } else if($bookingStatus == 'Checked-In'){
                                     $status = 'Check-In';
                                 }
                                 
