@@ -517,7 +517,7 @@ class RoomTypesController extends Controller
 
     public function getRoomAvailableByType(Request $request, $id) {
         try {
-            $targetDate = $request->input('date'); // Contoh: '2026-09-15'
+            $targetDate = $request->input('date');
 
             $rooms = Rooms::where('id_room_type', $id)->with([
                         'bookings' , 
@@ -528,19 +528,7 @@ class RoomTypesController extends Controller
                         ])
                         ->get()
                         ->map(function ($room) use ($targetDate) {
-                            // // 1. Cari booking yang sedang aktif di tanggal target
-                            // $activeBooking = $room->bookings->first(function ($b) use ($targetDate) {
-                            //     return $b->checkin_date <= $targetDate 
-                            //         && $b->checkout_date > $targetDate
-                            //         && in_array($b->booking?->booking_status, ['Approved', 'Checked-In']);
-                            // });
-
-                            // // 2. Jika tidak ada yang aktif, ambil booking paling baru (latest)
-                            // $latestBooking = $room->bookings->sortByDesc('checkin_date')->first();
-
-                            // // Ambil statusnya
-                            // $room->active_booking_status = $activeBooking?->booking?->booking_status; // null jika tidak ada yang aktif
-                            // $room->latest_booking_status = $latestBooking?->booking?->booking_status; // misal: 'Completed'
+                           
                             $activeBooking = $room->bookings()
                                 ->whereHas('booking', function($q) {
                                     $q->whereIn('booking_status', ['Pending','Approved', 'Checked-In']);

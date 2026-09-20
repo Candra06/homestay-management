@@ -14,6 +14,7 @@ use App\Http\Controllers\RoomsController;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\PromoController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\GuestController;
 use App\Http\Middleware\CheckAccessMidleware;
 
 /*
@@ -39,6 +40,7 @@ Route::group(["prefix" => "/", "middleware" => ["auth", CheckAccessMidleware::cl
     Route::post('booking/payment/{id}', [BookingController::class, 'paymentBooking'])->name('booking.payment');
     Route::get('booking/process/{id}/{type}', [BookingController::class, 'checkInProcess'])->name('booking.process');
     Route::get('booking/booked-rooms', [BookingController::class, 'getBookedRooms']);
+    Route::get('booking/print-invoice/{code}', [BookingController::class, 'printInvoice']);
 
     Route::get('room/list/{id}', [RoomTypesController::class, 'roomList']);
     Route::get('room/availability/{id}', [RoomTypesController::class, 'getRoomAvailableByType']);
@@ -55,6 +57,7 @@ Route::group(["prefix" => "/", "middleware" => ["auth", CheckAccessMidleware::cl
     Route::resource('room', RoomsController::class);
     Route::resource('voucher', VoucherController::class);
     Route::resource('promo', PromoController::class);
+    Route::resource('guest', GuestController::class);
 
     
 });

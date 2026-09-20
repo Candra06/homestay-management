@@ -198,7 +198,7 @@
                                         <tr>
                                             <td style="width: 15%;" class="tx-right " colspan="2">Diskon</td>
                                             <td class="tx-right" style="width: 20%!important;" id="total_discount">
-                                                {{ App\Helper\Helpers::rupiah($data->discount_amount) }}</td>
+                                                {{ App\Helper\Helpers::rupiah($data->discount_amount*-1) }}</td>
                                         </tr>
 
                                         <tr>
@@ -254,8 +254,8 @@
                             @endif
 
 
-                            <button class="btn btn-success" onclick="window.print()"><i class="fa fa-print"></i>
-                                Cetak</button>
+                            <button class="btn btn-success print-invoice"  onclick=""><i class="fa fa-print"></i>
+                                {{ $data->grand_total != $data->amount_paid ?'Cetak Bukti Pembayaran':'Cetak Invoice' }}</button>
 
                         </div>
                     </div>
@@ -384,5 +384,11 @@
 
             return split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
         }
+
+    $('.print-invoice').on('click', function(e){
+        e.preventDefault();
+        var code = "{{ $data->invoices[0]->id }}";
+        window.open("{{ url('booking/print-invoice') }}"+'/'+code, '_blank');
+    })
 </script>
 @endsection

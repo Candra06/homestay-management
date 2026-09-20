@@ -6,6 +6,8 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class Controller extends BaseController
 {
@@ -60,5 +62,21 @@ class Controller extends BaseController
         $extension = '.'.$extension;
 
         return $path.$hash.$extension;
+    }
+
+    protected function insertLog(string $message, Throwable $th, array $extra = []): void
+    {
+        $errorCode = $th->getCode();
+
+        // Hanya catat jika error code tidak kosong dan bukan 0
+        if (!empty($errorCode) && $errorCode !== 0) {
+            Log::error($message, array_merge([
+                'error_code'    => $errorCode,
+                'error_message' => $th->getMessage(),
+                'file'          => $th->getFile(),
+                'line'          => $th->getLine(),
+                'trace'         => $th->getTraceAsString(),
+            ], $extra));
+        }
     }
 }

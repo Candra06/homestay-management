@@ -12,10 +12,8 @@
             margin: 0 !important;
         }
 
-        /* Mengatur tingkat opacity (transparansi) kotak toast */
         #toast-container>.toast {
             opacity: 0.90 !important;
-            /* Ubah angka sesuai keinginan (0.0 - 1.0) */
             filter: alpha(opacity=90) !important;
         }
     </style>
@@ -35,17 +33,29 @@
 
 
     <x-alert />
-
+    @php
+        $roomType = $data->roomType;
+        $additionalRoom = $data->additionalRoom;
+        $generalAdd = $data->generalAdd;
+        $data = $data->bookingData;
+        $guest = $data->guest;
+        $bookingRooms = $data->bookingRooms;
+    @endphp
     <div class="card box-shadow">
         <div class="card-header pb-0">
             <div class="d-flex justify-content-between">
-                <h4 class="card-title mg-b-0">Tambah Reservasi</h4>
+                <h4 class="card-title mg-b-0">Edit Reservasi</h4>
                 <i class="mdi mdi-dots-horizontal text-gray"></i>
             </div>
         </div>
 
         <div class="card-body pd-r-0">
-            <form action="{{ url('/booking') }}" method="POST" class="form-horizontal" enctype="multipart/form-data">
+            <div class=" alert-info p-3 mb-2 me-4">
+               
+                <strong>Pemberitahuan!</strong> Anda hanya dapat mengubah data tamu dan menambahkan layanan tambahan.
+            </div>
+            <form action="{{ url('/booking/'.$data->id) }}" method="POST" class="form-horizontal" enctype="multipart/form-data">
+                @method('PUT')
                 @csrf
                 <div id="booking-container" class="d-block row">
                     {{-- Guest --}}
@@ -62,21 +72,22 @@
                                                     class="tx-danger">*</span></label>
                                             <input type="text" name="guest_name" id="guest_name"
                                                 class="form-control form-control-sm" placeholder="Masukkan Nama Tamu"
-                                                required>
+                                                required value="{{ $guest->nama_lengkap }}">
                                         </div>
                                         <div class="col form-group">
                                             <label class="tx-12" for="email">Email<span
                                                     class="tx-danger">*</span></label>
                                             <input type="email" name="guest_email" id="guest_email"
                                                 class="form-control form-control-sm" placeholder="Masukkan Email Tamu"
-                                                required>
+                                                required value="{{ $guest->email }}">
                                         </div>
                                         <div class="col form-group">
                                             <label class="tx-12" for="phone">Telepon/Whatsapp<span
                                                     class="tx-danger">*</span></label>
                                             <input type="tel" name="phone" id="phone"
                                                 class="form-control form-control-sm input-number"
-                                                placeholder="Masukkan Telepon/Whatsapp" required>
+                                                placeholder="Masukkan Telepon/Whatsapp" required
+                                                value="{{ $guest->no_telp }}">
                                         </div>
                                         <div class="col form-group">
                                             <label class="tx-12" for="identity_type">Tipe Identitas<span
@@ -84,10 +95,16 @@
                                             <select name="identity_type" id="identity_type"
                                                 class="form-control form-control-sm" required>
                                                 <option value="">Pilih Tipe Identitas</option>
-                                                <option value="ktp">KTP</option>
-                                                <option value="sim">SIM</option>
-                                                <option value="passport">Passport</option>
-                                                <option value="other">Lainnya</option>
+                                                <option value="ktp"
+                                                    {{ $guest->identity_type == 'ktp' ? 'selected' : '' }}>KTP</option>
+                                                <option value="sim"
+                                                    {{ $guest->identity_type == 'sim' ? 'selected' : '' }}>SIM</option>
+                                                <option value="passport"
+                                                    {{ $guest->identity_type == 'passport' ? 'selected' : '' }}>Passport
+                                                </option>
+                                                <option value="other"
+                                                    {{ $guest->identity_type == 'other' ? 'selected' : '' }}>Lainnya
+                                                </option>
                                             </select>
                                         </div>
                                         <div class="col form-group">
@@ -95,7 +112,8 @@
                                                     class="tx-danger">*</span></label>
                                             <input type="text" name="identity_number" id="identity_number"
                                                 class="form-control form-control-sm input-number"
-                                                placeholder="Masukkan Nomor Identitas" required>
+                                                placeholder="Masukkan Nomor Identitas" required
+                                                value="{{ $guest->identity_number }}">
                                         </div>
 
                                     </div>
@@ -103,7 +121,7 @@
                                         <div class="col-6 form-group">
                                             <label class="tx-12" for="identity_number">Alamat<span
                                                     class="tx-danger">*</span></label>
-                                            <textarea class="form-control form-control-sm" name="address" id="address" placeholder="Masukkan Alamat"></textarea>
+                                            <textarea class="form-control form-control-sm" name="address" id="address" placeholder="Masukkan Alamat">{{ $guest->address }}</textarea>
                                         </div>
                                         <div class="col form-group">
                                             <label class="tx-12" for="identity_number">Foto Identitas<span
@@ -119,90 +137,104 @@
                     </div>
                     {{-- Room --}}
                     <div class="row" id="room-container">
-                        <div class="col-md-6 card-room">
-                            <div class="card">
-                                <div class="card-header pb-0 d-flex justify-content-between">
-                                    <h4 class="card-title mg-b-0 room-title">Kamar <span class="room-number">1</span></h4>
-                                    <button class="btn btn-outline-primary btn-sm btn-add-room" type="button">
-                                        <i class="fas fa-plus"></i> Tambah
-                                    </button>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
 
-
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="tx-12" for="check_in">Tanggal Check-in<span
-                                                        class="tx-danger">*</span></label>
-                                                <input type="date" name="check_in[]"
-                                                    class="form-control form-control-sm check_in"
-                                                    placeholder="Masukkan Tanggal Check-in" required>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="tx-12" for="check_out">Tanggal Check-out<span
-                                                        class="tx-danger">*</span></label>
-                                                <input type="date" name="check_out[]"
-                                                    class="form-control form-control-sm check_out"
-                                                    placeholder="Masukkan Tanggal Check-out" required>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="tx-12" for="name">Tipe Kamar<span
-                                                        class="tx-danger">*</span></label>
-                                                <select name="room_type[]" class="form-control form-control-sm room-type"
-                                                    required>
-                                                    <option value="">Pilih Tipe Kamar</option>
-                                                    @foreach ($data->roomType as $item)
-                                                        <option value="{{ $item->id }}"
-                                                            data-price="{{ $item->base_price }}"
-                                                            data-name="{{ $item->type_name }}">{{ $item->type_name }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="tx-12" for="email">Nomor Kamar<span
-                                                        class="tx-danger">*</span></label>
-                                                <select name="room_number[]"
-                                                    class="form-control form-control-sm room-number" required>
-                                                    <option value="">Pilih Nomor Kamar</option>
-                                                </select>
-                                            </div>
-                                        </div>
+                        @foreach ($bookingRooms as $item)
+                            <div class="col-md-6 card-room">
+                                <div class="card">
+                                    <div class="card-header pb-0 d-flex justify-content-between">
+                                        <h4 class="card-title mg-b-0 room-title">Kamar <span class="room-number">1</span>
+                                        </h4>
+                                        {{-- <button class="btn btn-outline-primary btn-sm btn-add-room" type="button">
+                                            <i class="fas fa-plus"></i> Tambah
+                                        </button> --}}
                                     </div>
-                                    <div class="row">
-                                        <div class="col-md-12">
+                                    <div class="card-body">
+                                        <div class="row">
 
-                                            <div class="form-group">
-                                                <label class="tx-12" for="name">Layanan Tambahan</label>
-                                                <select class="form-control form-control-sm select2 additional_room"
-                                                    name="additional_services[]" multiple="multiple"
-                                                    data-placeholder="Pilih Layanan Tambahan">
-                                                    @if (count($data->additionalRoom) > 0)
-                                                        @foreach ($data->additionalRoom as $add)
-                                                            <option value="{{ $add->id }}"
-                                                                data-price="{{ $add->price }}"
-                                                                data-name="{{ $add->name }}">
-                                                                {{ $add->name }}</option>
+
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label class="tx-12" for="check_in">Tanggal Check-in<span
+                                                            class="tx-danger">*</span></label>
+                                                    <input type="date" name="check_in[]"
+                                                        class="form-control form-control-sm check_in"
+                                                        value="{{ $item->checkin_date }}" readonly
+                                                        placeholder="Masukkan Tanggal Check-in" required>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label class="tx-12" for="check_out">Tanggal Check-out<span
+                                                            class="tx-danger">*</span></label>
+                                                    <input type="date" name="check_out[]"
+                                                        class="form-control form-control-sm check_out"
+                                                        value="{{ $item->checkout_date }}" readonly
+                                                        placeholder="Masukkan Tanggal Check-out" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label class="tx-12" for="name">Tipe Kamar<span
+                                                            class="tx-danger">*</span></label>
+                                                    <select name="room_type[]"
+                                                        class="form-control form-control-sm room-type" readonly required>
+                                                        <option value="">Pilih Tipe Kamar</option>
+                                                        @foreach ($roomType as $rt)
+                                                            <option value="{{ $rt->id }}"
+                                                                data-price="{{ $rt->base_price }}"
+                                                                {{ $item->room->roomType->id == $rt->id ? 'selected' : '' }}
+                                                                data-name="{{ $rt->type_name }}">{{ $rt->type_name }}
+                                                            </option>
                                                         @endforeach
-                                                    @endif
-                                                </select>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label class="tx-12" for="email">Nomor Kamar<span
+                                                            class="tx-danger">*</span></label>
+                                                    <input type="text" name="room_number_display[]"
+                                                        class="form-control form-control-sm room-number"
+                                                        value="{{ $item->room->room_number }}" readonly>
+                                                    <input type="hidden" name="room_number[]"
+                                                        class="form-control form-control-sm room-number"
+                                                        value="{{ $item->room->id }}" readonly>
+
+                                                    {{-- <select name="room_number[]"
+                                                        class="form-control form-control-sm room-number" required readonly>
+                                                        <option value="{{ $item->room->room_number }}" selected>{{ $item->room->room_number }}</option>
+                                                    </select> --}}
+                                                </div>
                                             </div>
                                         </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+
+                                                <div class="form-group">
+                                                    <label class="tx-12" for="name">Layanan Tambahan</label>
+                                                    <select class="form-control form-control-sm select2 additional_room"
+                                                        name="additional_services[]" multiple="multiple"
+                                                        data-placeholder="Pilih Layanan Tambahan">
+                                                        @if (count($additionalRoom) > 0)
+                                                            @foreach ($additionalRoom as $add)
+                                                                <option value="{{ $add->id }}"
+                                                                    data-price="{{ $add->price }}"
+                                                                    {{ in_array($add->id, $item->additionals->pluck('additional_id')->toArray()) ? 'selected' : '' }}
+                                                                    data-name="{{ $add->name }}">
+                                                                    {{ $add->name }}</option>
+                                                            @endforeach
+                                                        @endif
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+
                                     </div>
-
-
                                 </div>
                             </div>
-                        </div>
-
+                        @endforeach
                     </div>
 
                     <div class="row">
@@ -218,8 +250,8 @@
                                         <label class="tx-12" for="name">Layanan Tambahan</label>
                                         <select class="form-control form-control-sm select2 additional_services"
                                             id="additional_services" name="additional_services" multiple="multiple">
-                                            @if (count($data->generalAdd) > 0)
-                                                @foreach ($data->generalAdd as $add)
+                                            @if (count($generalAdd) > 0)
+                                                @foreach ($generalAdd as $add)
                                                     <option value="{{ $add->id }}">
                                                         {{ $add->name }}</option>
                                                 @endforeach
@@ -229,36 +261,51 @@
                                             <label class="tx-12" for="book_reff">Sumber Reservasi<span
                                                     class="tx-danger">*</span></label>
                                             <select name="book_reff" id="book_reff" class="form-control form-control-sm"
-                                                required>
+                                                readonly required>
                                                 <option value="">Pilih Sumber Reservasi</option>
-                                                <option value="direct_walkin">Direct Walk-In</option>
-                                                <option value="direct_wa">Direct Whatsapp</option>
-                                                <option value="ota">OTA</option>
+                                                <option value="direct_walkin"
+                                                    {{ $data->book_reff == 'direct_walkin' ? 'selected' : '' }}>Direct
+                                                    Walk-In</option>
+                                                <option value="direct_wa"
+                                                    {{ $data->book_reff == 'direct_wa' ? 'selected' : '' }}>Direct Whatsapp
+                                                </option>
+                                                <option value="ota" {{ $data->book_reff == 'ota' ? 'selected' : '' }}>
+                                                    OTA</option>
                                             </select>
                                         </div>
                                         <div class="form-group mt-2 ota_container">
                                             <label class="tx-12" for="book_reff">External Booking ID<span
                                                     class="tx-danger">*</span></label>
                                             <input type="text" name="external_booking_id" id="external_booking_id"
-                                                class="form-control form-control-sm"
+                                                class="form-control form-control-sm" readonly
+                                                value="{{ $data->external_booking_id }}"
                                                 placeholder="Masukkan External Booking ID">
                                         </div>
                                         <div class="form-group mt-2 ota_container">
                                             <label class="tx-12" for="ota_name">OTA Name<span
                                                     class="tx-danger">*</span></label>
-                                            <select name="ota_name" id="ota_name" class="form-control form-control-sm">
+                                            <select name="ota_name" id="ota_name" class="form-control form-control-sm"
+                                                readonly>
                                                 <option value="">Pilih OTA Name</option>
-                                                <option value="Agoda">Agoda</option>
-                                                <option value="Booking.com">Booking.com</option>
-                                                <option value="Ticket.com">Ticket.com</option>
-                                                <option value="Traveloka">Traveloka</option>
-                                                <option value="Airbnb">Airbnb</option>
+                                                <option value="Agoda" {{ $data->ota_name == 'Agoda' ? 'selected' : '' }}>
+                                                    Agoda</option>
+                                                <option value="Booking.com"
+                                                    {{ $data->ota_name == 'Booking.com' ? 'selected' : '' }}>Booking.com
+                                                </option>
+                                                <option value="Ticket.com"
+                                                    {{ $data->ota_name == 'Ticket.com' ? 'selected' : '' }}>Ticket.com
+                                                </option>
+                                                <option value="Traveloka"
+                                                    {{ $data->ota_name == 'Traveloka' ? 'selected' : '' }}>Traveloka
+                                                </option>
+                                                <option value="Airbnb"
+                                                    {{ $data->ota_name == 'Airbnb' ? 'selected' : '' }}>Airbnb</option>
                                             </select>
                                         </div>
                                         <div class="form-group mt-2 ">
                                             <label class="tx-12" for="book_reff">Catatan Tambahan</label>
-                                            <textarea type="text" name="additional_notes" id="additional_notes" class="form-control form-control-sm"
-                                                placeholder="Masukkan Catatan Tambahan"></textarea>
+                                            <textarea type="text" name="additional_notes" readonly id="additional_notes" class="form-control form-control-sm"
+                                                placeholder="Masukkan Catatan Tambahan">{{ $data->note }}</textarea>
                                         </div>
                                     </div>
 
@@ -281,11 +328,11 @@
                                             </div>
                                             <div class="col-md-8">
                                                 <div class="form-group">
-                                                    <input type="hidden" name="subtotal_value" id="subtotal_value"
-                                                        value="0">
+                                                    <input type="hidden" name="subtotal_value" id="subtotal_value" 
+                                                        value="{{ $data->subtotal }}">
                                                     <input type="number" name="subtotal" id="subtotal"
-                                                        class="form-control form-control-sm" value="0" readonly
-                                                        placeholder="Masukkan Jumlah Pembayaran">
+                                                        class="form-control form-control-sm" value="{{ App\Helper\Helpers::rupiah($data->subtotal) }}" readonly
+                                                        >
                                                 </div>
                                             </div>
                                         </div>
@@ -296,9 +343,9 @@
                                             <div class="col-md-8">
                                                 <div class="form-group ms-4">
                                                     <input type="checkbox" name="tax" id="tax"
-                                                        class="custom-control-input">
+                                                        class="custom-control-input" {{ $data->tax >0 ? 'checked' :'' }}>
                                                     <input type="hidden" name="tax_value" id="tax_value"
-                                                        value="0">
+                                                        value="{{ $data->tax }}">
                                                     <label class="custom-control-label tx-12" for="tax">Aktifkan
                                                         PPN</label>
                                                 </div>
@@ -332,7 +379,7 @@
                                                     <select class="form-control form-control-sm" name="disc_type"
                                                         id="disc_type">
                                                         <option value="">Pilih Tipe Diskon</option>
-                                                        <option value="nominal">Nominal</option>
+                                                        <option value="nominal" selected>Nominal</option>
                                                         <option value="percentage">Persentase</option>
                                                     </select>
                                                 </div>
@@ -341,11 +388,11 @@
                                                 <div class="form-group">
                                                     <input type="text" name="discount_display" id="discount_display"
                                                         class="form-control form-control-sm input-display"
-                                                        placeholder="Masukkan Jumlah Diskon">
+                                                        placeholder="Masukkan Jumlah Diskon" value="{{ App\Helper\Helpers::rupiah($data->discount_amount) }}">
                                                     <input type="hidden" name="discount" id="discount"
-                                                        class="input-raw">
+                                                        class="input-raw" value="{{ $data->discount_amount }}">
                                                     <input type="hidden" name="discount_amount_value"
-                                                        id="discount_amount_value" class="input-raw">
+                                                        id="discount_amount_value" class="input-raw" value="{{ $data->discount_amount }}">
                                                 </div>
                                             </div>
                                         </div>
@@ -356,10 +403,10 @@
                                             <div class="col-md-8">
                                                 <div class="form-group">
                                                     <input type="hidden" name="grand_total_value" id="grand_total_value"
-                                                        value="0">
+                                                        value="{{ $data->grand_total }}">
                                                     <input type="number" name="grand_total" id="grand_total"
                                                         class="form-control form-control-sm"
-                                                        placeholder="Masukkan Jumlah Diskon" value="0" readonly>
+                                                        placeholder="" value="{{ App\Helper\Helpers::rupiah($data->grand_total) }}" readonly>
                                                 </div>
                                             </div>
                                         </div>
@@ -370,13 +417,22 @@
                                                         class="tx-danger">*</span></label>
                                             </div>
                                             <div class="col-md-8">
+                                                @php
+                                                    $amount = 0;
+                                                    if (isset($data->paid_at)) {
+                                                        $amount = 0;
+                                                    } else {
+                                                        $amount = $data->down_payment;
+                                                    }
+                                                    
+                                                @endphp
                                                 <div class="form-group">
                                                     <input type="text" name="payment_amount_display"
                                                         id="payment_amount_display"
-                                                        class="form-control form-control-sm input-display" value=""
+                                                        class="form-control form-control-sm input-display" value="{{ App\Helper\Helpers::rupiah($data->total_payment) }}"
                                                         placeholder="Masukkan Jumlah Pembayaran" required>
                                                     <input type="hidden" class="input-raw" name="payment_amount"
-                                                        id="payment_amount" value="" required>
+                                                        id="payment_amount" value="{{ $data->total_payment }}" required>
                                                 </div>
                                             </div>
                                         </div>
@@ -389,9 +445,9 @@
                                                 <div class="form-group">
                                                     <input type="text" name="dp_amount_masking" id="dp_amount_masking"
                                                         class="form-control form-control-sm input-display"
-                                                        value="{{ old('dp_amount') }}" placeholder="Masukkan Jumlah DP">
+                                                        value="{{ App\Helper\Helpers::rupiah($data->down_payment) }}" placeholder="Masukkan Jumlah DP">
                                                     <input type="hidden" class="input-raw" name="dp_amount"
-                                                        id="dp_amount" value="{{ old('dp_amount') }}">
+                                                        id="dp_amount" value="{{ $data->down_payment }}">
                                                 </div>
                                             </div>
                                         </div>
@@ -405,9 +461,9 @@
                                                     <select name="payment_method" id="payment_method"
                                                         class="form-control form-control-sm" required>
                                                         <option value="">Pilih Metode Pembayaran</option>
-                                                        <option value="Bank Transfer">Transfer Bank</option>
-                                                        <option value="Cash">Tunai</option>
-                                                        <option value="QRIS">QRIS</option>
+                                                        <option value="Bank Transfer" {{ $data->payment_method =='Bank Transfer' ? 'selected' : '' }}>Transfer Bank</option>
+                                                        <option value="Cash" {{ $data->payment_method =='Cash' ? 'selected' : '' }}>Tunai</option>
+                                                        <option value="QRIS" {{ $data->payment_method =='QRIS' ? 'selected' : '' }}>QRIS</option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -421,7 +477,7 @@
                                             <div class="col-md-8">
                                                 <div class="form-group">
                                                     <input type="date" name="payment_date" id="payment_date"
-                                                        class="form-control form-control-sm" value=""
+                                                        class="form-control form-control-sm" value="{{ isset($data->paid_at) ? explode(' ',$data->paid_at)[0] : explode(' ',$data->down_payment_paid_at)[0]}}"
                                                         placeholder="Masukkan Tanggal Pembayaran" required>
                                                 </div>
                                             </div>
@@ -462,6 +518,10 @@
             if ($('.select2').length > 0) {
                 $('.select2').select2();
             }
+            $("#subtotal").val(rupiah("{{ $data->subtotal }}"));
+            $("#subtotal_value").val("{{ $data->subtotal }}");
+            $("#grand_total").val(rupiah("{{ $data->grand_total }}"));
+            $("#grand_total_value").val("{{ $data->grand_total }}");
         };
         var guest = {};
         var rooms = [];
@@ -477,7 +537,7 @@
                 "progressBar": true
             };
             updateRoomNumbers();
-            $('.container-value-discount').hide();
+            
             $('.select2').select2();
 
             $('.ota_container').hide();
