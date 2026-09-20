@@ -520,34 +520,31 @@ class RoomTypesController extends Controller
             $targetDate = $request->input('date'); // Contoh: '2026-09-15'
 
             $rooms = Rooms::where('id_room_type', $id)->with(['bookings', 'roomType'])
-                ->get()
-                ->map(function ($room) use ($targetDate) {
-                    // Cek apakah ada booking aktif di tanggal tersebut
-                    $activeBooking = $room->bookings()
-                        ->whereHas('booking', function($q) {
-                            $q->whereIn('booking_status', ['Approved', 'Checked-In']);
-                        })
-                ->where(function($query) use ($targetDate) {
-                    // Kondisi: target date berada di antara check_in dan check_out 
-                    // (check_out menggunakan tanda '<' karena hari check-out kamar sudah kosong untuk tamu berikutnya)
-                    $query->where('checkin_date', '<=', $targetDate)
-                          ->where('checkout_date', '>', $targetDate);
-                })
-                ->with('booking')
-                ->first();
+                        ->get()
+                        ->map(function ($room) use ($targetDate) {
+                            $activeBooking = $room->bookings()
+                                ->whereHas('booking', function($q) {
+                                    $q->whereIn('booking_status', ['Approved', 'Checked-In']);
+                                })
+                            ->where(function($query) use ($targetDate) {
+                                $query->where('checkin_date', '<=', $targetDate)
+                                    ->where('checkout_date', '>', $targetDate);
+                            })
+                            ->with('booking')
+                            ->first();
 
-                if ($activeBooking) {
-                    $room->status = $room->status =='Approved'? 'Booked': 'Check-In';
-                    $room->booking_code = $activeBooking->booking->booking_code ?? '-';
-                    $room->booking_status = $activeBooking->booking->booking_status ?? '-';
-                } else {
-                    $room->status = $room->status != 'Maintenance' ? 'Tersedia' : 'Maintenance';
-                    $room->booking_code = null;
-                    $room->booking_status = null;
-                }
+                            if ($activeBooking) {
+                                $room->status = $room->status =='Approved'? 'Booked': 'Check-In';
+                                $room->booking_code = $activeBooking->booking->booking_code ?? '-';
+                                $room->booking_status = $activeBooking->booking->booking_status ?? '-';
+                            } else {
+                                $room->status = $room->status;
+                                $room->booking_code = null;
+                                $room->booking_status = null;
+                            }
 
-                return $room;
-            });
+                            return $room;
+                    });
             
             return response()->json([
                 'status' => true,
