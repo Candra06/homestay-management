@@ -534,11 +534,11 @@ class RoomTypesController extends Controller
                             ->first();
 
                             if ($activeBooking) {
-                                $room->status = $room->status =='Approved'? 'Booked': 'Check-In';
+                                $room->status =  $activeBooking->booking->booking_status =='Approved'? 'Booked': 'Check-In';
                                 $room->booking_code = $activeBooking->booking->booking_code ?? '-';
                                 $room->booking_status = $activeBooking->booking->booking_status ?? '-';
                             } else {
-                                $room->status = $room->status == 'Terisi' ? 'Check-In' : $room->status;
+                                $room->status = $room->status == 'Terisi' ? 'Check-In' : ($activeBooking->booking->booking_code == null ? 'Tersedia' : $room->status);
                                 $room->booking_code = null;
                                 $room->booking_status = null;
                             }
