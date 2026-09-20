@@ -128,7 +128,7 @@
                             <div class="card-body tx-white">
                                 <h3 class=" tx-center">${item.room_number}</h3>
                                 <p class="tx-center mb-0">${item.status}</p>
-                                <p class="tx-center ${item.status == 'Booked' ? 'mb-0' : 'mb-1 pb-3'}">${item.status == 'Booked' ? item.booking_code : ''}</p>
+                                <p class="tx-center ${['Booked', 'Check-In'].includes(item.status) ? 'mb-0' : 'mb-1 pb-3'}">${['Booked', 'Check-In'].includes(item.status) ? item.booking_code : ''}</p>
                             </div>
                         </div>
                     </div>

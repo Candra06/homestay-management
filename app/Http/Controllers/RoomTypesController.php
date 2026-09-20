@@ -547,20 +547,32 @@ class RoomTypesController extends Controller
                                 })
                             ->where(function($query) use ($targetDate) {
                                 $query->where('checkin_date', '<=', $targetDate)
-                                    ->where('checkout_date', '>', $targetDate);
+                                    ->where('checkout_date', '>=', $targetDate);
                             })
                             ->with('booking')
                             ->first();
                             
                             if ($activeBooking) {
                                 $bookingStatus = $activeBooking->booking->booking_status;
+                                $target = date('Y-m-d', strtotime($targetDate));
+                                $checkin = date('Y-m-d', strtotime($activeBooking->checkin_date));
+                                $checkout = date('Y-m-d', strtotime($activeBooking->checkout_date));
+                                $status = '';
+                                if (($target <= $checkin || $target > $checkout) && $activeBooking->booking->booking_code == null) {
+                                    $status = 'Tersedia';
+                                } else if($bookingStatus == 'Approved'){
+                                    $status = 'Booked';
+                                } else {
+                                    $status = 'Check-In';
+                                }
+                                
 
-                                $room->status = ($bookingStatus === 'Approved') ? 'Booked' : 'Check-In';
+                                $room->status = $status;
+                                // $room->status = ($bookingStatus === 'Approved' && $target <= $checkin && $target >= $checkout) ? 'Booked' : 'Check-In';
                                 $room->booking_code = $activeBooking->booking->booking_code ?? '-';
                                 $room->booking_status = $activeBooking->booking->booking_status ?? '-';
                             } else {
                                 $room->status = $room->status != 'Maintenance' ? 'Tersedia' : 'Maintenance';
-                                // $room->status = $activeBooking->booking_status == 'Terisi' ? 'Check-In' : ($activeBooking->booking_code == null ? 'Tersedia' : $room->status);
                                 $room->booking_code = null;
                                 $room->booking_status = null;
                             }
