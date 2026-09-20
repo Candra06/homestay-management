@@ -109,6 +109,9 @@
                     case 'Booked':
                         bgCard = "bg-warning";
                         break;
+                    case 'Terisi':
+                        bgCard = "bg-warning";
+                        break;
                     case 'Check-In':
                         bgCard = "bg-danger";
                         break;
