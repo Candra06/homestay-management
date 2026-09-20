@@ -77,7 +77,7 @@
     $item = (object) $data->items;
     $booking = (object) $data->booking;
     $guest = (object) $booking->guest;
-    $lastPayment = $data->payments[count($data->payments) -1];
+    $lastPayment = count($data->payments) > 0? $data->payments[count($data->payments) -1]:null;
 @endphp
 
 <body>
@@ -124,7 +124,7 @@
                             <tr>
                                 <td>Nomor {{ $data->status == 'Paid' ? 'Invoice' :'Pemabayaran' }}</td>
                                 <td>:</td>
-                                <td>{{ $data->status == 'Paid' ? $data->invoice_number : $lastPayment->code }}</td>
+                                <td>{{ $data->status == 'Paid' ? $data->invoice_number : ($lastPayment->code??'-') }}</td>
                             </tr>
                             <tr>
                                 <td>Status</td>
@@ -151,7 +151,7 @@
                                 <td>Tanggal Pembayaran</td>
                                 <td>:</td>
                                 <td>
-                                    {{ App\Helper\Helpers::tanggal(explode(' ', $lastPayment->paid_at)[0]) }}
+                                    {{ $lastPayment!=null ? App\Helper\Helpers::tanggal(explode(' ', $lastPayment->paid_at)[0]) :'-' }}
                                 </td>
                             </tr>
                         </table>

@@ -615,10 +615,12 @@ class BookingController extends Controller
             Invoice::where('id', $invoice->id)->update($updateInvoice);
             $addPayment = [
                 'invoice_id' => $invoice->id,
+                'code' => $this->generatePaymentCode(),
                 'amount' => $request->amount,
                 'payment_method' => $request->payment_method,
                 'reference_number' => $invoice->invoice_number,
                 'paid_at' => $request->tgl_bayar.' '.date('H:i:s'),
+                'description'=> 'Pelunasan Reservasi No. '.$booking->booking_code.' Invoice No. '.$invoice->invoice_number,
                 'created_by' => Auth::user()->id,
                 'created_at' => Carbon::now(),
                 'updated_by' => Auth::user()->id,
