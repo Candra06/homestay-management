@@ -308,7 +308,12 @@
                  var telepon = (data.get('telepon') || '').trim();
                  var checkin = data.get('checkin') || '';
                  var checkout = data.get('checkout') || '';
-                 var tipeKamar = (document.getElementById('bookingRoomLabel').textContent ?? data.get('tipe_kamar')) || '';
+                 var tipeKamar = '';
+                 if (document.getElementById('bookingRoomLabel')) {
+                    tipeKamar = document.getElementById('bookingRoomLabel').textContent ?? '';
+                 }else {
+                    tipeKamar = data.get('tipe_kamar') ?? '';
+                 }
                  var voucher = (data.get('voucher') || '').trim();
                  var catatan = (data.get('catatan') || '').trim();
 
