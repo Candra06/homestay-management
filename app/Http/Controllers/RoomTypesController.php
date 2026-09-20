@@ -538,7 +538,7 @@ class RoomTypesController extends Controller
                                 $room->booking_code = $activeBooking->booking->booking_code ?? '-';
                                 $room->booking_status = $activeBooking->booking->booking_status ?? '-';
                             } else {
-                                $room->status = $room->status;
+                                $room->status = $room->status == 'Terisi' ? 'Check-In' : $room->status;
                                 $room->booking_code = null;
                                 $room->booking_status = null;
                             }
