@@ -492,26 +492,32 @@ class BookingController extends Controller
     private function generatePaymentCode()
     {
         
-        $now = Carbon::now();
-        $yearFormatted = $now->format('Y'); 
-        $monthFormatted = $now->format('m'); 
-        $dayFormatted = $now->format('d'); 
-        $prefix = 'EZ-PAY/' . $yearFormatted .'/'. $monthFormatted .'/'. $dayFormatted .'/';
+        try {
+            $now = Carbon::now();
+            $yearFormatted = $now->format('Y'); 
+            $monthFormatted = $now->format('m'); 
+            $dayFormatted = $now->format('d'); 
+            $prefix = 'EZ-PAY/' . $yearFormatted .'/'. $monthFormatted .'/'. $dayFormatted .'/';
 
-        $lastPayment = Payment::whereDate('created_at', $now->toDateString())
-            ->orderBy('id', 'desc')
-            ->withTrashed()
-            ->first();
-        if (!$lastPayment) {
-            $sequence = 1;
-        } else {
-            $lastCode = $lastPayment->code;
-            $lastSequence = (int) substr($lastCode, -3);
-            $sequence = $lastSequence + 1;
+            $lastPayment = Payment::whereDate('created_at', $now->toDateString())
+                ->whereNotNull('code')
+                ->orderBy('id', 'desc')
+                ->withTrashed()
+                ->first();
+            if (!$lastPayment) {
+                $sequence = 1;
+            } else {
+                $lastCode = $lastPayment->code;
+                $lastSequence = (int) substr($lastCode, -3);
+                $sequence = $lastSequence + 1;
+            }
+            $sequenceFormatted = str_pad($sequence, 3, '0', STR_PAD_LEFT);
+            
+            return $prefix .$sequenceFormatted;
+        } catch (\Throwable $th) {
+            $this->insertLog('Gagal generate payment code', $th,);
+            return 'EZ-PAY/' . Carbon::now()->format('Y') .'/'. Carbon::now()->format('m') .'/'. Carbon::now()->format('d') .'/001';
         }
-        $sequenceFormatted = str_pad($sequence, 3, '0', STR_PAD_LEFT);
-        
-        return $prefix .$sequenceFormatted;
     }
 
     public function ajax($list)
