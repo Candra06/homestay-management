@@ -22,4 +22,22 @@ class FinancialTransaction extends Model
         'updated_by'
     ];
 
+    public function account()
+    {
+        return $this->belongsTo(FinancialAccount::class, 'financial_account_id');
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+    public function reference()
+    {
+        return $this->morphTo();
+    }
+    
+    public function getReferenceAttribute($value)
+    {
+        return $this->morphTo()->first();
+    }
+
 }

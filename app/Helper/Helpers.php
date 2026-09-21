@@ -57,6 +57,16 @@ class Helpers {
                 $format[] = ["data" => $value, "name" => $value, "searchable" => true, "orderable" => true, "width" => '10%'];
             }else if ($value == "booking_status"){
                 $format[] = ["data" => $value, "name" => $value, "searchable" => true, "orderable" => false, "width" => '10%'];
+            }else if ($value == "amount"){
+                $format[] = ["data" => $value, "name" => $value, "searchable" => true, "orderable" => false, "width" => '12%'];
+            }else if ($value == "transaction_date"){
+                $format[] = ["data" => $value, "name" => $value, "searchable" => true, "orderable" => false, "width" => '12%'];
+            }else if ($value == "account_name"){
+                $format[] = ["data" => $value, "name" => $value, "searchable" => true, "orderable" => false, "width" => '12%'];
+            }else if ($value == "transaction_type"){
+                $format[] = ["data" => $value, "name" => $value, "searchable" => true, "orderable" => false, "width" => '10%'];
+            }else if ($value == "created_by"){
+                $format[] = ["data" => $value, "name" => $value, "searchable" => true, "orderable" => false, "width" => '10%'];
             }else if ($value == "payment_status"){
                 $format[] = ["data" => $value, "name" => $value, "searchable" => true, "orderable" => false, "width" => '10%'];
             }else {

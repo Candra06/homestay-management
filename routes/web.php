@@ -15,6 +15,7 @@ use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\PromoController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\GuestController;
+use App\Http\Controllers\FinancialTransactionController;
 use App\Http\Middleware\CheckAccessMidleware;
 
 /*
@@ -58,6 +59,7 @@ Route::group(["prefix" => "/", "middleware" => ["auth", CheckAccessMidleware::cl
     Route::resource('voucher', VoucherController::class);
     Route::resource('promo', PromoController::class);
     Route::resource('guest', GuestController::class);
+    Route::resource('cashflow', FinancialTransactionController::class);
 
     
 });

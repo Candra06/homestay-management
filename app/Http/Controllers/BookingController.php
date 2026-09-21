@@ -68,10 +68,7 @@ class BookingController extends Controller
             $dataPage = $this->dataPage;
             $list = Booking::with('guest','bookingRooms', 'bookingRooms.room', 'userCreate')->orderBy('created_at', 'DESC')->get();
             $akses = request()->attributes->get("hakAkses");
-            if ($akses['access_edit'] != 'Y' && $akses['access_delete'] != 'Y') {
-                unset($dataPage['tableHead'][count($dataPage['tableHead']) - 1]);
-                unset($dataPage['tableColumns'][count($dataPage['tableColumns']) - 1]);
-            }
+            
             $data=(object)[
                 'title' => 'Booking',
                 'subtitle' => 'Reservasi',
@@ -586,8 +583,8 @@ class BookingController extends Controller
                 $deleteRoute = route($this->dataPage['route']['delete'], $row->id);
                 $message = 'Apakah Anda yakin untuk menghapus booking '.$row->booking_code.' ?';
 
-                $actionBtn = $akses['access_edit'] != 'Y' ? '' : '<a href="'.$editRoute.'"><button class="btn-sm me-2 btn btn-warning" style="font-size:12px;"><span class="fe fe-edit"></span></button></a>';
-                $actionBtn .= '<a href="'.$detailRoute.'"><button class="btn-sm me-2 btn btn-primary" style="font-size:12px;"><span class="fe fe-eye"></span></button></a>';
+                $actionBtn = '<a href="'.$detailRoute.'"><button class="btn-sm me-2 btn btn-primary" style="font-size:12px;"><span class="fe fe-eye"></span></button></a>';
+                $actionBtn .= $akses['access_edit'] != 'Y' ? '' : '<a href="'.$editRoute.'"><button class="btn-sm me-2 btn btn-warning" style="font-size:12px;"><span class="fe fe-edit"></span></button></a>';
                 $actionBtn .= $akses['access_delete'] != 'Y' ? '' : '<button class="btn-sm mr-2 modal-effect btn btn-danger" data-bs-effect="effect-scale" data-bs-toggle="modal" style="font-size:12px;" onclick="deleteData(\''.$deleteRoute.'\', \''.$message.'\')" href="#modal-delete"><span class="fe fe-trash"></span></button>';
 
                 return $actionBtn;
