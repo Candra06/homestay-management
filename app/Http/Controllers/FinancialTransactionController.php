@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\FinancialTransaction;
+use App\Models\FinancialAccount;
 use Illuminate\Http\Request;
 use App\Helper\Helpers;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\DB;
+use Auth;
 
 class FinancialTransactionController extends Controller
 {
@@ -36,17 +38,17 @@ class FinancialTransactionController extends Controller
             'user'])
             ->orderBy('transaction_date', 'DESC')
             ->get();
-
+            $category = FinancialAccount::whereIn('id', [18,19,29,21,22,25,26,3,8,11,12,13,14])->get();
             $summary = FinancialTransaction::select(
                 DB::raw('SUM(CASE WHEN transaction_type = "income" THEN amount ELSE 0 END) as income'),
                 DB::raw('SUM(CASE WHEN transaction_type = "expense" THEN amount ELSE 0 END) as expense')
             )->first();
             
             $akses = request()->attributes->get('hakAkses');
-            if ($akses['access_edit'] != 'Y' && $akses['access_delete'] != 'Y') {
-                unset($dataPage['tableHead'][7]);
-                unset($dataPage['tableColumns'][7]);
-            }
+            // if ($akses['access_edit'] != 'Y' && $akses['access_delete'] != 'Y') {
+            //     unset($dataPage['tableHead'][7]);
+            //     unset($dataPage['tableColumns'][7]);
+            // }
             $data = (object) [
                 'title' => 'Cash Flow',
                 'createBtn' => $akses['access_create'] == 'Y',
@@ -56,6 +58,7 @@ class FinancialTransactionController extends Controller
                 'routeData' => route($dataPage['route']['index']),
                 'data' => $list,
                 'summary' => $summary,
+                'category' => $category,
             ];
 
             if (request()->ajax()) {
@@ -82,7 +85,32 @@ class FinancialTransactionController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'transaction_date' => 'required',
+                'transaction_category' => 'required',
+                'transaction_type' => 'required',
+                'amount' => 'required',
+                'description' => 'nullable',
+            ]);
+            FinancialTransaction::create([
+                'transaction_date' => $request->transaction_date,
+                'financial_account_id' => $request->transaction_category,
+                'transaction_type' => $request->transaction_type,
+                'amount' => $request->amount,
+                'reference_type' =>  in_array($request->transaction_category, [3,11,12]) ? 'booking' : 'general',
+                'description' => $request->description??'-',
+                'created_by' => Auth::user()->id,
+            ]);
+            DB::commit();
+            return redirect()->route($this->dataPage['route']['index'])
+            ->with('success', 'Data berhasil ditambahkan');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return redirect()->route($this->dataPage['route']['index'])
+            ->with('error', 'Data gagal ditambahkan, message : '.$th->getMessage());
+        }
     }
 
     /**
@@ -114,7 +142,22 @@ class FinancialTransactionController extends Controller
      */
     public function destroy(FinancialTransaction $financialTransaction)
     {
-        //
+        DB::beginTransaction();
+        try {
+            $financialTransaction->delete();
+            DB::commit();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data berhasil dihapus',
+            ]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            $this->insertLog('error cashflow',$th);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Data gagal dihapus, message : '.$th->getMessage(),
+            ]);
+        }
     }
 
     public function ajax($list)
@@ -143,9 +186,14 @@ class FinancialTransactionController extends Controller
                 $detailRoute = route($this->dataPage['route']['show'], $row->id);
                 $deleteRoute = route($this->dataPage['route']['delete'], $row->id);
                 $message = 'Apakah Anda yakin untuk menghapus tipe kamar '.$row->type_name.' ?';
-
-                $actionBtn = $akses['access_edit'] != 'Y' ? '' : '<a href="'.$editRoute.'"><button class="btn-sm me-2 btn btn-warning" style="font-size:12px;"><span class="fe fe-edit"></span></button></a>';
-                $actionBtn .= $akses['access_delete'] != 'Y' ? '' : '<button class="btn-sm mr-2 modal-effect btn btn-danger" data-bs-effect="effect-scale" data-bs-toggle="modal" style="font-size:12px;" onclick="deleteData(\''.$deleteRoute.'\', \''.$message.'\')" href="#modal-delete"><span class="fe fe-trash"></span></button>';
+                $showDelete = false;
+                if ($row->reference_type == 'booking') {
+                    $showDelete = false;
+                }else if($akses['access_delete'] == 'Y') {
+                    $showDelete = true;
+                }
+                // $actionBtn = $akses['access_edit'] != 'Y' ? '' : '<a href="'.$editRoute.'"><button class="btn-sm me-2 btn btn-warning" style="font-size:12px;"><span class="fe fe-edit"></span></button></a>';
+                $actionBtn = $showDelete == false ? '' : '<button class="btn-sm mr-2 modal-effect btn btn-danger" data-bs-effect="effect-scale" data-bs-toggle="modal" style="font-size:12px;" onclick="deleteData(\''.$deleteRoute.'\', \''.$message.'\')" href="#modal-delete"><span class="fe fe-trash"></span></button>';
 
                 return $actionBtn;
             })

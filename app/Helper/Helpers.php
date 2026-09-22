@@ -60,7 +60,7 @@ class Helpers {
             }else if ($value == "amount"){
                 $format[] = ["data" => $value, "name" => $value, "searchable" => true, "orderable" => false, "width" => '12%'];
             }else if ($value == "transaction_date"){
-                $format[] = ["data" => $value, "name" => $value, "searchable" => true, "orderable" => false, "width" => '12%'];
+                $format[] = ["data" => $value, "name" => $value, "searchable" => true, "orderable" => true, "width" => '12%'];
             }else if ($value == "account_name"){
                 $format[] = ["data" => $value, "name" => $value, "searchable" => true, "orderable" => false, "width" => '12%'];
             }else if ($value == "transaction_type"){
@@ -69,6 +69,8 @@ class Helpers {
                 $format[] = ["data" => $value, "name" => $value, "searchable" => true, "orderable" => false, "width" => '10%'];
             }else if ($value == "payment_status"){
                 $format[] = ["data" => $value, "name" => $value, "searchable" => true, "orderable" => false, "width" => '10%'];
+            }else if ($value == "description"){
+                $format[] = ["data" => $value, "name" => $value, "searchable" => true, "orderable" => false, "width" => '20%'];
             }else {
                 if ($value == "DT_RowIndex" || $value == "select") {
                     $format[] = ["data" => $value, "name" => $value, "width" => '4%'];
