@@ -217,6 +217,11 @@
                     </td>
                 </tr>
                 <tr>
+                    <td colspan="3" style="text-align: right;">Metode Pembayaran</td>
+                    <td style="text-align: right;"><strong>{{ $booking->payment_method }}</strong>
+                    </td>
+                </tr>
+                <tr>
                     <td colspan="3" style="text-align: right;">Total</td>
                     <td style="text-align: right;">
                         <strong>{{ App\Helper\Helpers::rupiah($data->grand_total) }}</strong>

@@ -277,15 +277,17 @@ class BookingController extends Controller
                 'updated_at' => Carbon::now()
             ];
             $this->insertTransaction($bodyTransaction);
-            // $bookingAdditionalData = [];
-            // for ($i=0; $i < count($request->additional_id); $i++) {
-            //     $bookingAdditionalData[] = [
-            //         'booking_id' => $booking->id,
-            //         'additional_id' => $request->additional_id[$i],
-            //         'qty' => $request->qty[$i],s
-            //     ];
-            // }
-            // BookingAdditional::insert($bookingAdditionalData);
+            $bookingAdditionalData = [];
+            for ($i=0; $i < count($request->additional_services); $i++) {
+                $add = Additional::where('id', $request->additional_services[$i])->first();
+                $bookingAdditionalData[] = [
+                    'booking_id' => $booking->id,
+                    'additional_id' => $request->additional_services[$i],
+                    'price_per_additional' => $add->price,
+                    'total_price' => $add->price,
+                ];
+            }
+            BookingAdditional::insert($bookingAdditionalData);
              if ($request->hasFile('identity_image')) {
                 $file = $request->file('identity_image');
                 $path = storage_path('app/public/guest');
@@ -327,6 +329,8 @@ class BookingController extends Controller
         $bookingData = Booking::with(
                 'guest', 
                 'invoices', 
+                'additional',
+                'additional.item',
                 'bookingRooms',
                 'bookingRooms.room', 
                 'bookingRooms.additionals', 
@@ -391,7 +395,106 @@ class BookingController extends Controller
      */
     public function update(Request $request, Booking $booking)
     {
-        //
+        
+        DB::beginTransaction();
+        try {
+            $booking = Booking::where('id', $booking->id)->first();
+            $bookingRoomData = [];
+            $bookingAddOnData = [];
+            $invoiceItemData = [];
+            for ($i=0; $i < count($request->room_type); $i++) {
+                $room = BookingRoom::where('room_id', $request->room_number[$i])->where('booking_id', $booking->id)->first();
+                $checkIn = new DateTime($request->check_in[$i]);
+                $checkOut = new DateTime($request->check_out[$i]);
+                $nights = $checkIn->diff($checkOut)->days;
+                $additionalAddOn = $request->input("additional_room-{$i}", []);
+               
+                foreach ($additionalAddOn as $key => $add) {
+                    $bookingRoomAdd = BookingRoomAdditional::where('booking_room_id', $room->id)->where('additional_id', $add)->first();
+                    if(!$bookingRoomAdd){
+                        $addInfo = Additional::where('id', $add)->first();
+                        $bookingAddOnData[] = [
+                            'booking_room_id' => $room->id,
+                            'additional_id' => $add,
+                            'price_per_additional' => $addInfo->price,
+                            'total_price' => $addInfo->price * $nights,
+                            'created_at' => date('Y-m-d H:i:s'),
+                        ];
+                        $invoiceItemData[] = [
+                            'invoice_id' => 0,
+                            'item_name' => 'Additional ' . $addInfo->name,
+                            'quantity' => $nights,
+                            'unit_price' => $addInfo->price,
+                            'total_price' => $addInfo->price * $nights,
+                        ];
+                    }
+                }
+            }
+            // return [
+            //     'bookingAddOnData' => $bookingAddOnData,
+            //     'invoiceItemData' => $invoiceItemData,
+            // ];
+            BookingRoomAdditional::insert($bookingAddOnData);
+
+            $bookingAdditionalData = [];
+            for ($i=0; $i < count($request->additional_services); $i++) {
+                $bookingAdd = BookingAdditional::where('booking_id', $booking->id)->where('additional_id', $request->additional_services[$i])->first();
+                if (!$bookingAdd) {
+                    $add = Additional::where('id', $request->additional_services[$i])->first();
+                    $bookingAdditionalData[] = [
+                        'booking_id' => $booking->id,
+                        'additional_id' => $request->additional_services[$i],
+                        'price_per_additional' => $add->price,
+                        'total_price' => $add->price,
+                        'created_at' => date('Y-m-d H:i:s'),
+                    ];
+                }
+            }
+            BookingAdditional::insert($bookingAdditionalData);
+
+            $invoice = Invoice::where('booking_id', $booking->id)->first();
+            
+            if ($invoice) {
+                for ($i=0; $i < count($invoiceItemData); $i++) { 
+                    $invoiceItemData[$i]['invoice_id'] = $invoice->id;
+                }
+                InvoiceItem::insert($invoiceItemData);
+            }
+            
+            $bodyBooking = [
+                'subtotal' => $request->subtotal_value,
+                'grand_total' => $request->grand_total_value,
+                'amount_paid' => ($request->dp_amount > 0) ? $request->dp_amount : $request->payment_amount,
+                'down_payment' => $request->dp,
+                'payment_status' => ($request->payment_amount == $request->grand_total_value) ? 'Paid' : (($request->dp_amount > 0) ? 'Part Paid' : 'Unpaid'),
+                'total_payment' => $request->payment_amount,
+                'paid_at' => ($request->payment_amount == $request->grand_total_value) ? $request->payment_date : null,
+                'down_payment_paid_at' => ($request->dp_amount > 0) ? $request->payment_date : null,
+                'updated_by' => Auth::user()->id,
+                'updated_at' => date('Y-m-d H:i:s'),
+            ];
+                
+            $invoiceData = [
+                'paid_at' => ($request->payment_amount == $request->grand_total_value) ? $request->payment_date : null,
+                'subtotal' => $request->subtotal_value,
+                'grand_total' => $request->grand_total_value,
+                'amount_paid' => ($request->dp_amount > 0) ? $request->dp_amount : $request->payment_amount,
+                'status' => $request->payment_amount == $request->grand_total_value ? 'Paid' : ($request->dp_amount > 0 ? 'Partial' : 'Unpaid'),
+                'updated_by' => Auth::user()->id,
+                'updated_at' => date('Y-m-d H:i:s'),
+            ];
+                
+            Booking::where('id', $booking->id)->update($bodyBooking);
+            Invoice::where('id', $invoice->id)->update($invoiceData);
+            DB::commit();
+            return redirect('/booking')
+                ->with('success', 'Data berhasil diedit');
+        } catch (\Throwable $th) {
+            DB::rollback();
+            throw $th;
+            $this->insertLog('Gagal mengedit data booking', $th);
+            return redirect()->back()->with('error', 'Data gagal disimpan : ' . $th->getMessage());
+        }
     }
 
     /**
@@ -739,7 +842,7 @@ class BookingController extends Controller
             $dataInvoice=[
                 'data' => $invoice,
             ];
-            
+            // return $invoice;
             $pdf = PDF::loadView('template.print.booking.invoice', compact('dataInvoice'));
             
             return $pdf->stream('invoice.pdf');

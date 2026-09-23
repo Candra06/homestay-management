@@ -220,7 +220,8 @@
                                             id="additional_services" name="additional_services" multiple="multiple">
                                             @if (count($data->generalAdd) > 0)
                                                 @foreach ($data->generalAdd as $add)
-                                                    <option value="{{ $add->id }}">
+                                                    <option value="{{ $add->id }}" data-price="{{ $add->price }}"
+                                                                data-name="{{ $add->name }}">
                                                         {{ $add->name }}</option>
                                                 @endforeach
                                             @endif
@@ -637,7 +638,7 @@
             });
 
             $(document).on('change',
-                '.room-type, .check_in, .check_out, .additional_room',
+                '.room-type, .check_in, .check_out, .additional_room, #additional_services',
                 function() {
 
                     calculateTotalPayment();
@@ -820,7 +821,7 @@
 
             // Ambil Additional General (Layanan tambahan umum di luar kamar)
             let generalAdditional = [];
-            $('#general_additional').find('option:selected').each(function() {
+            $('#additional_services').find('option:selected').each(function() {
                 generalAdditional.push({
                     name: $(this).data('name'),
                     price: parseFloat($(this).data('price')) || 0,

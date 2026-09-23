@@ -78,6 +78,17 @@
                         ];
                     }
                 }
+                foreach ($data->additional as $add) {
+                    $additional[] = (object)[
+                            'jenis' => 'Service Charge',
+                            'name' => $add->item->name,
+                            'price' => App\Helper\Helpers::rupiah($add->item->price),
+                            'total_price' => App\Helper\Helpers::rupiah($add->item->price),
+                            'checkin_date' => '-',
+                            'checkout_date' => '-',
+                            'nights' => '-',
+                        ];
+                }
             @endphp
             <div class="col-md-12 col-xl-12 row row-sm px-0" id="confirm-container">
 
@@ -223,7 +234,11 @@
                                             <td class="tx-right" style="width: 20%!important;" id="total_remaining">
                                                 {{ App\Helper\Helpers::rupiah($sisa) }}</td>
                                         </tr>
-
+                                        <tr>
+                                            <td style="width: 15%;" class="tx-right " colspan="2">Metode Pembayaran</td>
+                                            <td class="tx-right" style="width: 20%!important;">
+                                                {{ $data->payment_method ?? '-' }}</td>
+                                        </tr>
                                         <tr>
                                             <td style="width: 15%;" class="tx-right  tx-uppercase tx-bold tx-inverse"
                                                 colspan="2">Total

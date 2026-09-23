@@ -51,10 +51,11 @@
 
         <div class="card-body pd-r-0">
             <div class=" alert-info p-3 mb-2 me-4">
-               
+
                 <strong>Pemberitahuan!</strong> Anda hanya dapat mengubah data tamu dan menambahkan layanan tambahan.
             </div>
-            <form action="{{ url('/booking/'.$data->id) }}" method="POST" class="form-horizontal" enctype="multipart/form-data">
+            <form action="{{ url('/booking/' . $data->id) }}" method="POST" class="form-horizontal"
+                enctype="multipart/form-data">
                 @method('PUT')
                 @csrf
                 <div id="booking-container" class="d-block row">
@@ -128,7 +129,8 @@
                                                     class="tx-danger">*</span></label>
                                             <input type="file" name="identity_image" id="identity_image"
                                                 class="form-control form-control-sm" placeholder="Masukkan Foto Identitas"
-                                                required>
+                                                >
+                                                <small>* Kosongkan jika tidak ingin mengubah</small>
                                         </div>
                                     </div>
                                 </div>
@@ -249,10 +251,12 @@
                                     <div class="form-group">
                                         <label class="tx-12" for="name">Layanan Tambahan</label>
                                         <select class="form-control form-control-sm select2 additional_services"
-                                            id="additional_services" name="additional_services" multiple="multiple">
+                                            id="additional_services" name="additional_services[]" multiple="multiple">
                                             @if (count($generalAdd) > 0)
                                                 @foreach ($generalAdd as $add)
-                                                    <option value="{{ $add->id }}">
+                                                    <option value="{{ $add->id }}" data-price="{{ $add->price }}"
+                                                        {{ in_array($add->id, $item->additionals->pluck('additional_id')->toArray()) ? 'selected' : '' }}
+                                                        data-name="{{ $add->name }}">
                                                         {{ $add->name }}</option>
                                                 @endforeach
                                             @endif
@@ -328,11 +332,12 @@
                                             </div>
                                             <div class="col-md-8">
                                                 <div class="form-group">
-                                                    <input type="hidden" name="subtotal_value" id="subtotal_value" 
+                                                    <input type="hidden" name="subtotal_value" id="subtotal_value"
                                                         value="{{ $data->subtotal }}">
                                                     <input type="number" name="subtotal" id="subtotal"
-                                                        class="form-control form-control-sm" value="{{ App\Helper\Helpers::rupiah($data->subtotal) }}" readonly
-                                                        >
+                                                        class="form-control form-control-sm"
+                                                        value="{{ App\Helper\Helpers::rupiah($data->subtotal) }}"
+                                                        readonly>
                                                 </div>
                                             </div>
                                         </div>
@@ -343,7 +348,7 @@
                                             <div class="col-md-8">
                                                 <div class="form-group ms-4">
                                                     <input type="checkbox" name="tax" id="tax"
-                                                        class="custom-control-input" {{ $data->tax >0 ? 'checked' :'' }}>
+                                                        class="custom-control-input" {{ $data->tax > 0 ? 'checked' : '' }}>
                                                     <input type="hidden" name="tax_value" id="tax_value"
                                                         value="{{ $data->tax }}">
                                                     <label class="custom-control-label tx-12" for="tax">Aktifkan
@@ -388,11 +393,13 @@
                                                 <div class="form-group">
                                                     <input type="text" name="discount_display" id="discount_display"
                                                         class="form-control form-control-sm input-display"
-                                                        placeholder="Masukkan Jumlah Diskon" value="{{ App\Helper\Helpers::rupiah($data->discount_amount) }}">
+                                                        placeholder="Masukkan Jumlah Diskon"
+                                                        value="{{ App\Helper\Helpers::rupiah($data->discount_amount) }}">
                                                     <input type="hidden" name="discount" id="discount"
                                                         class="input-raw" value="{{ $data->discount_amount }}">
                                                     <input type="hidden" name="discount_amount_value"
-                                                        id="discount_amount_value" class="input-raw" value="{{ $data->discount_amount }}">
+                                                        id="discount_amount_value" class="input-raw"
+                                                        value="{{ $data->discount_amount }}">
                                                 </div>
                                             </div>
                                         </div>
@@ -405,8 +412,9 @@
                                                     <input type="hidden" name="grand_total_value" id="grand_total_value"
                                                         value="{{ $data->grand_total }}">
                                                     <input type="number" name="grand_total" id="grand_total"
-                                                        class="form-control form-control-sm"
-                                                        placeholder="" value="{{ App\Helper\Helpers::rupiah($data->grand_total) }}" readonly>
+                                                        class="form-control form-control-sm" placeholder=""
+                                                        value="{{ App\Helper\Helpers::rupiah($data->grand_total) }}"
+                                                        readonly>
                                                 </div>
                                             </div>
                                         </div>
@@ -424,12 +432,13 @@
                                                     } else {
                                                         $amount = $data->down_payment;
                                                     }
-                                                    
+
                                                 @endphp
                                                 <div class="form-group">
                                                     <input type="text" name="payment_amount_display"
                                                         id="payment_amount_display"
-                                                        class="form-control form-control-sm input-display" value="{{ App\Helper\Helpers::rupiah($data->total_payment) }}"
+                                                        class="form-control form-control-sm input-display"
+                                                        value="{{ App\Helper\Helpers::rupiah($data->total_payment) }}"
                                                         placeholder="Masukkan Jumlah Pembayaran" required>
                                                     <input type="hidden" class="input-raw" name="payment_amount"
                                                         id="payment_amount" value="{{ $data->total_payment }}" required>
@@ -445,7 +454,8 @@
                                                 <div class="form-group">
                                                     <input type="text" name="dp_amount_masking" id="dp_amount_masking"
                                                         class="form-control form-control-sm input-display"
-                                                        value="{{ App\Helper\Helpers::rupiah($data->down_payment) }}" placeholder="Masukkan Jumlah DP">
+                                                        value="{{ App\Helper\Helpers::rupiah($data->down_payment) }}"
+                                                        placeholder="Masukkan Jumlah DP">
                                                     <input type="hidden" class="input-raw" name="dp_amount"
                                                         id="dp_amount" value="{{ $data->down_payment }}">
                                                 </div>
@@ -461,9 +471,15 @@
                                                     <select name="payment_method" id="payment_method"
                                                         class="form-control form-control-sm" required>
                                                         <option value="">Pilih Metode Pembayaran</option>
-                                                        <option value="Bank Transfer" {{ $data->payment_method =='Bank Transfer' ? 'selected' : '' }}>Transfer Bank</option>
-                                                        <option value="Cash" {{ $data->payment_method =='Cash' ? 'selected' : '' }}>Tunai</option>
-                                                        <option value="QRIS" {{ $data->payment_method =='QRIS' ? 'selected' : '' }}>QRIS</option>
+                                                        <option value="Bank Transfer"
+                                                            {{ $data->payment_method == 'Bank Transfer' ? 'selected' : '' }}>
+                                                            Transfer Bank</option>
+                                                        <option value="Cash"
+                                                            {{ $data->payment_method == 'Cash' ? 'selected' : '' }}>Tunai
+                                                        </option>
+                                                        <option value="QRIS"
+                                                            {{ $data->payment_method == 'QRIS' ? 'selected' : '' }}>QRIS
+                                                        </option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -477,7 +493,8 @@
                                             <div class="col-md-8">
                                                 <div class="form-group">
                                                     <input type="date" name="payment_date" id="payment_date"
-                                                        class="form-control form-control-sm" value="{{ isset($data->paid_at) ? explode(' ',$data->paid_at)[0] : explode(' ',$data->down_payment_paid_at)[0]}}"
+                                                        class="form-control form-control-sm"
+                                                        value="{{ $data->payment_status == 'Part Paid' ? explode(' ', $data->down_payment_paid_at)[0] : explode(' ', $data->paid_at)[0] }}"
                                                         placeholder="Masukkan Tanggal Pembayaran" required>
                                                 </div>
                                             </div>
@@ -537,7 +554,7 @@
                 "progressBar": true
             };
             updateRoomNumbers();
-            
+
             $('.select2').select2();
 
             $('.ota_container').hide();
@@ -697,7 +714,7 @@
             });
 
             $(document).on('change',
-                '.room-type, .check_in, .check_out, .additional_room',
+                '.room-type, .check_in, .check_out, .additional_room, .additional_services',
                 function() {
 
                     calculateTotalPayment();
@@ -880,7 +897,7 @@
 
             // Ambil Additional General (Layanan tambahan umum di luar kamar)
             let generalAdditional = [];
-            $('#general_additional').find('option:selected').each(function() {
+            $('#additional_services').find('option:selected').each(function() {
                 generalAdditional.push({
                     name: $(this).data('name'),
                     price: parseFloat($(this).data('price')) || 0,
@@ -931,6 +948,7 @@
 
                 bookData.push(roomData);
             }
+            console.log(generalAdditional);
 
             // 2. Looping untuk Additional General (Layanan Umum)
             if (generalAdditional.length > 0) {
@@ -1013,9 +1031,7 @@
         }
 
         function validateInput() {
-            if (validateRoom() == false) {
-                return false;
-            }
+
             var guestName = $('#guest_name').val();
             if (!guestName) {
                 toastr.warning('Masukkan nama tamu');

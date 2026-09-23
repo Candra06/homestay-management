@@ -20,8 +20,8 @@ class BookingAdditional extends Model
         return $this->belongsTo(Booking::class);
     }
 
-    public function additional()
+    public function item()
     {
-        return $this->belongsTo(Additional::class);
+        return $this->belongsTo(Additional::class, 'additional_id');
     }
 }

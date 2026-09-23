@@ -45,10 +45,7 @@ class FinancialTransactionController extends Controller
             )->first();
             
             $akses = request()->attributes->get('hakAkses');
-            // if ($akses['access_edit'] != 'Y' && $akses['access_delete'] != 'Y') {
-            //     unset($dataPage['tableHead'][7]);
-            //     unset($dataPage['tableColumns'][7]);
-            // }
+            
             $data = (object) [
                 'title' => 'Cash Flow',
                 'createBtn' => $akses['access_create'] == 'Y',
@@ -118,7 +115,16 @@ class FinancialTransactionController extends Controller
      */
     public function show(FinancialTransaction $financialTransaction)
     {
-        //
+        $data = $financialTransaction->with([
+            'account' => function ($q)  {
+                $q->select('id', 'account_code', 'account_name', 'type', 'balance')->get();
+            },
+            'user'])->first();
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data berhasil diambil',
+            'data' => $data
+        ]);
     }
 
     /**
@@ -185,15 +191,23 @@ class FinancialTransactionController extends Controller
                 $editRoute = route($this->dataPage['route']['edit'], $row->id);
                 $detailRoute = route($this->dataPage['route']['show'], $row->id);
                 $deleteRoute = route($this->dataPage['route']['delete'], $row->id);
-                $message = 'Apakah Anda yakin untuk menghapus tipe kamar '.$row->type_name.' ?';
+                $message = 'Apakah Anda yakin untuk menghapus transaksi '.$row->type_name.' ?';
                 $showDelete = false;
+                $showEdit = false;
                 if ($row->reference_type == 'booking') {
                     $showDelete = false;
-                }else if($akses['access_delete'] == 'Y') {
-                    $showDelete = true;
+                    $showEdit = false;
+                }else {
+                    if($akses['access_delete'] == 'Y') {
+                        $showDelete = true;
+                    }
+                    if($akses['access_edit'] == 'Y'){
+                        $showEdit = true;
+                    }
+                   
                 }
-                // $actionBtn = $akses['access_edit'] != 'Y' ? '' : '<a href="'.$editRoute.'"><button class="btn-sm me-2 btn btn-warning" style="font-size:12px;"><span class="fe fe-edit"></span></button></a>';
-                $actionBtn = $showDelete == false ? '' : '<button class="btn-sm mr-2 modal-effect btn btn-danger" data-bs-effect="effect-scale" data-bs-toggle="modal" style="font-size:12px;" onclick="deleteData(\''.$deleteRoute.'\', \''.$message.'\')" href="#modal-delete"><span class="fe fe-trash"></span></button>';
+                $actionBtn = $showEdit == false ? '' : '<button class="btn-sm me-2 btn modal-effect btn-warning" data-bs-toggle="modal" data-bs-effect="effect-scale" style="font-size:12px;" onclick="editData(\''.$detailRoute.'\',\''.$row->id.'\')" href="#modal-edit"><span class="fe fe-edit"></span></button>';
+                $actionBtn .= $showDelete == false ? '' : '<button class="btn-sm mr-2 modal-effect btn btn-danger" data-bs-effect="effect-scale" data-bs-toggle="modal" style="font-size:12px;" onclick="deleteData(\''.$deleteRoute.'\', \''.$message.'\')" href="#modal-delete"><span class="fe fe-trash"></span></button>';
 
                 return $actionBtn;
             })
