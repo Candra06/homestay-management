@@ -108,7 +108,7 @@
                                         <div class="col form-group">
                                             <label class="tx-12" for="identity_number">Foto Identitas<span
                                                     class="tx-danger">*</span></label>
-                                            <input type="file" name="identity_image" id="identity_image"
+                                            <input type="file" name="identity_image" id="identity_image" accept="image/png, image/jpeg" 
                                                 class="form-control form-control-sm" placeholder="Masukkan Foto Identitas"
                                                 required>
                                         </div>
@@ -217,7 +217,7 @@
                                     <div class="form-group">
                                         <label class="tx-12" for="name">Layanan Tambahan</label>
                                         <select class="form-control form-control-sm select2 additional_services"
-                                            id="additional_services" name="additional_services" multiple="multiple">
+                                            id="additional_services" name="additional_services[]" multiple="multiple">
                                             @if (count($data->generalAdd) > 0)
                                                 @foreach ($data->generalAdd as $add)
                                                     <option value="{{ $add->id }}" data-price="{{ $add->price }}"

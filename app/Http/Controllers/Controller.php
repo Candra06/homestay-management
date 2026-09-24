@@ -64,19 +64,16 @@ class Controller extends BaseController
         return $path.$hash.$extension;
     }
 
-    protected function insertLog(string $message, Throwable $th, array $extra = []): void
+    protected function insertLog(string $message, Throwable $th, array $extra = [])
     {
-        $errorCode = $th->getCode();
+        $errorCode = (!empty($th->getCode()) && $th->getCode() !== 0) ? $th->getCode() : 500;
 
-        // Hanya catat jika error code tidak kosong dan bukan 0
-        if (!empty($errorCode) && $errorCode !== 0) {
-            Log::error($message, array_merge([
-                'error_code'    => $errorCode,
-                'error_message' => $th->getMessage(),
-                'file'          => $th->getFile(),
-                'line'          => $th->getLine(),
-                'trace'         => $th->getTraceAsString(),
-            ], $extra));
-        }
+        Log::error($message, array_merge([
+            'error_code'    => $errorCode,
+            'error_message' => $th->getMessage(),
+            'file'          => $th->getFile(),
+            'line'          => $th->getLine(),
+            'trace'         => $th->getTraceAsString(),
+        ], $extra));
     }
 }

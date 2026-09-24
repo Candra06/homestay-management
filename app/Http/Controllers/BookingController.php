@@ -126,7 +126,7 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
-        // return $request;
+        
         DB::beginTransaction();
         try {
             $inputAttachment= [];
@@ -227,6 +227,19 @@ class BookingController extends Controller
             
             
             BookingRoomAdditional::insert($bookingAddOnData);
+            if ($request->has('additional_services') &&count($request->additional_services) > 0) {
+                $bookingAdditionalData = [];
+                for ($i=0; $i < count($request->additional_services); $i++) {
+                    $add = Additional::where('id', $request->additional_services[$i])->first();
+                    $bookingAdditionalData[] = [
+                        'booking_id' => $booking->id,
+                        'additional_id' => $request->additional_services[$i],
+                        'price_per_additional' => $add->price,
+                        'total_price' => $add->price,
+                    ];
+                }
+                BookingAdditional::insert($bookingAdditionalData);
+            }
 
             $invoiceData = [
                 'booking_id' => $booking->id,
@@ -277,17 +290,7 @@ class BookingController extends Controller
                 'updated_at' => Carbon::now()
             ];
             $this->insertTransaction($bodyTransaction);
-            $bookingAdditionalData = [];
-            for ($i=0; $i < count($request->additional_services); $i++) {
-                $add = Additional::where('id', $request->additional_services[$i])->first();
-                $bookingAdditionalData[] = [
-                    'booking_id' => $booking->id,
-                    'additional_id' => $request->additional_services[$i],
-                    'price_per_additional' => $add->price,
-                    'total_price' => $add->price,
-                ];
-            }
-            BookingAdditional::insert($bookingAdditionalData);
+            
              if ($request->hasFile('identity_image')) {
                 $file = $request->file('identity_image');
                 $path = storage_path('app/public/guest');
@@ -316,10 +319,13 @@ class BookingController extends Controller
             return redirect(route('booking.index'))->with(!$sendEmail? 'warning':'success', !$sendEmail? 'Berhasil menambahkan booking tapi email gagal terkirim,silahkan kirim secara manual':'Berhasil menambah data booking');
         } catch (\Throwable $th) {
             DB::rollback();
+            
             $this->insertLog('Gagal menambahkan data booking', $th);
             return redirect()->back()->with('error', 'Data gagal disimpan : ' . $th->getMessage());
         }
     }
+    
+
 
     /**
      * Display the specified resource.
