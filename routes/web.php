@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\HousekeepingController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
@@ -45,6 +46,7 @@ Route::group(["prefix" => "/", "middleware" => ["auth", CheckAccessMidleware::cl
 
     Route::get('room/list/{id}', [RoomTypesController::class, 'roomList']);
     Route::get('room/availability/{id}', [RoomTypesController::class, 'getRoomAvailableByType']);
+    Route::put('room/update-status/{id}', [HousekeepingController::class, 'updateStatus']);
 
     Route::resource('employee', EmployeeController::class);
     Route::resource('menu', MenuController::class);
@@ -60,6 +62,7 @@ Route::group(["prefix" => "/", "middleware" => ["auth", CheckAccessMidleware::cl
     Route::resource('promo', PromoController::class);
     Route::resource('guest', GuestController::class);
     Route::resource('cashflow', FinancialTransactionController::class);
+    Route::resource('housekeeping', HousekeepingController::class);
 
     
 });

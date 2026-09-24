@@ -436,10 +436,6 @@ class BookingController extends Controller
                     }
                 }
             }
-            // return [
-            //     'bookingAddOnData' => $bookingAddOnData,
-            //     'invoiceItemData' => $invoiceItemData,
-            // ];
             BookingRoomAdditional::insert($bookingAddOnData);
 
             $bookingAdditionalData = [];
@@ -489,15 +485,62 @@ class BookingController extends Controller
                 'updated_by' => Auth::user()->id,
                 'updated_at' => date('Y-m-d H:i:s'),
             ];
+            $transaction = FinancialTransaction::where('reference_type', 'booking')
+                            ->where('reference_id', $booking->id)
+                            ->first();
+            if ($transaction) {
+                FinancialTransaction::where('id', $transaction->id)->update([
+                    'amount' => ($request->dp_amount > 0) ? $request->dp_amount : $request->payment_amount,
+                    'updated_by' => Auth::user()->id,
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+            }
+            
                 
             Booking::where('id', $booking->id)->update($bodyBooking);
             Invoice::where('id', $invoice->id)->update($invoiceData);
+            if ($request->hasFile('identity_image')) {
+                $oldAttachments = Attachment::where('reff_feature', 'guest')
+                    ->where('reff_id', $booking->guest_id)
+                    ->get();
+
+                foreach ($oldAttachments as $old) {
+                    if ($old->file_url && Storage::disk('public')->exists($old->file_url)) {
+                        Storage::disk('public')->delete($old->file_url);
+                    }
+                }
+
+                Attachment::where('reff_feature', 'guest')
+                    ->where('reff_id', $booking->guest_id)
+                    ->delete();
+                $inputAttachment= [];
+                $file = $request->file('identity_image');
+                $path = storage_path('app/public/guest');
+                $photo = 'guest/' . $this->compress($file, $path, 50);
+                $imagePaths = [
+                            'file_path'=>$photo,
+                            'file_name'=> basename($photo),
+                            'original_name'=>$file->getClientOriginalName(),
+                            'file_size'=>Storage::disk('public')->size($photo),
+                            'mime_type'=>Storage::disk('public')->mimeType($photo)
+                        ];
+                $inputAttachment = [
+                    'reff_feature' => 'guests',
+                    'file_url' => $imagePaths['file_path'],
+                    'file_name' => $imagePaths['file_name'],
+                    'original_name' => $imagePaths['original_name'],
+                    'mime_type' => $imagePaths['mime_type'],
+                    'reff_id' => $booking->id,
+                    'file_size' => $imagePaths['file_size'],
+                ];
+                Attachment::create($inputAttachment);
+            }
             DB::commit();
             return redirect('/booking')
                 ->with('success', 'Data berhasil diedit');
         } catch (\Throwable $th) {
             DB::rollback();
-            throw $th;
+            
             $this->insertLog('Gagal mengedit data booking', $th);
             return redirect()->back()->with('error', 'Data gagal disimpan : ' . $th->getMessage());
         }

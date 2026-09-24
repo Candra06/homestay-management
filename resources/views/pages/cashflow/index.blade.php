@@ -164,138 +164,137 @@
                 </div>
             </div>
         </div>
-        <div class="modal fade" id="modal-edit">
-            <div class="modal-dialog modal-dialog-centered" role="modal">
-                <div class="modal-content modal-content-demo">
-                    <div class="modal-header">
-                        <h6 class="modal-title">Edit Transaksi</h6><button aria-label="Close" class="close"
-                            data-bs-dismiss="modal" type="button"><span aria-hidden="true">&times;</span></button>
-                    </div>
-                    <div class="modal-body">
-                        <form action="" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <div class="form-group">
-                                <label for="transaction_date">Tanggal Transaksi<span class="tx-danger">*</span></label>
-                                <input type="date" name="transaction_date" id="transaction_date"
-                                    class="form-control " placeholder="Masukkan Tanggal Transaksi" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="transaction_type">Jenis Transaksi<span class="tx-danger">*</span></label>
-                                <select name="transaction_type" id="transaction_type" class="form-control" required>
-                                    <option value="">Pilih Jenis Transaksi</option>
-                                    <option value="income">Pemasukan</option>
-                                    <option value="expense">Pengeluaran</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="amount">Nominal Transaksi<span class="tx-danger">*</span></label>
-                                <input type="number" name="amount_display" id="amount_display"
-                                    class="form-control input-display" placeholder="Masukkan Nominal Transaksi" required>
-                                <input type="hidden" name="amount" id="amount" class="form-control input-raw"
-                                    placeholder="Masukkan Nominal Transaksi">
-                            </div>
-                            <div class="form-group">
-                                <label for="transaction_category">Kategori Transaksi<span
-                                        class="tx-danger">*</span></label>
-                                <select name="transaction_category" id="transaction_category" class="form-control"
-                                    required>
-                                    <option value="">Pilih Kategori Transaksi</option>
-                                    @foreach ($data->category as $category)
-                                        <option value="{{ $category->id }}">{{ $category->account_name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="description">Deskripsi</label>
-                                <textarea name="description" id="description" class="form-control" placeholder="Masukkan Deskripsi"></textarea>
-                            </div>
-                            <div class="form-group d-flex flex-row justify-content-end">
-                                <button type="submit" class="btn btn-primary">Simpan Transaksi</button>
-                            </div>
-                        </form>
-                    </div>
+    </div>
+    <div class="modal fade" id="modal-edit">
+        <div class="modal-dialog modal-dialog-centered" role="modal">
+            <div class="modal-content modal-content-demo">
+                <div class="modal-header">
+                    <h6 class="modal-title">Edit Transaksi</h6><button aria-label="Close" class="close"
+                        data-bs-dismiss="modal" type="button"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <form action="" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <div class="form-group">
+                            <label for="transaction_date">Tanggal Transaksi<span class="tx-danger">*</span></label>
+                            <input type="date" name="transaction_date" id="transaction_date" class="form-control "
+                                placeholder="Masukkan Tanggal Transaksi" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="transaction_type">Jenis Transaksi<span class="tx-danger">*</span></label>
+                            <select name="transaction_type" id="transaction_type" class="form-control" required>
+                                <option value="">Pilih Jenis Transaksi</option>
+                                <option value="income">Pemasukan</option>
+                                <option value="expense">Pengeluaran</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="amount">Nominal Transaksi<span class="tx-danger">*</span></label>
+                            <input type="number" name="amount_display" id="amount_display"
+                                class="form-control input-display" placeholder="Masukkan Nominal Transaksi" required>
+                            <input type="hidden" name="amount" id="amount" class="form-control input-raw"
+                                placeholder="Masukkan Nominal Transaksi">
+                        </div>
+                        <div class="form-group">
+                            <label for="transaction_category">Kategori Transaksi<span class="tx-danger">*</span></label>
+                            <select name="transaction_category" id="transaction_category" class="form-control" required>
+                                <option value="">Pilih Kategori Transaksi</option>
+                                @foreach ($data->category as $category)
+                                    <option value="{{ $category->id }}">{{ $category->account_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Deskripsi</label>
+                            <textarea name="description" id="description" class="form-control" placeholder="Masukkan Deskripsi"></textarea>
+                        </div>
+                        <div class="form-group d-flex flex-row justify-content-end">
+                            <button type="submit" class="btn btn-primary">Simpan Transaksi</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-    @endsection
-    @section('script')
-        <script>
-            $("#table").DataTable({
-                ajax: '{{ $data->routeData }}',
-                processing: true,
-                serverSide: true,
-                stateSave: true,
-                columns: JSON.parse(`{!! json_encode($data->tableColumns) !!}`)
-            });
-        </script>
-        <script type="text/javascript">
-            $(document).ready(function() {
-                $(document).on('input', '.input-display', function() {
-                    let $displayInput = $(this);
-                    let typedValue = $displayInput.val();
+    </div>
+@endsection
+@section('script')
+    <script>
+        $("#table").DataTable({
+            ajax: '{{ $data->routeData }}',
+            processing: true,
+            serverSide: true,
+            stateSave: true,
+            columns: JSON.parse(`{!! json_encode($data->tableColumns) !!}`)
+        });
+    </script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $(document).on('input', '.input-display', function() {
+                let $displayInput = $(this);
+                let typedValue = $displayInput.val();
 
-                    let rawValue = typedValue.replace(/[^0-9]/g, '');
+                let rawValue = typedValue.replace(/[^0-9]/g, '');
 
-                    let $rawInput = $displayInput.closest('.form-group').find('.input-raw');
-                    $rawInput.val(rawValue);
+                let $rawInput = $displayInput.closest('.form-group').find('.input-raw');
+                $rawInput.val(rawValue);
 
-                    if (rawValue) {
-                        $displayInput.val(formatRibuan(rawValue));
-                    } else {
-                        $displayInput.val('');
-                    }
-                });
-            });
-
-            function formatRibuan(angka) {
-                if (!angka) return '';
-                let numberString = angka.toString().replace(/[^,\d]/g, '');
-                let split = numberString.split(',');
-                let sisa = split[0].length % 3;
-                let rupiah = split[0].substr(0, sisa);
-                let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
-                if (ribuan) {
-                    let separator = sisa ? '.' : '';
-                    rupiah += separator + ribuan.join('.');
+                if (rawValue) {
+                    $displayInput.val(formatRibuan(rawValue));
+                } else {
+                    $displayInput.val('');
                 }
+            });
+        });
 
-                return split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+        function formatRibuan(angka) {
+            if (!angka) return '';
+            let numberString = angka.toString().replace(/[^,\d]/g, '');
+            let split = numberString.split(',');
+            let sisa = split[0].length % 3;
+            let rupiah = split[0].substr(0, sisa);
+            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if (ribuan) {
+                let separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
             }
-        </script>
+
+            return split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+        }
+    </script>
 
 
-        <script>
-            function deleteData(route, message) {
-                $("#modal-delete").find("form").attr("action", route)
-                $("#modal-delete").find(".message").text(message)
-            }
+    <script>
+        function deleteData(route, message) {
+            $("#modal-delete").find("form").attr("action", route)
+            $("#modal-delete").find(".message").text(message)
+        }
 
-            function editData(route, id) {
-                let data;
-                let url = route + '/' + id;
-                $.ajax({
-                    url: route,
-                    type: 'GET',
-                    success: function(res) {
-                        data = res.data;
-                        console.log(data);
+        function editData(route, id) {
+            let data;
+            let url = route + '/' + id;
+            $.ajax({
+                url: route,
+                type: 'GET',
+                success: function(res) {
+                    data = res.data;
+                    console.log(data);
 
-                        $("#modal-edit").find("form").attr("action", route);
-                        $("#modal-edit").find("#transaction_date").val(data.transaction_date);
-                        $("#modal-edit").find("#transaction_type").val(data.transaction_type);
-                        $("#modal-edit").find("#amount").val(data.amount);
-                        $("#modal-edit").find("#amount_display").val(data.amount);
-                        $("#modal-edit").find("#transaction_category").val(data.transaction_category);
-                        $("#modal-edit").find("#description").val(data.description);
-                    },
-                    error: function(xhr, status, error) {
-                        console.log(xhr.responseJSON);
+                    $("#modal-edit").find("form").attr("action", route);
+                    $("#modal-edit").find("#transaction_date").val(data.transaction_date);
+                    $("#modal-edit").find("#transaction_type").val(data.transaction_type);
+                    $("#modal-edit").find("#amount").val(data.amount);
+                    $("#modal-edit").find("#amount_display").val(data.amount);
+                    $("#modal-edit").find("#transaction_category").val(data.transaction_category);
+                    $("#modal-edit").find("#description").val(data.description);
+                },
+                error: function(xhr, status, error) {
+                    console.log(xhr.responseJSON);
 
-                    }
-                })
+                }
+            })
 
-            }
-        </script>
-    @endsection
+        }
+    </script>
+@endsection
