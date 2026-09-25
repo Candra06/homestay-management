@@ -45,7 +45,7 @@
         </div>
 
         <div class="card-body pd-r-0">
-            <form action="{{ url('/booking') }}" method="POST" class="form-horizontal" enctype="multipart/form-data">
+            <form action="{{ url('/booking') }}" method="POST" class="form-horizontal" id="form-booking" enctype="multipart/form-data">
                 @csrf
                 <div id="booking-container" class="d-block row">
                     {{-- Guest --}}
@@ -643,6 +643,10 @@
 
                     calculateTotalPayment();
                 });
+
+            $('#form-booking').on('submit', function(){
+                $('#save-booking-submit').prop('disabled', true).text('Menyimpan...')
+            })
         });
 
         $(document).on('click', '.btn-remove-room', function(e) {
