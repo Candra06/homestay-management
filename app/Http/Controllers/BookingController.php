@@ -182,7 +182,7 @@ class BookingController extends Controller
                 'discount_amount' => $request->has('discount_amount_value') ? ($request->discount_amount_value != null ? $request->discount_amount_value : 0) : 0,
             ];
             $booking = Booking::create($bookingData);
-            $bookingRoomData = [];
+            
             $bookingAddOnData = [];
             $invoiceItemData = [];
             for ($i=0; $i < count($request->room_type); $i++) {
