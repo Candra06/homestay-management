@@ -153,9 +153,10 @@ class BookingController extends Controller
                 'identity_number' => $request->identity_number,
                 'address' => $request->address,
             ];
-            $guest = Guest::updateOrCreate([
-                'identity_number' => $request->identity_number
-            ], $guestData);
+            $guest = Guest::create($guestData);
+            // $guest = Guest::updateOrCreate([
+            //     'identity_number' => $request->identity_number
+            // ], $guestData);
             $voucher = Voucher::where('code', $request->voucher_code)->first();
             $bookingData=[
                 'created_by' => Auth::user()->id,
