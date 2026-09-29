@@ -7,6 +7,7 @@
 @section('css')
     <link rel="stylesheet" href="{{ asset('assets') }}/plugins/sweet-alert/sweetalert.css">
     <link href="{{ asset('assets') }}/css/animate.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 @endsection
 
 @section('main')
@@ -51,7 +52,7 @@
                                 <i class="fa fa-download text-white me-4" style="font-size: 30px;"></i>
                                 <div>
                                     <span class="text-white">Pemasukan</span>
-                                    <h3 class="text-white mb-0">{{ App\Helper\Helpers::rupiah($data->summary->income) }}
+                                    <h3 class="text-white mb-0" id="income">{{ App\Helper\Helpers::rupiah($data->summary->income) }}
                                     </h3>
                                 </div>
                             </div>
@@ -66,7 +67,7 @@
                                 <i class="fa fa-upload text-white me-4" style="font-size: 30px;"></i>
                                 <div>
                                     <span class="text-white">Pengeluaran</span>
-                                    <h3 class="text-white mb-0">{{ App\Helper\Helpers::rupiah($data->summary->expense) }}
+                                    <h3 class="text-white mb-0" id="expense">{{ App\Helper\Helpers::rupiah($data->summary->expense) }}
                                     </h3>
                                 </div>
                             </div>
@@ -81,7 +82,7 @@
                                 <i class="fa fa-money-bill-wave text-white me-4" style="font-size: 30px;"></i>
                                 <div>
                                     <span class="text-white">Saldo</span>
-                                    <h3 class="text-white mb-0">
+                                    <h3 class="text-white mb-0" id="balance">
                                         {{ App\Helper\Helpers::rupiah($data->summary->income - $data->summary->expense) }}
                                     </h3>
                                 </div>
@@ -89,6 +90,30 @@
                         </div>
                     </div>
 
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="daterange">Tanggal Transaksi</label>
+                        <div class="input-group">
+                            <div class="input-group-text" style="padding: 4px 0px">
+                                <span class="input-group-text"><i class="fa fa-calendar"></i></span>
+                            </div>
+                            <input type="text" id="daterange" placeholder="Pilih tanggal transaksi" name="daterange"
+                                class="form-control" value="" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="">Jenis Transaksi</label>
+                        <select name="type_transaction" class="form-control" id="type_transaction">
+                            <option value="">Pilih Jenis Transaksi</option>
+                            <option value="income">Pemasukan</option>
+                            <option value="expense">Pengeluaran</option>
+                        </select>
+                    </div>
                 </div>
             </div>
             <div class="table-responsive">
@@ -221,13 +246,33 @@
 @section('script')
     <script>
         $("#table").DataTable({
-            ajax: '{{ $data->routeData }}',
+            ajax: {
+                url: '{{ $data->routeData }}',
+                data: function(d) {
+                    // Ambil nilai dari input daterangepicker
+                    var daterange = $('#daterange').val();
+                    var typeTransaction = $('#type_transaction').val();
+                    if (daterange) {
+                        var dates = daterange.split(
+                            ' s/d '); // Sesuaikan separator dengan settingan daterangepicker kamu
+                        d.start_date = dates[0];
+                        d.end_date = dates[1];
+                    }
+                    if (typeTransaction) {
+                        d.type_transaction = typeTransaction
+                    }
+                }
+            },
             processing: true,
             serverSide: true,
             stateSave: true,
             columns: JSON.parse(`{!! json_encode($data->tableColumns) !!}`)
         });
     </script>
+    <!-- Moment.js (Wajib untuk daterangepicker) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <!-- Daterangepicker JS -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
             $(document).on('input', '.input-display', function() {
@@ -246,6 +291,72 @@
                 }
             });
         });
+
+        $('#type_transaction').on('change', function() {
+            filter()
+        });
+
+        $(function() {
+            $('#daterange').daterangepicker({
+                opens: 'left',
+                autoUpdateInput: false, // Biarkan kosong dulu sampai user memilih
+                locale: {
+                    format: 'YYYY-MM-DD',
+                    separator: ' s/d ',
+                    applyLabel: 'Pilih',
+                    cancelLabel: 'Batal',
+                    fromLabel: 'Dari',
+                    toLabel: 'Hingga',
+                    customRangeLabel: 'Pilih Sendiri',
+                    daysOfWeek: ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'],
+                    monthNames: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus',
+                        'September', 'Oktober', 'November', 'Desember'
+                    ],
+                    firstDay: 1
+                }
+            }, function(start, end, label) {
+                // Callback saat tanggal dipilih
+                $('#daterange').val(start.format('YYYY-MM-DD') + ' s/d ' + end.format('YYYY-MM-DD'));
+                filter()
+
+            });
+
+            // Handle tombol batal agar input kembali bersih
+            $('#daterange').on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+                $('#table').DataTable().ajax.reload()
+            });
+        });
+
+        function filter() {
+            $('#table').DataTable().ajax.reload();
+            let param = {filter:true};
+            var daterange = $('#daterange').val();
+            var typeTransaction = $('#type_transaction').val();
+            if (daterange) {
+                var dates = daterange.split(
+                    ' s/d '); // Sesuaikan separator dengan settingan daterangepicker kamu
+                param.start_date = dates[0];
+                param.end_date = dates[1];
+            }
+            if (typeTransaction) {
+                param.type_transaction = typeTransaction
+            }
+            $.ajax({
+                type: 'GET',
+                url: '{{ $data->routeData }}',
+                data:param,
+                success: function(res) {
+                    console.log(res);
+                    let income = (res.summary.income??'0.00').split('.')[0]
+                    let expense = (res.summary.expense??'0.00').split('.')[0]
+                    let balance = income - expense
+                    $('#income').text(`Rp. ${formatRibuan(income)}`)
+                    $('#expense').text(`Rp. ${formatRibuan(expense)}`)
+                    $('#balance').text(`Rp. ${formatRibuan(balance)}`)
+                }
+            })
+        }
 
         function formatRibuan(angka) {
             if (!angka) return '';
@@ -286,7 +397,7 @@
                     $("#modal-edit").find("#transaction_type").val(data.transaction_type);
                     $("#modal-edit").find("#amount").val(data.amount);
                     $("#modal-edit").find("#amount_display").val(data.amount);
-                    $("#modal-edit").find("#transaction_category").val(data.transaction_category);
+                    $("#modal-edit").find("#transaction_category").val(data.financial_account_id);
                     $("#modal-edit").find("#description").val(data.description);
                 },
                 error: function(xhr, status, error) {
