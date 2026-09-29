@@ -37,7 +37,7 @@ class FinancialTransactionController extends Controller
                     $q->select('id', 'account_code', 'account_name', 'type', 'balance')->get();
                 },
                 'user']);
-            $category = FinancialAccount::whereIn('id', [18, 19, 29, 21, 22, 25, 26, 3, 8, 11, 12, 13, 14])->get();
+            $category = FinancialAccount::whereIn('id', [17, 18, 19, 20, 29, 21, 22, 25, 26, 3, 8, 11, 12, 13, 14])->get();
             $summary = FinancialTransaction::select(
                 DB::raw('SUM(CASE WHEN transaction_type = "income" THEN amount ELSE 0 END) as income'),
                 DB::raw('SUM(CASE WHEN transaction_type = "expense" THEN amount ELSE 0 END) as expense'));
