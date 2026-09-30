@@ -42,6 +42,7 @@ return [
         | Configure e.g. delimiter, enclosure and line ending for CSV exports.
         |
         */
+        'default_writer' => 'Xlsx',
         'csv'                    => [
             'delimiter'              => ',',
             'enclosure'              => '"',

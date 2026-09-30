@@ -47,6 +47,8 @@ Route::group(["prefix" => "/", "middleware" => ["auth", CheckAccessMidleware::cl
     Route::get('room/list/{id}', [RoomTypesController::class, 'roomList']);
     Route::get('room/availability/{id}', [RoomTypesController::class, 'getRoomAvailableByType']);
     Route::put('room/update-status/{id}', [HousekeepingController::class, 'updateStatus']);
+    
+    Route::get('cashflow/export-excel', [FinancialTransactionController::class, 'exportExcel']);
 
     Route::resource('employee', EmployeeController::class);
     Route::resource('menu', MenuController::class);

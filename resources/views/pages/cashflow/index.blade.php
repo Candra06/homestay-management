@@ -52,7 +52,8 @@
                                 <i class="fa fa-download text-white me-4" style="font-size: 30px;"></i>
                                 <div>
                                     <span class="text-white">Pemasukan</span>
-                                    <h3 class="text-white mb-0" id="income">{{ App\Helper\Helpers::rupiah($data->summary->income) }}
+                                    <h3 class="text-white mb-0" id="income">
+                                        {{ App\Helper\Helpers::rupiah($data->summary->income) }}
                                     </h3>
                                 </div>
                             </div>
@@ -67,7 +68,8 @@
                                 <i class="fa fa-upload text-white me-4" style="font-size: 30px;"></i>
                                 <div>
                                     <span class="text-white">Pengeluaran</span>
-                                    <h3 class="text-white mb-0" id="expense">{{ App\Helper\Helpers::rupiah($data->summary->expense) }}
+                                    <h3 class="text-white mb-0" id="expense">
+                                        {{ App\Helper\Helpers::rupiah($data->summary->expense) }}
                                     </h3>
                                 </div>
                             </div>
@@ -114,6 +116,10 @@
                             <option value="expense">Pengeluaran</option>
                         </select>
                     </div>
+                </div>
+                <div class="col-md-2 pt-1">
+                    <button type="button" id="export-cashflow" class="btn btn-md btn-success mt-4"><i
+                            class="fa fa-file-excel me-1"></i> Export Excel</button>
                 </div>
             </div>
             <div class="table-responsive">
@@ -330,7 +336,9 @@
 
         function filter() {
             $('#table').DataTable().ajax.reload();
-            let param = {filter:true};
+            let param = {
+                filter: true
+            };
             var daterange = $('#daterange').val();
             var typeTransaction = $('#type_transaction').val();
             if (daterange) {
@@ -345,11 +353,11 @@
             $.ajax({
                 type: 'GET',
                 url: '{{ $data->routeData }}',
-                data:param,
+                data: param,
                 success: function(res) {
                     console.log(res);
-                    let income = (res.summary.income??'0.00').split('.')[0]
-                    let expense = (res.summary.expense??'0.00').split('.')[0]
+                    let income = (res.summary.income ?? '0.00').split('.')[0]
+                    let expense = (res.summary.expense ?? '0.00').split('.')[0]
                     let balance = income - expense
                     $('#income').text(`Rp. ${formatRibuan(income)}`)
                     $('#expense').text(`Rp. ${formatRibuan(expense)}`)
@@ -373,6 +381,27 @@
 
             return split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
         }
+
+        $('#export-cashflow').on('click', function(e) {
+            e.preventDefault();
+            var daterange = $('#daterange').val();
+            if (!daterange) {
+                 toastr.warning(
+                            'Tanggal harus dipilih.',
+                            'Informasi');
+                return; // Batalkan proses export
+            }
+            
+            var startDate = '';
+            var endDate = '';
+
+            var dates = daterange.split(' s/d '); // Sesuaikan dengan separator daterangepicker kamu
+            startDate = dates[0];
+            endDate = dates[1];
+            
+            var exportUrl = "{{ url('/cashflow/export-excel') }}"+"?start_date="+startDate+"&end_date="+endDate;
+            window.location.href = exportUrl;
+        })
     </script>
 
 

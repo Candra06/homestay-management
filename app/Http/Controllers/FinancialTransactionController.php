@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\CashflowExport;
 use App\Helper\Helpers;
 use App\Models\FinancialAccount;
 use App\Models\FinancialTransaction;
 use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+
+use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
 class FinancialTransactionController extends Controller
@@ -24,8 +27,8 @@ class FinancialTransactionController extends Controller
             'detail' => 'cashflow.detail',
             'delete' => 'cashflow.destroy',
         ],
-        'tableHead' => ['No', 'Tanggal Transaksi', 'Jenis Transaksi', 'Kategori', 'Nominal', 'Catatan', 'Petugas', 'aksi'],
-        'tableColumns' => ['DT_RowIndex', 'transaction_date', 'transaction_type', 'account_name', 'amount', 'description', 'created_by', 'action'],
+        'tableHead' => ['No', 'Tanggal Transaksi', 'Jenis Transaksi', 'Sumber', 'Kategori', 'Nominal', 'Catatan', 'Petugas', 'aksi'],
+        'tableColumns' => ['DT_RowIndex', 'transaction_date', 'transaction_type', 'resource','account_name', 'amount', 'description', 'created_by', 'action'],
     ];
 
     public function index(Request $request)
@@ -221,7 +224,10 @@ class FinancialTransactionController extends Controller
                 return Helpers::rupiah($row->amount);
             })
             ->addColumn('account_name', function ($row) {
-                return $row->account->account_code == '1-100' ? 'Reservasi' : $row->account->account_name;
+                return $row->account->account_name;
+            })
+            ->addColumn('resource', function ($row) {
+                return $row->account->account_code == '1-100' ? 'Reservasi' : 'Lain-lain';
             })
             ->addColumn('created_by', function ($row) {
                 return $row->user->name;
@@ -258,5 +264,16 @@ class FinancialTransactionController extends Controller
             })
             ->rawColumns(['action'])
             ->make(true);
+    }
+
+    public function exportExcel(Request $request){
+        try {
+            $fileName = 'data-cashflow-'.date('Y-m-d').'.xlsx';
+            return Excel::download(new CashflowExport($request->start_date, $request->end_date), $fileName);
+        } catch (\Throwable $th) {
+            $this->insertLog('error cashflow', $th);
+            return redirect()->route($this->dataPage['route']['index'])
+                ->with('error', 'Data gagal diexport, message : '.$th->getMessage());
+        }
     }
 }
