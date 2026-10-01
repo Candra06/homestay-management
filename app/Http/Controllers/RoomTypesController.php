@@ -3,17 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Helper\Helpers;
+use App\Models\Attachment;
+use App\Models\BookingRoom;
 use App\Models\Facility;
 use App\Models\RoomFacilities;
-use App\Models\BookingRoom;
-use App\Models\RoomTypes;
 use App\Models\Rooms;
-use App\Models\Attachment;
+use App\Models\RoomTypes;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Yajra\DataTables\Facades\DataTables;
 
 class RoomTypesController extends Controller
 {
@@ -91,7 +92,7 @@ class RoomTypesController extends Controller
                 'required' => false,
                 'placeholder' => 'Opsional (Ditampilkan pada informasi kamar)',
             ],
-            
+
         ],
         'route' => [
             'index' => 'room-type.index',
@@ -103,7 +104,7 @@ class RoomTypesController extends Controller
             'detail' => 'room-type.detail',
             'delete' => 'room-type.destroy',
         ],
-        'tableHead' => ['No', 'Tipe Kamar', 'Kapasitas', 'Jenis Bed', 'Slug','Harga', 'aksi'],
+        'tableHead' => ['No', 'Tipe Kamar', 'Kapasitas', 'Jenis Bed', 'Slug', 'Harga', 'aksi'],
         'tableColumns' => ['DT_RowIndex', 'type_name', 'kapasitas', 'bed_type', 'slug', 'base_price', 'action'],
     ];
 
@@ -115,7 +116,7 @@ class RoomTypesController extends Controller
         try {
             $dataPage = $this->dataPage;
             $list = RoomTypes::with('attachments')->get();
-            
+
             $akses = request()->attributes->get('hakAkses');
             if ($akses['access_edit'] != 'Y' && $akses['access_delete'] != 'Y') {
                 unset($dataPage['tableHead'][6]);
@@ -162,14 +163,14 @@ class RoomTypesController extends Controller
             ];
         }
         $forms[] = [
-                'name' => 'image',
-                'title' => 'Foto Tipe Kamar',
-                'type' => 'file',
-                'custom-class-wrapper' => 'col-12',
-                'class_input' => 'dropify',
-                'other-attr' => ' multiple ',
-                'required' => false,
-                'placeholder' => 'Pilih Gambar',
+            'name' => 'image',
+            'title' => 'Foto Tipe Kamar',
+            'type' => 'file',
+            'custom-class-wrapper' => 'col-12',
+            'class_input' => 'dropify',
+            'other-attr' => ' multiple ',
+            'required' => false,
+            'placeholder' => 'Pilih Gambar',
         ];
         $data = (object) [
             'title' => 'Tambah Data Tipe Kamar',
@@ -193,25 +194,25 @@ class RoomTypesController extends Controller
         try {
             $imagePaths = [];
             $files = $request->file('image');
-            if (!empty($files)) {
-                if (!is_array($files)) {
+            if (! empty($files)) {
+                if (! is_array($files)) {
                     $files = [$files];
                 }
                 foreach ($files as $file) {
                     if ($file && $file->isValid()) {
                         $path = storage_path('app/public/room_types');
-                        $photo = 'room_types/' . $this->compress($file, $path, 50);
+                        $photo = 'room_types/'.$this->compress($file, $path, 50);
                         $imagePaths[] = [
-                            'file_path'=>$photo,
-                            'file_name'=> basename($photo),
-                            'original_name'=>$file->getClientOriginalName(),
-                            'file_size'=>Storage::disk('public')->size($photo),
-                            'mime_type'=>Storage::disk('public')->mimeType($photo)
+                            'file_path' => $photo,
+                            'file_name' => basename($photo),
+                            'original_name' => $file->getClientOriginalName(),
+                            'file_size' => Storage::disk('public')->size($photo),
+                            'mime_type' => Storage::disk('public')->mimeType($photo),
                         ];
                     }
                 }
             }
-            
+
             $input = [
                 'type_name' => $request->type_name,
                 'kapasitas' => $request->kapasitas,
@@ -219,10 +220,9 @@ class RoomTypesController extends Controller
                 'base_price' => str_replace('.', '', $request->base_price),
                 'slug' => Str::slug($request->type_name).'-'.$request->bed_type,
             ];
-           
+
             $room = RoomTypes::create($input);
-    
-    
+
             if ($request->has('facility') && is_array($request->facility)) {
                 $insertRoomFacilities = [];
                 foreach ($request->facility as $key => $value) {
@@ -254,7 +254,7 @@ class RoomTypesController extends Controller
         } catch (\Throwable $th) {
             DB::rollback();
 
-            return back()->with('error', 'Gagal menambah data tipe kamar: ' . $th->getMessage());
+            return back()->with('error', 'Gagal menambah data tipe kamar: '.$th->getMessage());
         }
     }
 
@@ -299,7 +299,7 @@ class RoomTypesController extends Controller
                 'required' => false,
                 'placeholder' => 'Pilih Gambar',
             ];
-            
+
             $data = (object) [
                 'title' => 'Edit Data Tipe Kamar',
                 'subtitle' => 'Tipe Kamar',
@@ -346,20 +346,20 @@ class RoomTypesController extends Controller
 
             $imagePaths = [];
             $files = $request->file('image');
-            if (!empty($files)) {
-                if (!is_array($files)) {
+            if (! empty($files)) {
+                if (! is_array($files)) {
                     $files = [$files];
                 }
                 foreach ($files as $file) {
                     if ($file && $file->isValid()) {
                         $path = storage_path('app/public/room_types');
-                        $photo = 'room_types/' . $this->compress($file, $path, 50);
+                        $photo = 'room_types/'.$this->compress($file, $path, 50);
                         $imagePaths[] = [
                             'file_path' => $photo,
                             'file_name' => basename($photo),
                             'original_name' => $file->getClientOriginalName(),
                             'file_size' => Storage::disk('public')->size($photo),
-                            'mime_type' => Storage::disk('public')->mimeType($photo)
+                            'mime_type' => Storage::disk('public')->mimeType($photo),
                         ];
                     }
                 }
@@ -403,7 +403,7 @@ class RoomTypesController extends Controller
         } catch (\Throwable $th) {
             DB::rollback();
 
-            return back()->with('error', 'Gagal memperbarui data tipe kamar: ' . $th->getMessage());
+            return back()->with('error', 'Gagal memperbarui data tipe kamar: '.$th->getMessage());
         }
     }
 
@@ -467,110 +467,113 @@ class RoomTypesController extends Controller
             ->make(true);
     }
 
-    public function getRoomByType(Request $request, $id) {
+    public function getRoomByType(Request $request, $id)
+    {
         try {
-            $checkIn   = $request->check_in;
-            $checkOut  = $request->check_out;
+            // $checkIn   = $request->check_in;
+            // $checkOut  = $request->check_out;
+            $checkIn = Carbon::parse($request->check_in)->toDateString();
+            $checkOut = Carbon::parse($request->check_out)->toDateString();
 
             $bookedRoomIds = BookingRoom::where(function ($query) use ($checkIn, $checkOut) {
-                $query->where('checkin_date', '<', $checkOut)
-                      ->where('checkout_date', '>=', $checkIn);
+                $query->whereDate('checkin_date', '<', $checkOut)
+                    ->whereDate('checkout_date', '>', $checkIn);
             })
-            ->pluck('room_id')
-            ->toArray();
+                ->pluck('room_id')
+                ->toArray();
 
             $room = Rooms::where('id_room_type', $id)
-                        ->where('status','Tersedia')
-                        ->whereNotIn('id', $bookedRoomIds)->get();
+                ->where('status', 'Tersedia')
+                ->whereNotIn('id', $bookedRoomIds)->get();
 
             return response()->json([
                 'status' => true,
                 'message' => 'Data berhasil diambil',
-                'data' => $room
+                'data' => $room,
             ], 200);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
-                'message' => 'Data gagal diambil : ' . $th->getMessage(),
-                'data' => []
+                'message' => 'Data gagal diambil : '.$th->getMessage(),
+                'data' => [],
             ], 500);
         }
     }
 
-    function roomList($id) {
+    public function roomList($id)
+    {
         try {
             $type = RoomTypes::where('id', $id)->first();
-             $dataPage = $this->dataPage;
+            $dataPage = $this->dataPage;
             $data = (object) [
                 'title' => 'Ketersediaan Kamar '.$type->type_name,
                 'routeData' => route($dataPage['route']['index']),
                 'data' => $type,
             ];
 
-
             // return $data;
             return view('pages.room-types.list-room', compact('data'));
         } catch (\Throwable $th) {
-            //throw $th;
+            // throw $th;
         }
     }
 
-    public function getRoomAvailableByType(Request $request, $id) {
+    public function getRoomAvailableByType(Request $request, $id)
+    {
         try {
             $targetDate = $request->input('date');
 
             $rooms = Rooms::where('id_room_type', $id)->with([
-                        'bookings' , 
-                        'roomType', 
-                        'bookings.booking' => function ($q) {
-                            $q->select('id', 'booking_code', 'booking_status');
-                            },
-                        ])
-                        ->get()
-                        ->map(function ($room) use ($targetDate) {
-                           
-                            $activeBooking = $room->bookings()
-                                ->whereHas('booking', function($q) {
-                                    $q->whereIn('booking_status', ['Pending','Approved', 'Checked-In']);
-                                })
-                            ->where(function($query) use ($targetDate) {
-                                $query->where('checkin_date', '<=', $targetDate)
-                                    ->where('checkout_date', '>=', $targetDate);
-                            })
-                            ->with('booking')
-                            ->first();
-                            
-                            if ($activeBooking) {
-                                $bookingStatus = $activeBooking->booking->booking_status;
-                                $target = date('Y-m-d', strtotime($targetDate));
-                                $checkin = date('Y-m-d', strtotime($activeBooking->checkin_date));
-                                $checkout = date('Y-m-d', strtotime($activeBooking->checkout_date));
-                                $status = '';
-                                if (($target <= $checkin || $target > $checkout) && $activeBooking->booking->booking_code == null) {
-                                    $status = 'Tersedia';
-                                } else if($bookingStatus == 'Approved' || $bookingStatus == 'Pending'){
-                                    $status = 'Booked';
-                                } else if($bookingStatus == 'Checked-In'){
-                                    $status = 'Check-In';
-                                }
-                                
+                'bookings',
+                'roomType',
+                'bookings.booking' => function ($q) {
+                    $q->select('id', 'booking_code', 'booking_status');
+                },
+            ])
+                ->get()
+                ->map(function ($room) use ($targetDate) {
 
-                                $room->status = $status;
-                                // $room->status = ($bookingStatus === 'Approved' && $target <= $checkin && $target >= $checkout) ? 'Booked' : 'Check-In';
-                                $room->booking_code = $activeBooking->booking->booking_code ?? '-';
-                                $room->booking_status = $activeBooking->booking->booking_status ?? '-';
-                            } else {
-                                $room->status = $room->status != 'Maintenance' ? 'Tersedia' : 'Maintenance';
-                                $room->booking_code = null;
-                                $room->booking_status = null;
-                            }
+                    $activeBooking = $room->bookings()
+                        ->whereHas('booking', function ($q) {
+                            $q->whereIn('booking_status', ['Pending', 'Approved', 'Checked-In']);
+                        })
+                        ->where(function ($query) use ($targetDate) {
+                            $query->where('checkin_date', '<=', $targetDate)
+                                ->where('checkout_date', '>=', $targetDate);
+                        })
+                        ->with('booking')
+                        ->first();
 
-                            return $room;
-                    });
-            
+                    if ($activeBooking) {
+                        $bookingStatus = $activeBooking->booking->booking_status;
+                        $target = date('Y-m-d', strtotime($targetDate));
+                        $checkin = date('Y-m-d', strtotime($activeBooking->checkin_date));
+                        $checkout = date('Y-m-d', strtotime($activeBooking->checkout_date));
+                        $status = '';
+                        if (($target <= $checkin || $target > $checkout) && $activeBooking->booking->booking_code == null) {
+                            $status = 'Tersedia';
+                        } elseif ($bookingStatus == 'Approved' || $bookingStatus == 'Pending') {
+                            $status = 'Booked';
+                        } elseif ($bookingStatus == 'Checked-In') {
+                            $status = 'Check-In';
+                        }
+
+                        $room->status = $status;
+                        // $room->status = ($bookingStatus === 'Approved' && $target <= $checkin && $target >= $checkout) ? 'Booked' : 'Check-In';
+                        $room->booking_code = $activeBooking->booking->booking_code ?? '-';
+                        $room->booking_status = $activeBooking->booking->booking_status ?? '-';
+                    } else {
+                        $room->status = $room->status != 'Maintenance' ? 'Tersedia' : 'Maintenance';
+                        $room->booking_code = null;
+                        $room->booking_status = null;
+                    }
+
+                    return $room;
+                });
+
             return response()->json([
                 'status' => true,
-                'data' => $rooms
+                'data' => $rooms,
             ], 200);
         } catch (\Throwable $th) {
             throw $th;
