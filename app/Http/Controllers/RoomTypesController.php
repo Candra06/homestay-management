@@ -483,7 +483,7 @@ class RoomTypesController extends Controller
                 ->toArray();
 
             $room = Rooms::where('id_room_type', $id)
-                ->where('status', 'Tersedia')
+                // ->where('status', 'Tersedia')
                 ->whereNotIn('id', $bookedRoomIds)->get();
 
             return response()->json([
