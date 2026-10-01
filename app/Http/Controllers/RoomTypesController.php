@@ -484,7 +484,6 @@ class RoomTypesController extends Controller
 
             $room = Rooms::where('id_room_type', $id)
                 ->where('status', 'Tersedia')
-                ->orWhere('status', '!=', 'Maintenance')
                 ->whereNotIn('id', $bookedRoomIds)->get();
 
             return response()->json([
