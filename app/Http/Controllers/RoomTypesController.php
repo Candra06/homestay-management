@@ -477,7 +477,7 @@ class RoomTypesController extends Controller
 
             $bookedRoomIds = BookingRoom::where(function ($query) use ($checkIn, $checkOut) {
                 $query->whereDate('checkin_date', '<', $checkOut)
-                    ->whereDate('checkout_date', '>', $checkIn);
+                    ->whereDate('checkout_date', '>=', $checkIn);
             })
                 ->pluck('room_id')
                 ->toArray();
