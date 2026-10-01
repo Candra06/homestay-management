@@ -477,13 +477,14 @@ class RoomTypesController extends Controller
 
             $bookedRoomIds = BookingRoom::where(function ($query) use ($checkIn, $checkOut) {
                 $query->whereDate('checkin_date', '<', $checkOut)
-                    ->whereDate('checkout_date', '>=', $checkIn);
+                    ->whereDate('checkout_date', '>', $checkIn);
             })
                 ->pluck('room_id')
                 ->toArray();
 
             $room = Rooms::where('id_room_type', $id)
                 ->where('status', 'Tersedia')
+                ->orWhere('status', '!=', 'Maintenance')
                 ->whereNotIn('id', $bookedRoomIds)->get();
 
             return response()->json([
