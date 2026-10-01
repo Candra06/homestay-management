@@ -583,6 +583,7 @@ class BookingController extends Controller
                 }
             }
             Invoice::where('booking_id', $booking->id)->delete();
+            FinancialTransaction::where('reference_type', 'booking')->where('reference_id', $booking->id)->delete();
             $booking->delete();
 
             DB::commit();
