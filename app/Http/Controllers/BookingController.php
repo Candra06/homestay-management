@@ -2,45 +2,42 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Booking;
-use App\Models\Facility;
-use App\Models\RoomTypes;
-use App\Models\Attachment;
-use App\Models\Rooms;
+use App\Helper\Helpers;
+use App\Mail\InvoiceMail;
 use App\Models\Additional;
-use App\Models\Guest;
-use App\Models\Voucher;
-use App\Models\BookingRoom;
+use App\Models\Attachment;
+use App\Models\Booking;
 use App\Models\BookingAdditional;
+use App\Models\BookingRoom;
 use App\Models\BookingRoomAdditional;
-use App\Models\Invoice;
-use App\Models\Payment;
-use App\Models\InvoiceItem;
 use App\Models\FinancialAccount;
 use App\Models\FinancialTransaction;
-use Illuminate\Http\Request;
-use Carbon\Carbon;
-use App\Helper\Helpers;
-use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Storage;
-use Barryvdh\DomPDF\Facade\Pdf;
-use App\Mail\InvoiceMail;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Log;
+use App\Models\Guest;
+use App\Models\Invoice;
+use App\Models\InvoiceItem;
+use App\Models\Payment;
+use App\Models\Rooms;
+use App\Models\RoomTypes;
+use App\Models\Voucher;
 use Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use DateTime;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use Yajra\DataTables\Facades\DataTables;
 
 class BookingController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-
     public $dataPage = [
-       
-        "route" => [
+
+        'route' => [
             'index' => 'booking.index',
             'add' => 'booking.create',
             'show' => 'booking.show',
@@ -50,39 +47,41 @@ class BookingController extends Controller
             'detail' => 'booking.detail',
             'delete' => 'booking.destroy',
         ],
-        "tableHead" => ["No", "Booking", "Kamar","Tanggal Reservasi", "Source", "Rincian Finansial", "Bayar","Petugas","aksi"],
-        "tableColumns" => ["DT_RowIndex", "booking", "room", "date_info","book_reff","total_price", "payment_status","created_by","action"],
+        'tableHead' => ['No', 'Booking', 'Kamar', 'Tanggal Reservasi', 'Source', 'Rincian Finansial', 'Bayar', 'Petugas', 'aksi'],
+        'tableColumns' => ['DT_RowIndex', 'booking', 'room', 'date_info', 'book_reff', 'total_price', 'payment_status', 'created_by', 'action'],
     ];
+
     public function index()
     {
         try {
             $today = Carbon::today();
 
             $availableRooms = RoomTypes::withCount(['rooms' => function ($query) use ($today) {
-                $query->where('status', 'Tersedia') // Kamar tidak rusak
+                $query->whereIn('status', ['Tersedia', 'Cleaning']) // Kamar tidak rusak
                     ->whereDoesntHave('bookings', function ($q) use ($today) {
                         $q->where('checkin_date', '<=', $today)
                             ->where('checkout_date', '>', $today);
                     });
             }])->get();
             $dataPage = $this->dataPage;
-            $list = Booking::with('guest','bookingRooms', 'bookingRooms.room', 'userCreate')->orderBy('created_at', 'DESC')->get();
-            $akses = request()->attributes->get("hakAkses");
-            
-            $data=(object)[
+            $list = Booking::with('guest', 'bookingRooms', 'bookingRooms.room', 'userCreate')->orderBy('created_at', 'DESC')->get();
+            $akses = request()->attributes->get('hakAkses');
+
+            $data = (object) [
                 'title' => 'Booking',
                 'subtitle' => 'Reservasi',
                 'active' => 'booking',
-                "createBtn" => $akses['access_create'] == 'Y',
+                'createBtn' => $akses['access_create'] == 'Y',
                 'tableHead' => $dataPage['tableHead'],
                 'tableColumns' => Helpers::tableColumns($dataPage['tableColumns']),
-                 "routeAdd" => route($dataPage['route']['add']),
-                "routeData" => route($dataPage['route']['index']),
+                'routeAdd' => route($dataPage['route']['add']),
+                'routeData' => route($dataPage['route']['index']),
                 'availableRooms' => $availableRooms,
             ];
-             if (request()->ajax()) {
+            if (request()->ajax()) {
                 return $this->ajax($list);
             }
+
             // $bookings = Booking::all();
             return view('pages.booking.index', compact('data'));
         } catch (\Throwable $th) {
@@ -102,12 +101,12 @@ class BookingController extends Controller
         foreach ($additional as $key => $add) {
             if ($add->type == 'room') {
                 $roomAdd[] = $add;
-            }else {
+            } else {
                 $generalAdd[] = $add;
             }
         }
         $bookingCode = $this->generateBookingCode();
-        $data=(object)[
+        $data = (object) [
             'title' => 'Booking',
             'subtitle' => 'Reservasi',
             'active' => 'booking',
@@ -117,7 +116,7 @@ class BookingController extends Controller
             'additionalRoom' => $roomAdd,
             'generalAdd' => $generalAdd,
         ];
-        
+
         return view('pages.booking.form', compact('data'));
     }
 
@@ -126,10 +125,10 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
-        
+
         DB::beginTransaction();
         try {
-            $inputAttachment= [];
+            $inputAttachment = [];
             $rules = [
                 'guest_name' => 'required',
                 'guest_email' => 'required',
@@ -143,7 +142,7 @@ class BookingController extends Controller
             ];
             $validate = Validator::make($request->all(), $rules);
             if ($validate->fails()) {
-                return redirect()->back()->withInput()->with('error', 'Data gagal divalidasi : ' . $validate->errors()->first());
+                return redirect()->back()->withInput()->with('error', 'Data gagal divalidasi : '.$validate->errors()->first());
             }
             $guestData = [
                 'nama_lengkap' => $request->guest_name,
@@ -158,7 +157,7 @@ class BookingController extends Controller
             //     'identity_number' => $request->identity_number
             // ], $guestData);
             $voucher = Voucher::where('code', $request->voucher_code)->first();
-            $bookingData=[
+            $bookingData = [
                 'created_by' => Auth::user()->id,
                 'updated_by' => Auth::user()->id,
                 'booking_code' => $this->generateBookingCode(),
@@ -168,7 +167,7 @@ class BookingController extends Controller
                 'tax' => $request->tax_value,
                 'payment_method' => $request->payment_method,
                 'subtotal' => $request->subtotal_value,
-                'down_payment' => $request->dp_amount??0,
+                'down_payment' => $request->dp_amount ?? 0,
                 'note' => $request->additional_notes,
                 'total_payment' => $request->payment_amount,
                 'grand_total' => $request->grand_total_value,
@@ -182,10 +181,10 @@ class BookingController extends Controller
                 'discount_amount' => $request->has('discount_amount_value') ? ($request->discount_amount_value != null ? $request->discount_amount_value : 0) : 0,
             ];
             $booking = Booking::create($bookingData);
-            
+
             $bookingAddOnData = [];
             $invoiceItemData = [];
-            for ($i=0; $i < count($request->room_type); $i++) {
+            for ($i = 0; $i < count($request->room_type); $i++) {
                 $price = RoomTypes::where('id', $request->room_type[$i])->first();
                 $checkIn = new DateTime($request->check_in[$i]);
                 $checkOut = new DateTime($request->check_out[$i]);
@@ -202,12 +201,12 @@ class BookingController extends Controller
                 ]);
                 $invoiceItemData[] = [
                     'invoice_id' => 0,
-                    'item_name' => 'Room ' . $price->type_name,
+                    'item_name' => 'Room '.$price->type_name,
                     'quantity' => $nights,
                     'unit_price' => $price->base_price,
                     'total_price' => $totalPrice,
                 ];
-                
+
                 foreach ($additionalAddOn as $key => $add) {
                     $addInfo = Additional::where('id', $add)->first();
                     $bookingAddOnData[] = [
@@ -218,19 +217,18 @@ class BookingController extends Controller
                     ];
                     $invoiceItemData[] = [
                         'invoice_id' => 0,
-                        'item_name' => 'Additional ' . $addInfo->name,
+                        'item_name' => 'Additional '.$addInfo->name,
                         'quantity' => $nights,
                         'unit_price' => $addInfo->price,
                         'total_price' => $addInfo->price * $nights,
                     ];
                 }
             }
-            
-            
+
             BookingRoomAdditional::insert($bookingAddOnData);
-            if ($request->has('additional_services') &&count($request->additional_services) > 0) {
+            if ($request->has('additional_services') && count($request->additional_services) > 0) {
                 $bookingAdditionalData = [];
-                for ($i=0; $i < count($request->additional_services); $i++) {
+                for ($i = 0; $i < count($request->additional_services); $i++) {
                     $add = Additional::where('id', $request->additional_services[$i])->first();
                     $bookingAdditionalData[] = [
                         'booking_id' => $booking->id,
@@ -248,9 +246,9 @@ class BookingController extends Controller
                 'issue_date' => $request->payment_date,
                 'due_date' => $request->check_in[0],
                 'subtotal' => $request->subtotal_value,
-                'service_charge' => $request->service_charge_value??0,
-                'tax_amount' => $request->tax_value??0,
-                'discount' => $request->discount??0,
+                'service_charge' => $request->service_charge_value ?? 0,
+                'tax_amount' => $request->tax_value ?? 0,
+                'discount' => $request->discount ?? 0,
                 'grand_total' => $request->grand_total_value,
                 'amount_paid' => ($request->dp_amount > 0) ? $request->dp_amount : $request->payment_amount,
                 'status' => $request->payment_amount == $request->grand_total_value ? 'Paid' : ($request->dp_amount > 0 ? 'Partial' : 'Unpaid'),
@@ -258,9 +256,9 @@ class BookingController extends Controller
                 'created_by' => Auth::user()->id,
                 'updated_by' => Auth::user()->id,
             ];
-            
+
             $invoice = Invoice::create($invoiceData);
-            for ($i=0; $i < count($invoiceItemData); $i++) { 
+            for ($i = 0; $i < count($invoiceItemData); $i++) {
                 $invoiceItemData[$i]['invoice_id'] = $invoice->id;
             }
             InvoiceItem::insert($invoiceItemData);
@@ -268,7 +266,7 @@ class BookingController extends Controller
                 'invoice_id' => $invoice->id,
                 'code' => $this->generatePaymentCode(),
                 'payment_method' => $request->payment_method,
-                'description' => ($request->payment_amount == $request->grand_total_value ? 'Payment Full' : 'Down Payment').' - Booking '. $booking->booking_code,
+                'description' => ($request->payment_amount == $request->grand_total_value ? 'Payment Full' : 'Down Payment').' - Booking '.$booking->booking_code,
                 'amount' => ($request->dp_amount > 0) ? $request->dp_amount : $request->payment_amount,
                 'reference_number' => $invoice->invoice_number,
                 'paid_at' => $request->payment_date,
@@ -282,27 +280,27 @@ class BookingController extends Controller
                 'transaction_date' => $request->payment_date,
                 'transaction_type' => 'income',
                 'amount' => ($request->dp_amount > 0) ? $request->dp_amount : $request->payment_amount,
-                'description' => ($request->payment_amount == $request->grand_total_value ? 'Payment Full' : 'Down Payment').' - Booking '. $booking->booking_code,
+                'description' => ($request->payment_amount == $request->grand_total_value ? 'Payment Full' : 'Down Payment').' - Booking '.$booking->booking_code,
                 'reference_type' => 'booking',
                 'reference_id' => $booking->id,
                 'created_by' => Auth::user()->id,
                 'updated_by' => Auth::user()->id,
                 'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now()
+                'updated_at' => Carbon::now(),
             ];
             $this->insertTransaction($bodyTransaction);
-            
-             if ($request->hasFile('identity_image')) {
+
+            if ($request->hasFile('identity_image')) {
                 $file = $request->file('identity_image');
                 $path = storage_path('app/public/guest');
-                $photo = 'guest/' . $this->compress($file, $path, 50);
+                $photo = 'guest/'.$this->compress($file, $path, 50);
                 $imagePaths = [
-                            'file_path'=>$photo,
-                            'file_name'=> basename($photo),
-                            'original_name'=>$file->getClientOriginalName(),
-                            'file_size'=>Storage::disk('public')->size($photo),
-                            'mime_type'=>Storage::disk('public')->mimeType($photo)
-                        ];
+                    'file_path' => $photo,
+                    'file_name' => basename($photo),
+                    'original_name' => $file->getClientOriginalName(),
+                    'file_size' => Storage::disk('public')->size($photo),
+                    'mime_type' => Storage::disk('public')->mimeType($photo),
+                ];
                 $inputAttachment = [
                     'reff_feature' => 'guests',
                     'file_url' => $imagePaths['file_path'],
@@ -317,16 +315,16 @@ class BookingController extends Controller
             // send invoice to email
             $sendEmail = $this->sendEmail($invoice->id);
             DB::commit();
-            return redirect(route('booking.index'))->with(!$sendEmail? 'warning':'success', !$sendEmail? 'Berhasil menambahkan booking tapi email gagal terkirim,silahkan kirim secara manual':'Berhasil menambah data booking');
+
+            return redirect(route('booking.index'))->with(! $sendEmail ? 'warning' : 'success', ! $sendEmail ? 'Berhasil menambahkan booking tapi email gagal terkirim,silahkan kirim secara manual' : 'Berhasil menambah data booking');
         } catch (\Throwable $th) {
             DB::rollback();
-            
+
             $this->insertLog('Gagal menambahkan data booking', $th);
-            return redirect()->back()->with('error', 'Data gagal disimpan : ' . $th->getMessage());
+
+            return redirect()->back()->with('error', 'Data gagal disimpan : '.$th->getMessage());
         }
     }
-    
-
 
     /**
      * Display the specified resource.
@@ -334,25 +332,26 @@ class BookingController extends Controller
     public function show(Booking $booking)
     {
         $bookingData = Booking::with(
-                'guest', 
-                'invoices', 
-                'additional',
-                'additional.item',
-                'bookingRooms',
-                'bookingRooms.room', 
-                'bookingRooms.additionals', 
-                'bookingRooms.additionals.additional', 
-                'bookingRooms.room.roomType',
-                'userCreate',
-                'userUpdate'
-            )->where('id', $booking->id)->first();
-        
-        $data=(object)[
+            'guest',
+            'invoices',
+            'additional',
+            'additional.item',
+            'bookingRooms',
+            'bookingRooms.room',
+            'bookingRooms.additionals',
+            'bookingRooms.additionals.additional',
+            'bookingRooms.room.roomType',
+            'userCreate',
+            'userUpdate'
+        )->where('id', $booking->id)->first();
+
+        $data = (object) [
             'title' => 'Detail Reservasi',
             'subtitle' => 'Reservasi',
             'active' => 'booking',
             'bookingData' => $bookingData,
         ];
+
         return view('pages.booking.detail', compact('data'));
     }
 
@@ -368,23 +367,23 @@ class BookingController extends Controller
         foreach ($additional as $key => $add) {
             if ($add->type == 'room') {
                 $roomAdd[] = $add;
-            }else {
+            } else {
                 $generalAdd[] = $add;
             }
         }
         $bookingData = $booking->with(
-                'guest', 
-                'invoices', 
-                'bookingRooms',
-                'bookingRooms.room', 
-                'bookingRooms.additionals', 
-                'bookingRooms.additionals.additional', 
-                'bookingRooms.room.roomType',
-                'userCreate',
-                'userUpdate'
-            )->where('id', $booking->id)->first();
+            'guest',
+            'invoices',
+            'bookingRooms',
+            'bookingRooms.room',
+            'bookingRooms.additionals',
+            'bookingRooms.additionals.additional',
+            'bookingRooms.room.roomType',
+            'userCreate',
+            'userUpdate'
+        )->where('id', $booking->id)->first();
         // return $bookingData;
-       $data = (object)[
+        $data = (object) [
             'title' => 'Edit Reservasi',
             'subtitle' => 'Reservasi',
             'active' => 'booking',
@@ -393,7 +392,7 @@ class BookingController extends Controller
             'additionalRoom' => $roomAdd,
             'generalAdd' => $generalAdd,
         ];
-        
+
         return view('pages.booking.edit', compact('data'));
     }
 
@@ -402,23 +401,23 @@ class BookingController extends Controller
      */
     public function update(Request $request, Booking $booking)
     {
-        
+
         DB::beginTransaction();
         try {
             $booking = Booking::where('id', $booking->id)->first();
             $bookingRoomData = [];
             $bookingAddOnData = [];
             $invoiceItemData = [];
-            for ($i=0; $i < count($request->room_type); $i++) {
+            for ($i = 0; $i < count($request->room_type); $i++) {
                 $room = BookingRoom::where('room_id', $request->room_number[$i])->where('booking_id', $booking->id)->first();
                 $checkIn = new DateTime($request->check_in[$i]);
                 $checkOut = new DateTime($request->check_out[$i]);
                 $nights = $checkIn->diff($checkOut)->days;
                 $additionalAddOn = $request->input("additional_room-{$i}", []);
-               
+
                 foreach ($additionalAddOn as $key => $add) {
                     $bookingRoomAdd = BookingRoomAdditional::where('booking_room_id', $room->id)->where('additional_id', $add)->first();
-                    if(!$bookingRoomAdd){
+                    if (! $bookingRoomAdd) {
                         $addInfo = Additional::where('id', $add)->first();
                         $bookingAddOnData[] = [
                             'booking_room_id' => $room->id,
@@ -429,7 +428,7 @@ class BookingController extends Controller
                         ];
                         $invoiceItemData[] = [
                             'invoice_id' => 0,
-                            'item_name' => 'Additional ' . $addInfo->name,
+                            'item_name' => 'Additional '.$addInfo->name,
                             'quantity' => $nights,
                             'unit_price' => $addInfo->price,
                             'total_price' => $addInfo->price * $nights,
@@ -440,9 +439,9 @@ class BookingController extends Controller
             BookingRoomAdditional::insert($bookingAddOnData);
 
             $bookingAdditionalData = [];
-            for ($i=0; $i < count($request->additional_services); $i++) {
+            for ($i = 0; $i < count($request->additional_services); $i++) {
                 $bookingAdd = BookingAdditional::where('booking_id', $booking->id)->where('additional_id', $request->additional_services[$i])->first();
-                if (!$bookingAdd) {
+                if (! $bookingAdd) {
                     $add = Additional::where('id', $request->additional_services[$i])->first();
                     $bookingAdditionalData[] = [
                         'booking_id' => $booking->id,
@@ -456,14 +455,14 @@ class BookingController extends Controller
             BookingAdditional::insert($bookingAdditionalData);
 
             $invoice = Invoice::where('booking_id', $booking->id)->first();
-            
+
             if ($invoice) {
-                for ($i=0; $i < count($invoiceItemData); $i++) { 
+                for ($i = 0; $i < count($invoiceItemData); $i++) {
                     $invoiceItemData[$i]['invoice_id'] = $invoice->id;
                 }
                 InvoiceItem::insert($invoiceItemData);
             }
-            
+
             $bodyBooking = [
                 'subtotal' => $request->subtotal_value,
                 'grand_total' => $request->grand_total_value,
@@ -476,7 +475,7 @@ class BookingController extends Controller
                 'updated_by' => Auth::user()->id,
                 'updated_at' => date('Y-m-d H:i:s'),
             ];
-                
+
             $invoiceData = [
                 'paid_at' => ($request->payment_amount == $request->grand_total_value) ? $request->payment_date : null,
                 'subtotal' => $request->subtotal_value,
@@ -487,8 +486,8 @@ class BookingController extends Controller
                 'updated_at' => date('Y-m-d H:i:s'),
             ];
             $transaction = FinancialTransaction::where('reference_type', 'booking')
-                            ->where('reference_id', $booking->id)
-                            ->first();
+                ->where('reference_id', $booking->id)
+                ->first();
             if ($transaction) {
                 FinancialTransaction::where('id', $transaction->id)->update([
                     'amount' => ($request->dp_amount > 0) ? $request->dp_amount : $request->payment_amount,
@@ -496,8 +495,7 @@ class BookingController extends Controller
                     'updated_at' => date('Y-m-d H:i:s'),
                 ]);
             }
-            
-                
+
             Booking::where('id', $booking->id)->update($bodyBooking);
             Invoice::where('id', $invoice->id)->update($invoiceData);
             if ($request->hasFile('identity_image')) {
@@ -514,17 +512,17 @@ class BookingController extends Controller
                 Attachment::where('reff_feature', 'guest')
                     ->where('reff_id', $booking->guest_id)
                     ->delete();
-                $inputAttachment= [];
+                $inputAttachment = [];
                 $file = $request->file('identity_image');
                 $path = storage_path('app/public/guest');
-                $photo = 'guest/' . $this->compress($file, $path, 50);
+                $photo = 'guest/'.$this->compress($file, $path, 50);
                 $imagePaths = [
-                            'file_path'=>$photo,
-                            'file_name'=> basename($photo),
-                            'original_name'=>$file->getClientOriginalName(),
-                            'file_size'=>Storage::disk('public')->size($photo),
-                            'mime_type'=>Storage::disk('public')->mimeType($photo)
-                        ];
+                    'file_path' => $photo,
+                    'file_name' => basename($photo),
+                    'original_name' => $file->getClientOriginalName(),
+                    'file_size' => Storage::disk('public')->size($photo),
+                    'mime_type' => Storage::disk('public')->mimeType($photo),
+                ];
                 $inputAttachment = [
                     'reff_feature' => 'guests',
                     'file_url' => $imagePaths['file_path'],
@@ -537,13 +535,15 @@ class BookingController extends Controller
                 Attachment::create($inputAttachment);
             }
             DB::commit();
+
             return redirect('/booking')
                 ->with('success', 'Data berhasil diedit');
         } catch (\Throwable $th) {
             DB::rollback();
-            
+
             $this->insertLog('Gagal mengedit data booking', $th);
-            return redirect()->back()->with('error', 'Data gagal disimpan : ' . $th->getMessage());
+
+            return redirect()->back()->with('error', 'Data gagal disimpan : '.$th->getMessage());
         }
     }
 
@@ -551,10 +551,10 @@ class BookingController extends Controller
      * Remove the specified resource from storage.
      */
     public function destroy(Booking $booking)
-    {   
+    {
         DB::beginTransaction();
         try {
-             $oldAttachments = Attachment::where('reff_feature', 'guest')
+            $oldAttachments = Attachment::where('reff_feature', 'guest')
                 ->where('reff_id', $booking->guest_id)
                 ->get();
 
@@ -570,7 +570,7 @@ class BookingController extends Controller
             $bookingRoom = BookingRoom::where('booking_id', $booking->id)->get();
             if ($bookingRoom) {
                 foreach ($bookingRoom as $room) {
-                   BookingRoomAdditional::where('booking_room_id', $room->id)->delete();
+                    BookingRoomAdditional::where('booking_room_id', $room->id)->delete();
                 }
                 BookingRoom::where('booking_id', $booking->id)->delete();
             }
@@ -587,24 +587,26 @@ class BookingController extends Controller
             $booking->delete();
 
             DB::commit();
+
             return redirect(route('booking.index'))->with('success', 'Berhasil menghapus data booking');
         } catch (\Throwable $th) {
             DB::rollback();
-            return redirect()->back()->with('error', 'Data gagal dihapus : ' . $th->getMessage());
+
+            return redirect()->back()->with('error', 'Data gagal dihapus : '.$th->getMessage());
         }
     }
 
     private function generateBookingCode()
     {
-        
+
         $now = Carbon::now();
-        $dateFormatted = $now->format('dmy'); 
-        $prefix = 'EZ-RSV' . $dateFormatted;
+        $dateFormatted = $now->format('dmy');
+        $prefix = 'EZ-RSV'.$dateFormatted;
 
         $lastBooking = Booking::whereDate('created_at', $now->toDateString())
             ->orderBy('id', 'desc')
             ->first();
-        if (!$lastBooking) {
+        if (! $lastBooking) {
             $sequence = 1;
         } else {
             $lastCode = $lastBooking->booking_code;
@@ -612,24 +614,24 @@ class BookingController extends Controller
             $sequence = $lastSequence + 1;
         }
         $sequenceFormatted = str_pad($sequence, 3, '0', STR_PAD_LEFT);
-        
-        return $prefix .$sequenceFormatted;
+
+        return $prefix.$sequenceFormatted;
     }
 
     private function generateInvoiceCode()
     {
-        
+
         $now = Carbon::now();
-        $yearFormatted = $now->format('Y'); 
-        $monthFormatted = $now->format('m'); 
-        $dayFormatted = $now->format('d'); 
-        $prefix = 'EZ-INV/' . $yearFormatted .'/'. $monthFormatted .'/'. $dayFormatted .'/';
+        $yearFormatted = $now->format('Y');
+        $monthFormatted = $now->format('m');
+        $dayFormatted = $now->format('d');
+        $prefix = 'EZ-INV/'.$yearFormatted.'/'.$monthFormatted.'/'.$dayFormatted.'/';
 
         $lastInvoice = Invoice::whereDate('created_at', $now->toDateString())
             ->orderBy('id', 'desc')
             ->withTrashed()
             ->first();
-        if (!$lastInvoice) {
+        if (! $lastInvoice) {
             $sequence = 1;
         } else {
             $lastCode = $lastInvoice->invoice_number;
@@ -637,25 +639,26 @@ class BookingController extends Controller
             $sequence = $lastSequence + 1;
         }
         $sequenceFormatted = str_pad($sequence, 3, '0', STR_PAD_LEFT);
-        
-        return $prefix .$sequenceFormatted;
+
+        return $prefix.$sequenceFormatted;
     }
+
     private function generatePaymentCode()
     {
-        
+
         try {
             $now = Carbon::now();
-            $yearFormatted = $now->format('Y'); 
-            $monthFormatted = $now->format('m'); 
-            $dayFormatted = $now->format('d'); 
-            $prefix = 'EZ-PAY/' . $yearFormatted .'/'. $monthFormatted .'/'. $dayFormatted .'/';
+            $yearFormatted = $now->format('Y');
+            $monthFormatted = $now->format('m');
+            $dayFormatted = $now->format('d');
+            $prefix = 'EZ-PAY/'.$yearFormatted.'/'.$monthFormatted.'/'.$dayFormatted.'/';
 
             $lastPayment = Payment::whereDate('created_at', $now->toDateString())
                 ->whereNotNull('code')
                 ->orderBy('id', 'desc')
                 ->withTrashed()
                 ->first();
-            if (!$lastPayment) {
+            if (! $lastPayment) {
                 $sequence = 1;
             } else {
                 $lastCode = $lastPayment->code;
@@ -663,11 +666,12 @@ class BookingController extends Controller
                 $sequence = $lastSequence + 1;
             }
             $sequenceFormatted = str_pad($sequence, 3, '0', STR_PAD_LEFT);
-            
-            return $prefix .$sequenceFormatted;
+
+            return $prefix.$sequenceFormatted;
         } catch (\Throwable $th) {
-            $this->insertLog('Gagal generate payment code', $th,);
-            return 'EZ-PAY/' . Carbon::now()->format('Y') .'/'. Carbon::now()->format('m') .'/'. Carbon::now()->format('d') .'/001';
+            $this->insertLog('Gagal generate payment code', $th);
+
+            return 'EZ-PAY/'.Carbon::now()->format('Y').'/'.Carbon::now()->format('m').'/'.Carbon::now()->format('d').'/001';
         }
     }
 
@@ -676,24 +680,26 @@ class BookingController extends Controller
         return DataTables::of($list)
             ->addIndexColumn()
             ->smart(false)
-            ->addColumn('booking', function($row){
+            ->addColumn('booking', function ($row) {
                 $html = '<div class="fw-bold text-primary">'.$row->booking_code.'</div>
                             <div class="text-dark fw-medium">'.$row->guest->nama_lengkap.'</div>';
                 $html .= Helpers::generateStatus($row->booking_status);
+
                 return $html;
             })
-            ->addColumn('room', function($row){
-                $rooms =[];
+            ->addColumn('room', function ($row) {
+                $rooms = [];
                 foreach ($row->bookingRooms as $key => $value) {
                     $rooms[] = $value->room->room_number;
                 }
                 $roomNames = implode(', ', $rooms);
+
                 return $row->bookingRooms->count().' Kamar <br/>('.$roomNames.')';
             })
-            ->addColumn('date_info', function($row){
+            ->addColumn('date_info', function ($row) {
                 return Helpers::tanggalTime($row->created_at);
             })
-            ->addColumn('book_reff', function($row){
+            ->addColumn('book_reff', function ($row) {
                 $text = '';
                 if ($row->book_reff == 'direct_wa') {
                     $text = 'Direct WhatsApp';
@@ -702,10 +708,10 @@ class BookingController extends Controller
                 } elseif ($row->book_reff == 'ota') {
                     $text = 'OTA '.$row->ota_name;
                 }
-                
+
                 return $text;
             })
-            ->addColumn('total_price', function($row){
+            ->addColumn('total_price', function ($row) {
                 $html = '
                  <div class="fw-bold text-dark">
                                 Grand Total: '.Helpers::rupiah($row->grand_total).'
@@ -721,13 +727,14 @@ class BookingController extends Controller
                             <div class="fs-11 text-muted">
                                 Terbayar: '.Helpers::rupiah($row->amount_paid).'
                             </div>';
+
                 return $html;
             })
-           
-            ->addColumn('payment_status', function($row){
+
+            ->addColumn('payment_status', function ($row) {
                 return Helpers::generateStatusPayment($row->payment_status);
             })
-            ->addColumn('created_by', function($row){
+            ->addColumn('created_by', function ($row) {
                 return $row->userCreate->name;
             })
             ->addColumn('action', function ($row) {
@@ -743,31 +750,32 @@ class BookingController extends Controller
 
                 return $actionBtn;
             })
-            ->rawColumns(['action', 'booking', 'room','total_price','book_date','payment_status'])
+            ->rawColumns(['action', 'booking', 'room', 'total_price', 'book_date', 'payment_status'])
             ->make(true);
     }
 
-    public function paymentBooking(Request $request, $id) {
+    public function paymentBooking(Request $request, $id)
+    {
         DB::beginTransaction();
-        
-       try {
+
+        try {
             $booking = Booking::find($id);
             $invoice = Invoice::where('booking_id', $id)->first();
-            $updateBooking=[
+            $updateBooking = [
                 'amount_paid' => $booking->amount_paid + $request->amount,
                 'total_payment' => $booking->total_payment + $request->amount,
                 'paid_at' => $request->payment_date.' '.date('H:i:s'),
                 'payment_status' => 'Paid',
                 'booking_status' => 'Approved',
                 'updated_by' => Auth::user()->id,
-                'updated_at' => Carbon::now()
+                'updated_at' => Carbon::now(),
             ];
             Booking::where('id', $id)->update($updateBooking);
             $updateInvoice = [
                 'amount_paid' => $invoice->amount_paid + $request->amount,
                 'status' => 'Paid',
                 'updated_by' => Auth::user()->id,
-                'updated_at' => Carbon::now()
+                'updated_at' => Carbon::now(),
             ];
             Invoice::where('id', $invoice->id)->update($updateInvoice);
             $addPayment = [
@@ -777,17 +785,17 @@ class BookingController extends Controller
                 'payment_method' => $request->payment_method,
                 'reference_number' => $invoice->invoice_number,
                 'paid_at' => $request->tgl_bayar.' '.date('H:i:s'),
-                'description'=> 'Pelunasan Reservasi No. '.$booking->booking_code.' Invoice No. '.$invoice->invoice_number,
+                'description' => 'Pelunasan Reservasi No. '.$booking->booking_code.' Invoice No. '.$invoice->invoice_number,
                 'created_by' => Auth::user()->id,
                 'created_at' => Carbon::now(),
                 'updated_by' => Auth::user()->id,
-                'updated_at' => Carbon::now()
+                'updated_at' => Carbon::now(),
             ];
             Payment::create($addPayment);
             $akun = FinancialAccount::where('account_code', '1-100')->first();
             // return $akun;
             $addFinance[] = [
-                'financial_account_id'=> $akun->id,
+                'financial_account_id' => $akun->id,
                 'transaction_date' => $request->tgl_bayar,
                 'transaction_type' => 'income',
                 'amount' => $request->amount,
@@ -797,139 +805,153 @@ class BookingController extends Controller
                 'created_by' => Auth::user()->id,
                 'updated_by' => Auth::user()->id,
                 'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now()
+                'updated_at' => Carbon::now(),
             ];
 
             $this->insertTransaction($addFinance);
-            
+
             DB::commit();
+
             return redirect()->back()->with('success', 'Pembayaran berhasil ditambahkan');
-       } catch (\Throwable $th) {
+        } catch (\Throwable $th) {
             DB::rollback();
             throw $th;
+
             return redirect()->back()->with('error', 'Pembayaran gagal ditambahkan : '.$th->getMessage());
-       }
+        }
     }
 
-    public function checkInProcess($id, $type){
+    public function checkInProcess($id, $type)
+    {
         DB::beginTransaction();
         try {
-            $booking = Booking::with('bookingRooms')->where('id',$id)->first();
+            $booking = Booking::with('bookingRooms')->where('id', $id)->first();
             $bookingRoom = $booking->bookingRooms;
-            
-            $updateBooking=[
+
+            $updateBooking = [
                 'booking_status' => $type == 'checkin' ? 'Checked-In' : 'Completed',
                 'updated_by' => Auth::user()->id,
                 'checkedin_at' => $type == 'checkin' ? Carbon::now() : $booking->checkedin_at,
-                'updated_at' => Carbon::now()
+                'updated_at' => Carbon::now(),
             ];
             Booking::where('id', $id)->update($updateBooking);
             foreach ($bookingRoom as $key => $value) {
                 Rooms::where('id', $value->room_id)->update([
                     'status' => $type == 'checkin' ? 'Terisi' : 'Cleaning',
                     'remarks' => $type == 'checkin' ? 'Sedang digunakan(#'.$booking->booking_code.')' : 'Kamar dibersihkan',
-                    'updated_at' => Carbon::now()
+                    'updated_at' => Carbon::now(),
                 ]);
             }
             DB::commit();
+
             return response()->json([
-                'success' =>true,
+                'success' => true,
                 'message' => $type == 'checkin' ? 'Check-In berhasil ditambahkan' : 'Check-Out berhasil ditambahkan',
-                'id' =>$id,
+                'id' => $id,
             ]);
-            
+
         } catch (\Throwable $th) {
             DB::rollback();
+
             return response()->json([
-                'success' =>false,
+                'success' => false,
                 'message' => $type == 'checkin' ? 'Check-In gagal ditambahkan' : 'Check-Out gagal ditambahkan',
                 'error' => $th->getMessage(),
-                'id' => $id
+                'id' => $id,
             ]);
         }
-        
+
     }
 
-    public function getBookedRooms(Request $request) {
-       try {
-        DB::enableQueryLog();
+    public function getBookedRooms(Request $request)
+    {
+        try {
+            DB::enableQueryLog();
             $month = Carbon::parse($request->date)->format('m');
             $year = Carbon::parse($request->date)->format('Y');
             $booking = BookingRoom::with([
-                                'booking' => function($query) {
-                                    $query->select('id','booking_code','guest_id');
-                                },
-                                'booking.guest' => function($query) {
-                                    $query->select('id','nama_lengkap');
-                                },
-                                'room' => function($query) {
-                                    $query->select('id','room_number','id_room_type');
-                                },
-                                'room.roomType' => function($query) {
-                                    $query->select('id','type_name');
-                                },
-                                ])
-                            ->whereRaw("MONTH(checkin_date) = ".$month)
-                            ->whereRaw("YEAR(checkin_date) = ".$year)
-                            ->orderBy('checkin_date', 'asc')
-                            ->get();
+                'booking' => function ($query) {
+                    $query->select('id', 'booking_code', 'guest_id');
+                },
+                'booking.guest' => function ($query) {
+                    $query->select('id', 'nama_lengkap');
+                },
+                'room' => function ($query) {
+                    $query->select('id', 'room_number', 'id_room_type');
+                },
+                'room.roomType' => function ($query) {
+                    $query->select('id', 'type_name');
+                },
+            ])
+                ->whereRaw('MONTH(checkin_date) = '.$month)
+                ->whereRaw('YEAR(checkin_date) = '.$year)
+                ->orderBy('checkin_date', 'asc')
+                ->get();
+
             return response()->json([
-                'success' =>true,
+                'success' => true,
                 'data' => $booking,
             ]);
-       } catch (\Throwable $th) {
+        } catch (\Throwable $th) {
             return response()->json([
-                'success' =>false,
+                'success' => false,
                 'data' => [],
                 'message' => 'Gagal mengambil data',
                 'error' => $th->getMessage(),
             ]);
-       }
+        }
     }
 
-    public function printInvoice($code) {
+    public function printInvoice($code)
+    {
         try {
-            $invoice = Invoice::with('items','booking.guest','payments')->where('id', $code)->first();
-            $dataInvoice=[
+            $invoice = Invoice::with('items', 'booking.guest', 'payments')->where('id', $code)->first();
+            $dataInvoice = [
                 'data' => $invoice,
             ];
             // return $invoice;
-            $pdf = PDF::loadView('template.print.booking.invoice', compact('dataInvoice'));
-            
+            $pdf = Pdf::loadView('template.print.booking.invoice', compact('dataInvoice'));
+
             return $pdf->stream('invoice.pdf');
-            
+
         } catch (\Throwable $th) {
             throw $th;
         }
     }
 
-    function sendEmail($code) {
+    public function sendEmail($code)
+    {
         try {
-            $invoice = Invoice::with('items','booking.guest','payments')->where('id', $code)->first();
-            $dataInvoice=[
+            $invoice = Invoice::with('items', 'booking.guest', 'payments')->where('id', $code)->first();
+            $dataInvoice = [
                 'data' => $invoice,
             ];
-            
-            $pdf = PDF::loadView('template.print.booking.invoice', compact('dataInvoice'));
+
+            $pdf = Pdf::loadView('template.print.booking.invoice', compact('dataInvoice'));
             $pdfContent = $pdf->output();
             $recipient = $invoice->booking->guest->email;
             Mail::to($recipient)->send(new InvoiceMail($invoice, $pdfContent));
+
             return true;
         } catch (\Throwable $th) {
             $this->insertLog('Gagal mengirim email', $th);
+
             return false;
         }
     }
 
-    function insertTransaction($data) {
+    public function insertTransaction($data)
+    {
         DB::beginTransaction();
         try {
             FinancialTransaction::insert($data);
             DB::commit();
+
             return true;
         } catch (\Throwable $th) {
             DB::rollBack();
             $this->insertLog('Gagal input transaksi', $th);
+
             return false;
         }
     }

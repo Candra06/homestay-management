@@ -470,8 +470,7 @@ class RoomTypesController extends Controller
     public function getRoomByType(Request $request, $id)
     {
         try {
-            // $checkIn   = $request->check_in;
-            // $checkOut  = $request->check_out;
+            
             $checkIn = Carbon::parse($request->check_in)->toDateString();
             $checkOut = Carbon::parse($request->check_out)->toDateString();
 

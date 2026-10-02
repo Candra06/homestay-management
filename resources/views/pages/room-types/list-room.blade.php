@@ -63,8 +63,8 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content modal-content-demo">
                 <div class="modal-header">
-                    <h6 class="modal-title"></h6><button aria-label="Close" class="close"
-                        data-bs-dismiss="modal" type="button"><span aria-hidden="true">&times;</span></button>
+                    <h6 class="modal-title"></h6><button aria-label="Close" class="close" data-bs-dismiss="modal"
+                        type="button"><span aria-hidden="true">&times;</span></button>
                 </div>
                 <div class="modal-body">
                     <form action="{{ url('/room/update/') }}" method="POST">
@@ -132,6 +132,8 @@
 
         function generateCard(data) {
             let html = '';
+            let role = "{{ Auth::user()->roles->code }}";
+            
             data.forEach(item => {
                 let bgCard = "bg-success";
                 switch (item.status) {
@@ -154,7 +156,8 @@
                         break;
                 }
 
-                html += `
+                if (role == 'HOUSE_KEEPING') {
+                    html += `
                 <div class="col-md-2">
                     <a data-bs-effect="effect-scale" data-bs-toggle="modal" onclick="updateRoomStatus(${item.id},${item.room_number})" href="#modal-update">
                         <div class="card ${bgCard}">
@@ -167,6 +170,20 @@
                     </a>
                 </div>
                 `;
+                } else {
+                    html += `
+                        <div class="col-md-2">
+                            <div class="card ${bgCard}">
+                                <div class="card-body tx-white">
+                                    <h3 class=" tx-center">${item.room_number}</h3>
+                                    <p class="tx-center mb-0">${item.status}</p>
+                                    <p class="tx-center ${['Booked', 'Check-In'].includes(item.status) ? 'mb-0' : 'mb-1 pb-3'}">${['Booked', 'Check-In'].includes(item.status) ? item.booking_code : ''}</p>
+                                </div>
+                            </div>
+                           
+                        </div>
+                        `;
+                }
             });
             $('#room-list').html(html);
         }
