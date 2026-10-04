@@ -410,6 +410,15 @@ class BookingController extends Controller
             $bookingRoomData = [];
             $bookingAddOnData = [];
             $invoiceItemData = [];
+            $guestData = [
+                'nama_lengkap' => $request->guest_name,
+                'email' => $request->guest_email,
+                'no_telp' => $request->phone,
+                'identity_type' => $request->identity_type,
+                'identity_number' => $request->identity_number,
+                'address' => $request->address,
+            ];
+            Guest::where('id', $booking->guest_id)->update($guestData);
             for ($i = 0; $i < count($request->room_type); $i++) {
                 $room = BookingRoom::where('room_id', $request->room_number[$i])->where('booking_id', $booking->id)->first();
                 $checkIn = new DateTime($request->check_in[$i]);
@@ -541,11 +550,12 @@ class BookingController extends Controller
                     'file_name' => $imagePaths['file_name'],
                     'original_name' => $imagePaths['original_name'],
                     'mime_type' => $imagePaths['mime_type'],
-                    'reff_id' => $booking->id,
+                    'reff_id' => $booking->guest_id,
                     'file_size' => $imagePaths['file_size'],
                 ];
                 Attachment::create($inputAttachment);
             }
+            
             DB::commit();
 
             return redirect('/booking')
