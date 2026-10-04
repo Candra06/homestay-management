@@ -156,7 +156,7 @@ class BookingController extends Controller
             // $guest = Guest::updateOrCreate([
             //     'identity_number' => $request->identity_number
             // ], $guestData);
-            $voucher = Voucher::where('code', $request->voucher_code)->first();
+            
             $bookingData = [
                 'created_by' => Auth::user()->id,
                 'updated_by' => Auth::user()->id,
@@ -180,6 +180,7 @@ class BookingController extends Controller
                 'voucher_id' => $request->has('voucher_id') ? $request->voucher_id : null,
                 'discount_amount' => $request->has('discount_amount_value') ? ($request->discount_amount_value != null ? $request->discount_amount_value : 0) : 0,
             ];
+            
             $booking = Booking::create($bookingData);
 
             $bookingAddOnData = [];
@@ -333,6 +334,7 @@ class BookingController extends Controller
     {
         $bookingData = Booking::with(
             'guest',
+            'guest.attachment',
             'invoices',
             'additional',
             'additional.item',
@@ -351,8 +353,8 @@ class BookingController extends Controller
             'active' => 'booking',
             'bookingData' => $bookingData,
         ];
-
-        return view('pages.booking.detail', compact('data'));
+        
+        return view('pages.booking.detail-new', compact('data'));
     }
 
     /**
@@ -414,7 +416,12 @@ class BookingController extends Controller
                 $checkOut = new DateTime($request->check_out[$i]);
                 $nights = $checkIn->diff($checkOut)->days;
                 $additionalAddOn = $request->input("additional_room-{$i}", []);
-
+                $bookingRoomData=[
+                    'checkin_date' => $request->check_in[$i],
+                    'checkout_date'=> $request->check_out[$i],
+                    'total_price' => $room->price_per_night * $nights,
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ];
                 foreach ($additionalAddOn as $key => $add) {
                     $bookingRoomAdd = BookingRoomAdditional::where('booking_room_id', $room->id)->where('additional_id', $add)->first();
                     if (! $bookingRoomAdd) {
@@ -435,11 +442,15 @@ class BookingController extends Controller
                         ];
                     }
                 }
+                if ($room) {
+                    BookingRoom::where('id', $room->id)->update($bookingRoomData);
+                }
             }
             BookingRoomAdditional::insert($bookingAddOnData);
 
             $bookingAdditionalData = [];
-            for ($i = 0; $i < count($request->additional_services); $i++) {
+            if ( $request->has('additional_services') && count($request->additional_services)>0) {
+                for ($i = 0; $i < count($request->additional_services); $i++) {
                 $bookingAdd = BookingAdditional::where('booking_id', $booking->id)->where('additional_id', $request->additional_services[$i])->first();
                 if (! $bookingAdd) {
                     $add = Additional::where('id', $request->additional_services[$i])->first();
@@ -453,6 +464,7 @@ class BookingController extends Controller
                 }
             }
             BookingAdditional::insert($bookingAdditionalData);
+            }
 
             $invoice = Invoice::where('booking_id', $booking->id)->first();
 
@@ -540,7 +552,7 @@ class BookingController extends Controller
                 ->with('success', 'Data berhasil diedit');
         } catch (\Throwable $th) {
             DB::rollback();
-
+            throw $th;
             $this->insertLog('Gagal mengedit data booking', $th);
 
             return redirect()->back()->with('error', 'Data gagal disimpan : '.$th->getMessage());

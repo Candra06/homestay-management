@@ -45,7 +45,8 @@
         </div>
 
         <div class="card-body pd-r-0">
-            <form action="{{ url('/booking') }}" method="POST" class="form-horizontal" id="form-booking" enctype="multipart/form-data">
+            <form action="{{ url('/booking') }}" method="POST" class="form-horizontal" id="form-booking"
+                enctype="multipart/form-data">
                 @csrf
                 <div id="booking-container" class="d-block row">
                     {{-- Guest --}}
@@ -108,9 +109,9 @@
                                         <div class="col form-group">
                                             <label class="tx-12" for="identity_number">Foto Identitas<span
                                                     class="tx-danger">*</span></label>
-                                            <input type="file" name="identity_image" id="identity_image" accept="image/png, image/jpeg" 
-                                                class="form-control form-control-sm" placeholder="Masukkan Foto Identitas"
-                                                required>
+                                            <input type="file" name="identity_image" id="identity_image"
+                                                accept="image/png, image/jpeg" class="form-control form-control-sm"
+                                                placeholder="Masukkan Foto Identitas" required>
                                         </div>
                                     </div>
                                 </div>
@@ -221,7 +222,7 @@
                                             @if (count($data->generalAdd) > 0)
                                                 @foreach ($data->generalAdd as $add)
                                                     <option value="{{ $add->id }}" data-price="{{ $add->price }}"
-                                                                data-name="{{ $add->name }}">
+                                                        data-name="{{ $add->name }}">
                                                         {{ $add->name }}</option>
                                                 @endforeach
                                             @endif
@@ -316,11 +317,14 @@
                                                         <input class="form-control form-control-sm"
                                                             placeholder="Masukkan Kode Voucher" type="text"
                                                             name="voucher_code" id="voucher_code" />
+                                                        <input type="hidden" name="voucher_id" id="voucher_id">
                                                         <span class="input-group-btn"><button
-                                                                class="btn btn-sm btn-primary" type="button">
+                                                                class="btn btn-sm btn-primary" type="button"
+                                                                id="check_voucher">
                                                                 <span
                                                                     class="input-group-btn">Periksa</span></button></span>
                                                     </div>
+                                                    <small class="tx-danger d-none" id="err-voucher"></small>
                                                 </div>
                                             </div>
                                         </div>
@@ -644,7 +648,7 @@
                     calculateTotalPayment();
                 });
 
-            $('#form-booking').on('submit', function(){
+            $('#form-booking').on('submit', function() {
                 $('#save-booking-submit').prop('disabled', true).text('Menyimpan...')
             })
         });
@@ -696,10 +700,16 @@
             calculateTotalPayment();
         });
 
+        $(document).on('click', '#check_voucher', function() {
+            cekVoucher();
+        });
+
         $(document).ready(function() {
             let today = new Date().toISOString().split('T')[0];
-
-            $('.check_in').attr('min', today);
+            let role = "{{ Auth::user()->roles->code }}";
+            if (['ADMIN', 'SUPERADMIN'].includes(role)) {
+                $('.check_in').attr('min', today);
+            }
 
             $(document).on('click', '.btn-add', function() {
                 let $lastCard = $('.card-room').last();
@@ -763,14 +773,14 @@
                 } else if (discType == 'nominal') {
                     discountAmount = discValue;
                 }
-                subtotal = subtotal - discountAmount;
+                // subtotal = subtotal - discountAmount;
             }
             let ppnAmount = 0;
             if ($('#tax').is(':checked')) {
                 ppnAmount = subtotal * 0.11;
                 $('#tax_value').val(ppnAmount);
             }
-            grandTotal = subtotal + ppnAmount;
+            grandTotal = subtotal + ppnAmount - discountAmount;
             $('#subtotal').val(rupiah(subtotal));
             $('#subtotal_value').val(subtotal);
             $('#grand_total').val(rupiah(grandTotal));
@@ -779,8 +789,6 @@
             $('#total_discount').val(rupiah(parseInt(discountAmount)));
             // $('#total_payment').val(rupiah(grandTotal));
         }
-
-        function handleVoucher() {}
 
         function processBooking() {
 
@@ -1141,5 +1149,41 @@
                 $displayInput.val('');
             }
         });
+
+        function cekVoucher() {
+            let voucherCode = $('#voucher_code').val();
+            if (voucherCode != '') {
+                $('#check_voucher').prop('disabled', true).text('Memeriksa...');
+                $.ajax({
+                url: '/voucher/cek-code/' + voucherCode,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        $('#err-voucher').addClass('d-none');
+                        $('#err-voucher').text('');
+                        $('#voucher_id').val(response.data.id);
+                        $('#disc_type').val(response.data.type);
+                        $('#discount_display').val(formatRibuan(response.data.value));
+                        $('#discount').val(response.data.value);
+                        $('#discount_amount_value').val(response.data.value);
+                        $('.container-value-discount').show();
+                        calculateTotalPayment();
+                    }else{
+                        $('#err-voucher').removeClass('d-none');
+                        $('#err-voucher').text(response.message);
+                    }
+                },
+                error: function(xhr) {
+                    $('#err-voucher').removeClass('d-none');
+                    $('#err-voucher').text('Voucher tidak ditemukan');
+                },
+                complete: function() {
+                    $('#check_voucher').prop('disabled', false).text('Periksa');
+                }
+            });
+            }
+
+        }
     </script>
 @endsection

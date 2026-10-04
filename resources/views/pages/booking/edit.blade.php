@@ -160,7 +160,7 @@
                                                             class="tx-danger">*</span></label>
                                                     <input type="date" name="check_in[]"
                                                         class="form-control form-control-sm check_in"
-                                                        value="{{ $item->checkin_date }}" readonly
+                                                        value="{{ $item->checkin_date }}"
                                                         placeholder="Masukkan Tanggal Check-in" required>
                                                 </div>
                                             </div>
@@ -171,7 +171,7 @@
                                                             class="tx-danger">*</span></label>
                                                     <input type="date" name="check_out[]"
                                                         class="form-control form-control-sm check_out"
-                                                        value="{{ $item->checkout_date }}" readonly
+                                                        value="{{ $item->checkout_date }}"
                                                         placeholder="Masukkan Tanggal Check-out" required>
                                                 </div>
                                             </div>
@@ -771,7 +771,10 @@
         $(document).ready(function() {
             let today = new Date().toISOString().split('T')[0];
 
-            $('.check_in').attr('min', today);
+            let role = "{{ Auth::user()->roles->code }}";
+            if (['ADMIN','SUPERADMIN'].includes(role)) {
+                $('.check_in').attr('min', today);
+            }
 
             $(document).on('click', '.btn-add', function() {
                 let $lastCard = $('.card-room').last();

@@ -190,7 +190,7 @@ class VoucherController extends Controller
                 'description' => $request->description,
             ];
 
-            $result = Voucher::create($input);
+            Voucher::create($input);
             DB::commit();
 
             return redirect(route($this->dataPage['route']['index']))->with('success', 'Data Voucher berhasil ditambahkan');
@@ -305,5 +305,54 @@ class VoucherController extends Controller
             })
             ->rawColumns(['action'])
             ->make(true);
+    }
+
+    public function cekVoucher($code) {
+        try {
+            $voucher = Voucher::where('code', $code)->first();
+            if (empty($voucher)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Voucher tidak ditemukan',
+                    'data' => null,
+                ]);
+            }
+
+            if ($voucher->status == 'Inactive') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Voucher tidak aktif',
+                    'data' => null,
+                ]);
+            }
+
+            if ($voucher->start_date > date('Y-m-d')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Voucher belum berlaku',
+                    'data' => null,
+                ]);
+            }
+
+            if ($voucher->end_date < date('Y-m-d')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Voucher sudah berakhir',
+                    'data' => null,
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Voucher ditemukan',
+                'data' => $voucher
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $th->getMessage(),
+                'data' => null,
+            ]); 
+        }
     }
 }

@@ -50,6 +50,8 @@ Route::group(["prefix" => "/", "middleware" => ["auth", CheckAccessMidleware::cl
     
     Route::get('cashflow/export-excel', [FinancialTransactionController::class, 'exportExcel']);
 
+    Route::get('voucher/cek-code/{code}', [VoucherController::class, 'cekVoucher']);
+
     Route::resource('employee', EmployeeController::class);
     Route::resource('menu', MenuController::class);
     Route::resource('role', RoleUserController::class);

@@ -28,4 +28,9 @@ class Guest extends Model
     {
         return $this->hasMany(Booking::class);
     }
+    public function attachment()
+    {
+        return $this->hasOne(Attachment::class,'reff_id','id')->where('reff_feature', 'guests');
+        
+    }
 }
