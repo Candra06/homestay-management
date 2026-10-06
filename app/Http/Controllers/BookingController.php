@@ -847,7 +847,7 @@ class BookingController extends Controller
     {
         DB::beginTransaction();
         try {
-            $booking = Booking::with('bookingRooms')->where('id', $id)->first();
+            $booking = Booking::with('bookingRooms','guest')->where('id', $id)->first();
             $bookingRoom = $booking->bookingRooms;
 
             $updateBooking = [
@@ -859,8 +859,8 @@ class BookingController extends Controller
             Booking::where('id', $id)->update($updateBooking);
             foreach ($bookingRoom as $key => $value) {
                 Rooms::where('id', $value->room_id)->update([
-                    'status' => $type == 'checkin' ? 'Terisi' : 'Cleaning',
-                    'remarks' => $type == 'checkin' ? 'Sedang digunakan(#'.$booking->booking_code.')' : 'Kamar dibersihkan',
+                    'status' => $type == 'checkin' ? 'Terisi' : 'Tersedia',
+                    'remarks' => $type == 'checkin' ? 'Sedang digunakan('.$booking->guest->nama_lengkap.'#'.$booking->booking_code.')' : '',
                     'updated_at' => Carbon::now(),
                 ]);
             }

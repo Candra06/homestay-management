@@ -196,7 +196,7 @@
                     console.log('eventClick', arg.event);
                 },
                 editable: false,
-                dayMaxEvents: true,
+                dayMaxEvents: false,
                 fixedWeekCount: false,
                 contentHeight: 650,
                 events: function(fetchInfo, successCallback, failureCallback) {
@@ -226,7 +226,7 @@
                             if (response && response.data && Array.isArray(response.data)) {
                                 response.data.forEach(function(item) {
                                     listRoom.push({
-                                        title: `${item.room.room_number}-${item.room.room_type.type_name}(${item.booking.booking_code})`,
+                                        title: `${item.room.room_number}-${item.booking.guest.nama_lengkap}(${item.booking.booking_code})`,
                                         start: item.checkin_date,
                                         end: item.checkout_date,
                                         color: item.room.room_type
