@@ -124,11 +124,11 @@
         @endphp
         @foreach ($data->availableRooms as $key => $item)
             @php
-                $key = $key > 3 ? $key-4 : ($key > 6 ? $key-6 : $key);
+                $idx = $key % count($bg);
             @endphp
             <div class="col-lg-4 col-xl-4 col-md-4 col-12">
                 <a href="{{ url('room/list/' . $item->id) }}">
-                    <div class="card {{ $bg[$key] }} text-white ">
+                    <div class="card {{ $bg[$idx] }} text-white ">
                         <div class="card-body">
                             <div class="mt-0 text-center">
                                 <span class="text-white">{{ $item->type_name }}</span>
