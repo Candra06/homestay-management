@@ -124,7 +124,7 @@
         @endphp
         @foreach ($data->availableRooms as $key => $item)
             @php
-                $key = $key > 3 ? $key-4 : $key > 6 ? $key-6 : $key;
+                $key = $key > 3 ? $key-4 : ($key > 6 ? $key-6 : $key);
             @endphp
             <div class="col-lg-4 col-xl-4 col-md-4 col-12">
                 <a href="{{ url('room/list/' . $item->id) }}">
