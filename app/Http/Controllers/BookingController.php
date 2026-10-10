@@ -63,6 +63,7 @@ class BookingController extends Controller
                             ->where('checkout_date', '>', $today);
                     });
             }])->get();
+            $allRooms = Rooms::select('id', 'room_number')->orderBy('room_number', 'ASC')->get();
             $dataPage = $this->dataPage;
             $list = Booking::with('guest', 'bookingRooms', 'bookingRooms.room', 'userCreate')->orderBy('created_at', 'DESC')->get();
             $akses = request()->attributes->get('hakAkses');
@@ -77,6 +78,7 @@ class BookingController extends Controller
                 'routeAdd' => route($dataPage['route']['add']),
                 'routeData' => route($dataPage['route']['index']),
                 'availableRooms' => $availableRooms,
+                'allRooms' => $allRooms,
             ];
             if (request()->ajax()) {
                 return $this->ajax($list);

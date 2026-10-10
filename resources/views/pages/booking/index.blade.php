@@ -76,6 +76,20 @@
         .custom-toggle:not(.on) .toggle-text {
             transform: translateX(4px);
         }
+
+        .fc-timegrid-event.booking-end .fc-event-main,
+        .fc-timegrid-event.booking-middle .fc-event-main {
+            opacity: 0 !important;
+            /* Gunakan opacity 0 agar seluruh div 2 baris menghilang di hari berikutnya */
+            pointer-events: none;
+            /* Mencegah elemen yang tak terlihat ini diklik */
+        }
+
+        /* 7. Matikan border putih bawaan Fullcalendar */
+        .fc-timegrid-event-harness>.fc-timegrid-event {
+            box-shadow: none !important;
+            border-color: transparent !important;
+        }
     </style>
 @endsection
 @section('main')
@@ -105,11 +119,13 @@
                 'bg-primary-gradient',
                 'bg-success-gradient',
                 'bg-warning-gradient',
-                'bg-warning-gradient',
                 'bg-info-gradient',
             ];
         @endphp
         @foreach ($data->availableRooms as $key => $item)
+            @php
+                $key = $key > 3 ? $key-4 : $key > 6 ? $key-6 : $key;
+            @endphp
             <div class="col-lg-4 col-xl-4 col-md-4 col-12">
                 <a href="{{ url('room/list/' . $item->id) }}">
                     <div class="card {{ $bg[$key] }} text-white ">
@@ -226,7 +242,8 @@
                             if (response && response.data && Array.isArray(response.data)) {
                                 response.data.forEach(function(item) {
                                     listRoom.push({
-                                        title: `${item.room.room_number}-${item.booking.guest.nama_lengkap}(${item.booking.booking_code})`,
+                                        title: `${item.room.room_number}-${item.room.room_type.type_name}`,
+                                        booking_code: `${item.booking.guest.nama_lengkap}(${item.booking.booking_code})`,
                                         start: item.checkin_date,
                                         end: item.checkout_date,
                                         color: item.room.room_type
@@ -249,6 +266,27 @@
                     });
 
                 },
+                eventContent: function(arg) {
+                    // Ambil data yang kita parsing tadi
+                    let guestName = arg.event.title;
+                    let bookingCode = arg.event.extendedProps.booking_code;
+
+                    // Buat struktur HTML 2 baris (Bisa dikasih class Tailwind/Bootstrap)
+                    let htmlElement = `
+            <div class="custom-event-content">
+                <div class="guest-name" style="font-weight: bold; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    ${guestName}
+                </div>
+                <div class="booking-code" style="font-size: 0.75em; opacity: 0.9;">
+                    ${bookingCode}
+                </div>
+            </div>
+        `;
+
+                    return {
+                        html: htmlElement
+                    };
+                }
             });
             calendar.render();
 
