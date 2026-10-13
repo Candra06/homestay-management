@@ -6,6 +6,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@7.12.15/dist/sweetalert2.all.min.js"></script>
 
     <script src="{{ url('assets') }}/plugins/fullcalendar/fullcalendar.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 
     <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/sweetalert2@7.12.15/dist/sweetalert2.min.css'>
     <!-- FULL CALENDAR CSS -->
@@ -105,9 +106,10 @@
         <div class="d-flex my-xl-auto right-content">
             <div class="pe-1 mb-xl-0">
                 @if ($data->createBtn)
-                    <a href="{{ $data->routeAdd }}"><button class="btn btn-primary">
-                            Tambah Pemesanan</button></a>
+                    <a href="{{ $data->routeAdd }}" class="me-2"><button class="btn btn-sm btn-primary">
+                            <i class="fa fa-plus me-1"></i> Tambah Reservasi</button></a>
                 @endif
+                <button class="btn btn-sm btn-success"><i class="fa fa-file-excel me-1"></i> Export Reservasi </button>
             </div>
         </div>
     </div>
@@ -115,12 +117,7 @@
 
     <div class="row">
         @php
-            $bg = [
-                'bg-primary-gradient',
-                'bg-success-gradient',
-                'bg-warning-gradient',
-                'bg-info-gradient',
-            ];
+            $bg = ['bg-primary-gradient', 'bg-success-gradient', 'bg-warning-gradient', 'bg-info-gradient'];
         @endphp
         @foreach ($data->availableRooms as $key => $item)
             @php
@@ -157,6 +154,52 @@
         </div>
 
         <div class="card-body ">
+            <div class="row">
+                <div class="col-3">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-group-text" style="padding: 4px 0px">
+                                <span class="input-group-text"><i class="fa fa-calendar"></i></span>
+                            </div>
+                            <input type="text" id="daterange" placeholder="Pilih tanggal reservasi" name="daterange"
+                                class="form-control" value="" />
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-3">
+                    <div class="form-group">
+                        <select name="booking_status" id="booking_status" class="form-control" required>
+                            <option value="">Pilih Status Reservasi</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Checked-In">Checked In</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="form-group">
+                        <select name="payment_status" id="payment_status" class="form-control" required>
+                            <option value="">Pilih Status Pembayaran</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Part Paid">Part Paid</option>
+                            <option value="Paid">Paid</option>
+                            <option value="Unpaid">Unpaid</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="form-group">
+                        <select name="source" id="source" class="form-control" required>
+                            <option value="">Pilih Sumber Reservasi</option>
+                            <option value="direct_walkin">Onsite</option>
+                            <option value="direct_wa">Direct WhatsApp</option>
+                            <option value="ota">OTA</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
             @include('pages.booking.calendar')
             @include('pages.booking.list')
         </div>
@@ -164,11 +207,58 @@
 @endsection
 @section('script')
     <!-- FULL CALENDAR JS -->
-
+    <!-- Moment.js (Wajib untuk daterangepicker) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <!-- Daterangepicker JS -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
             $('.calendar-view').hide();
 
+        });
+        $(function() {
+            $('#daterange').daterangepicker({
+                opens: 'left',
+                autoUpdateInput: false, // Biarkan kosong dulu sampai user memilih
+                alwaysShowCalendars: true, // <--- Kunci utama agar kalender selalu tampil di sisi kanan
+                showCustomRangeLabel: true,
+                ranges: {
+                    'Hari Ini': [moment(), moment()],
+                    '7 Hari Terakhir': [moment().subtract(6, 'days'), moment()],
+                    '30 Hari Terakhir': [moment().subtract(29, 'days'), moment()],
+                    'Minggu Ini': [moment().startOf('week'), moment().endOf('week')],
+                    'Bulan Ini': [moment().startOf('month'), moment().endOf('month')],
+                    'Bulan Lalu': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1,
+                        'month').endOf('month')],
+                    'Tahun Ini': [moment().startOf('year'), moment().endOf('year')],
+                    '1 Tahun Terakhir': [moment().subtract(1, 'year'), moment()]
+                },
+                locale: {
+                    format: 'YYYY-MM-DD',
+                    separator: ' s/d ',
+                    applyLabel: 'Pilih',
+                    cancelLabel: 'Batal',
+                    fromLabel: 'Dari',
+                    toLabel: 'Hingga',
+                    customRangeLabel: 'Pilih Sendiri',
+                    daysOfWeek: ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'],
+                    monthNames: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus',
+                        'September', 'Oktober', 'November', 'Desember'
+                    ],
+                    firstDay: 1
+                }
+            }, function(start, end, label) {
+                // Callback saat tanggal dipilih
+                $('#daterange').val(start.format('YYYY-MM-DD') + ' s/d ' + end.format('YYYY-MM-DD'));
+                console.log($('#daterange').val());
+
+            });
+
+            // Handle tombol batal agar input kembali bersih
+            $('#daterange').on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+                $('#table').DataTable().ajax.reload()
+            });
         });
         $('#view-mode-toggle').on('click', function() {
             $(this).toggleClass('on');

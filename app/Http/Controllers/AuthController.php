@@ -158,6 +158,7 @@ class AuthController extends Controller
         ];
         $roomData = RoomTypes::with('attachments', 'facilities.facility')->get();
         $rooms = [];
+        // return $roomData;
         foreach ($roomData as $key => $room) {
             $fclt = [];
             foreach ($room->facilities as $key => $f) {
@@ -167,7 +168,7 @@ class AuthController extends Controller
                 'slug' => $room->slug,
                 'name' => $room->type_name,
                 'price' => $room->base_price,
-                'photo' => url('/').'/storage/'.$room->attachments[0]->file_url,
+                'photo' => count($room->attachments) > 0 ? url('/').'/storage/'.$room->attachments[0]->file_url : url('/assets/img/photos/default-image.png'),
                 'facility' => $fclt,
 
             ];
@@ -177,7 +178,6 @@ class AuthController extends Controller
             'facility' => $facility,
             'rooms' => $rooms,
         ];
-        // return $data;
 
         return view('frontend.index', compact('data'));
     }
