@@ -12,10 +12,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('app:send-broadcast-winner')->everyMinute();
-        // $schedule->command('app:send-broadcast-winner')->dailyAt('20:30');
-        $schedule->command('app:send-broadcast-winner')->cron('* * * * *');
-        $schedule->command('app:notify-cron-job')->cron('* * * * *');
+        
     }
 
     /**
@@ -23,7 +20,6 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         \App\Console\Commands\NotifyCronJob::class,
-        \App\Console\Commands\SendBroadcastWinner::class,
     ];
     protected function commands(): void
     {

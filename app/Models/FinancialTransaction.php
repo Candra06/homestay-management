@@ -18,6 +18,8 @@ class FinancialTransaction extends Model
         'description',
         'reference_type',
         'reference_id',
+        'payment_method',
+        'payment_method_id',
         'created_by',
         'updated_by'
     ];
@@ -26,18 +28,30 @@ class FinancialTransaction extends Model
     {
         return $this->belongsTo(FinancialAccount::class, 'financial_account_id');
     }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    /**
+     * Relasi polymorphic — otomatis resolve ke model yang sesuai
+     * berdasarkan morphMap di AppServiceProvider.
+     * Contoh: $transaction->reference  → Booking instance (jika reference_type='booking')
+     */
     public function reference()
     {
-        return $this->morphTo();
+        return $this->morphTo(__FUNCTION__, 'reference_type', 'reference_id');
     }
-    
-    public function getReferenceAttribute($value)
+
+    /**
+     * Shortcut langsung ke Booking (tanpa polymorphic)
+     * Gunakan ketika reference_type sudah pasti 'booking'.
+     * Contoh: $transaction->booking
+     */
+    public function booking()
     {
-        return $this->morphTo()->first();
+        return $this->belongsTo(Booking::class, 'reference_id');
     }
 
 }

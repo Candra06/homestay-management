@@ -16,6 +16,7 @@ use App\Models\Guest;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Payment;
+use App\Models\PaymentMethod;
 use App\Models\Rooms;
 use App\Models\RoomTypes;
 use App\Models\Voucher;
@@ -51,7 +52,7 @@ class BookingController extends Controller
         'tableColumns' => ['DT_RowIndex', 'booking', 'room', 'date_info', 'book_reff', 'total_price', 'payment_status', 'created_by', 'action'],
     ];
 
-    public function index()
+    public function index(Request $request)
     {
         try {
             $today = Carbon::today();
@@ -65,7 +66,8 @@ class BookingController extends Controller
             }])->get();
             $allRooms = Rooms::select('id', 'room_number')->orderBy('room_number', 'ASC')->get();
             $dataPage = $this->dataPage;
-            $list = Booking::with('guest', 'bookingRooms', 'bookingRooms.room', 'userCreate')->orderBy('created_at', 'DESC')->get();
+            $list = Booking::with('guest', 'bookingRooms', 'bookingRooms.room', 'userCreate')
+                    ->orderBy('created_at', 'DESC');
             $akses = request()->attributes->get('hakAkses');
 
             $data = (object) [
@@ -81,6 +83,7 @@ class BookingController extends Controller
                 'allRooms' => $allRooms,
             ];
             if (request()->ajax()) {
+                $list = $list->get();
                 return $this->ajax($list);
             }
 
@@ -97,6 +100,7 @@ class BookingController extends Controller
     public function create()
     {
         $roomType = RoomTypes::get();
+        $paymentMethod = PaymentMethod::get();
         $additional = Additional::get();
         $roomAdd = [];
         $generalAdd = [];
@@ -115,6 +119,7 @@ class BookingController extends Controller
             'formAction' => route('booking.store'),
             'bookcode' => $bookingCode,
             'roomType' => $roomType,
+            'paymentMethod' => $paymentMethod,
             'additionalRoom' => $roomAdd,
             'generalAdd' => $generalAdd,
         ];
@@ -129,6 +134,7 @@ class BookingController extends Controller
     {
 
         DB::beginTransaction();
+       
         try {
             $inputAttachment = [];
             $rules = [
@@ -187,8 +193,10 @@ class BookingController extends Controller
 
             $bookingAddOnData = [];
             $invoiceItemData = [];
+            $roomNumbers = [];
+            $roomTypes = RoomTypes::whereIn('id', $request->room_type)->get()->keyBy('id');
             for ($i = 0; $i < count($request->room_type); $i++) {
-                $price = RoomTypes::where('id', $request->room_type[$i])->first();
+                $price = $roomTypes->get($request->room_type[$i]);
                 $checkIn = new DateTime($request->check_in[$i]);
                 $checkOut = new DateTime($request->check_out[$i]);
                 $nights = $checkIn->diff($checkOut)->days;
@@ -227,6 +235,11 @@ class BookingController extends Controller
                     ];
                 }
             }
+            $roomNumber = Rooms::whereIn('id', $request->room_number)->get()->keyBy('id');
+            foreach ($roomNumber as $key => $value) {
+                $roomNumbers[] = $value->room_number;
+            }
+            
 
             BookingRoomAdditional::insert($bookingAddOnData);
             if ($request->has('additional_services') && count($request->additional_services) > 0) {
@@ -269,7 +282,7 @@ class BookingController extends Controller
                 'invoice_id' => $invoice->id,
                 'code' => $this->generatePaymentCode(),
                 'payment_method' => $request->payment_method,
-                'description' => ($request->payment_amount == $request->grand_total_value ? 'Payment Full' : 'Down Payment').' - Booking '.$booking->booking_code,
+                'description' => ($request->payment_amount == $request->grand_total_value ? 'Payment Full' : 'Down Payment').' - Booking '.$booking->booking_code.' - '.$request->guest_name.'('.implode(',', $roomNumbers).')',
                 'amount' => ($request->dp_amount > 0) ? $request->dp_amount : $request->payment_amount,
                 'reference_number' => $invoice->invoice_number,
                 'paid_at' => $request->payment_date,
@@ -283,8 +296,9 @@ class BookingController extends Controller
                 'transaction_date' => $request->payment_date,
                 'transaction_type' => 'income',
                 'amount' => ($request->dp_amount > 0) ? $request->dp_amount : $request->payment_amount,
-                'description' => ($request->payment_amount == $request->grand_total_value ? 'Payment Full' : 'Down Payment').' - Booking '.$booking->booking_code,
+                'description' => ($request->payment_amount == $request->grand_total_value ? 'Payment Full' : 'Down Payment').' - Booking '.$booking->booking_code.' Invoice No. '.$invoice->invoice_number.' atas nama '.$request->guest_name.'('.implode(',', $roomNumbers).')',
                 'reference_type' => 'booking',
+                'payment_method' => $request->payment_method,
                 'reference_id' => $booking->id,
                 'created_by' => Auth::user()->id,
                 'updated_by' => Auth::user()->id,
@@ -785,6 +799,12 @@ class BookingController extends Controller
         try {
             $booking = Booking::find($id);
             $invoice = Invoice::where('booking_id', $id)->first();
+            $rooms = BookingRoom::with('room')->where('booking_id', $id)->get();
+            $guest = Guest::where('id', $booking->guest_id)->first();
+            $roomNumbers = [];
+            foreach ($rooms as $key => $value) {
+                $roomNumbers[] = $value->room->room_number;
+            }
             $updateBooking = [
                 'amount_paid' => $booking->amount_paid + $request->amount,
                 'total_payment' => $booking->total_payment + $request->amount,
@@ -802,6 +822,7 @@ class BookingController extends Controller
                 'updated_at' => Carbon::now(),
             ];
             Invoice::where('id', $invoice->id)->update($updateInvoice);
+
             $addPayment = [
                 'invoice_id' => $invoice->id,
                 'code' => $this->generatePaymentCode(),
@@ -809,7 +830,7 @@ class BookingController extends Controller
                 'payment_method' => $request->payment_method,
                 'reference_number' => $invoice->invoice_number,
                 'paid_at' => $request->tgl_bayar.' '.date('H:i:s'),
-                'description' => 'Pelunasan Reservasi No. '.$booking->booking_code.' Invoice No. '.$invoice->invoice_number,
+                'description' => 'Pelunasan Reservasi No. '.$booking->booking_code.' Invoice No. '.$invoice->invoice_number.' atas nama '.$guest->nama_lengkap.'('.implode(',', $roomNumbers).')',
                 'created_by' => Auth::user()->id,
                 'created_at' => Carbon::now(),
                 'updated_by' => Auth::user()->id,
@@ -823,9 +844,10 @@ class BookingController extends Controller
                 'transaction_date' => $request->tgl_bayar,
                 'transaction_type' => 'income',
                 'amount' => $request->amount,
-                'description' => 'Pelunasan Reservasi No. '.$booking->booking_code.' Invoice No. '.$invoice->invoice_number.' atas nama '.$booking->guest->nama_lengkap,
+                'description' => 'Pelunasan Reservasi No. '.$booking->booking_code.' Invoice No. '.$invoice->invoice_number.' atas nama '.$guest->nama_lengkap.'('.implode(',', $roomNumbers).')',
                 'reference_type' => 'booking',
                 'reference_id' => $booking->id,
+                'payment_method' => $request->payment_method,
                 'created_by' => Auth::user()->id,
                 'updated_by' => Auth::user()->id,
                 'created_at' => Carbon::now(),
@@ -890,7 +912,7 @@ class BookingController extends Controller
     public function getBookedRooms(Request $request)
     {
         try {
-            DB::enableQueryLog();
+            
             $month = Carbon::parse($request->date)->format('m');
             $year = Carbon::parse($request->date)->format('Y');
             $booking = BookingRoom::with([

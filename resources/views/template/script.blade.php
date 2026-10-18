@@ -47,6 +47,12 @@
     $.extend(true, $.fn.dataTable.defaults, {
         stateSave: true
     });
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
     $(document).ready(function() {
         //untuk menutup alert secara otomatis
         $(".alert").hide();

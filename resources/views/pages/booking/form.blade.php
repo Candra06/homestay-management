@@ -410,9 +410,11 @@
                                                     <select name="payment_method" id="payment_method"
                                                         class="form-control form-control-sm" required>
                                                         <option value="">Pilih Metode Pembayaran</option>
-                                                        <option value="Bank Transfer">Transfer Bank</option>
                                                         <option value="Cash">Tunai</option>
-                                                        <option value="QRIS">QRIS</option>
+                                                        <option value="QRIS BCA">QRIS BCA</option>
+                                                        <option value="QRIS BNI">QRIS BNI</option>
+                                                        <option value="Transfer BCA">Transfer BCA</option>
+                                                        <option value="Transfer BNI">Transfer BNI</option>
                                                     </select>
                                                 </div>
                                             </div>

@@ -28,7 +28,7 @@ class NotifyCronJob extends Command
     {
         try {
             $count = CronActivity::orderBy('id', 'DESC')->get();
-            if (count($count) < 0) {
+            if (count($count) === 0) {
                 CronActivity::create(['cron_name'=>'Notify Cron']);
             }else{
                 CronActivity::where('id', $count[0]->id)->update(['cron_name'=>'Notify Cron']);

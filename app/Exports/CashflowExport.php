@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Helper\Helpers;
 use App\Models\FinancialTransaction;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -24,6 +25,19 @@ class CashflowExport implements FromCollection, WithHeadings, WithMapping, WithC
                 'account' => function ($q) {
                     $q->select('id', 'account_code', 'account_name', 'type', 'balance')->get();
                 },
+                
+                'booking' => function ($q) {
+                    $q->select('id','booking_code', 'guest_id')->get();
+                },
+                'booking.guest' => function ($q) {
+                    $q->select('id','nama_lengkap')->get();
+                },
+                'booking.bookingRooms' => function ($q) {
+                    $q->select('id','booking_id', 'checkin_date', 'checkout_date', 'room_id')->get();
+                },
+                'booking.bookingRooms.room' => function ($q) {
+                    $q->select('id','room_number')->get();
+                },
                 'user'])->whereBetween('transaction_date', [$this->start, $this->end])
                 ->get();
         return $query;
@@ -32,24 +46,30 @@ class CashflowExport implements FromCollection, WithHeadings, WithMapping, WithC
     public function headings() : array {
         return [
             'Tanggal Transaksi',
+            'Tanggal Check In',
             'Jenis Transaksi',
             'Kategori',
             'Sumber Dana',
             'Catatan',
+            'Tamu',
             'Petugas',
             'Nominal',
+            'Metode Pembayaran',
         ];
     }
 
     public function map($item) : array {
         return [
             $item->transaction_date,
+            $item->reference_type == 'booking' ? (empty($item->booking->bookingRooms) ? '-' :$item->booking->bookingRooms[0]->checkin_date) : '-',
             $item->transaction_type == 'income' ? 'Pemasukan' : 'Pengeluaran',
             $item->account->account_name,
             $item->account->account_code == '1-100' ? 'Reservasi' : $item->account->account_name,
             $item->description,
+            $item->booking->guest->nama_lengkap ?? '-',
             $item->user->name,
             $item->amount,
+            $item->payment_method??'-',
         ];
     }
 

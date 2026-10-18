@@ -166,6 +166,17 @@
                             </select>
                         </div>
                         <div class="form-group">
+                            <label for="payment_method">Metode Pembayaran<span class="tx-danger">*</span></label>
+                            <select name="payment_method" id="payment_method" class="form-control" required>
+                                <option value="">Pilih Metode Bayar</option>
+                                <option value="Cash">Tunai</option>
+                                <option value="QRIS BCA">QRIS BCA</option>
+                                <option value="QRIS BNI">QRIS BNI</option>
+                                <option value="Transfer BCA">Transfer BCA</option>
+                                <option value="Transfer BNI">Transfer BNI</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label for="amount">Nominal Transaksi<span class="tx-danger">*</span></label>
                             <input type="number" name="amount_display" id="amount_display"
                                 class="form-control input-display" placeholder="Masukkan Nominal Transaksi" required>
@@ -218,6 +229,17 @@
                                 <option value="">Pilih Jenis Transaksi</option>
                                 <option value="income">Pemasukan</option>
                                 <option value="expense">Pengeluaran</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="payment_method">Metode Pembayaran<span class="tx-danger">*</span></label>
+                            <select name="payment_method" id="payment_method" class="form-control" required>
+                                <option value="">Pilih Metode Bayar</option>
+                                <option value="Cash">Tunai</option>
+                                <option value="QRIS BCA">QRIS BCA</option>
+                                <option value="QRIS BNI">QRIS BNI</option>
+                                <option value="Transfer BCA">Transfer BCA</option>
+                                <option value="Transfer BNI">Transfer BNI</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -386,20 +408,21 @@
             e.preventDefault();
             var daterange = $('#daterange').val();
             if (!daterange) {
-                 toastr.warning(
-                            'Tanggal harus dipilih.',
-                            'Informasi');
+                toastr.warning(
+                    'Tanggal harus dipilih.',
+                    'Informasi');
                 return; // Batalkan proses export
             }
-            
+
             var startDate = '';
             var endDate = '';
 
             var dates = daterange.split(' s/d '); // Sesuaikan dengan separator daterangepicker kamu
             startDate = dates[0];
             endDate = dates[1];
-            
-            var exportUrl = "{{ url('/cashflow/export-excel') }}"+"?start_date="+startDate+"&end_date="+endDate;
+
+            var exportUrl = "{{ url('/cashflow/export-excel') }}" + "?start_date=" + startDate + "&end_date=" +
+                endDate;
             window.location.href = exportUrl;
         })
     </script>

@@ -27,8 +27,8 @@ class FinancialTransactionController extends Controller
             'detail' => 'cashflow.detail',
             'delete' => 'cashflow.destroy',
         ],
-        'tableHead' => ['No', 'Tanggal Transaksi', 'Jenis Transaksi', 'Sumber', 'Kategori', 'Nominal', 'Catatan', 'Petugas', 'aksi'],
-        'tableColumns' => ['DT_RowIndex', 'transaction_date', 'transaction_type', 'resource','account_name', 'amount', 'description', 'created_by', 'action'],
+        'tableHead' => ['No', 'Tanggal Transaksi', 'Jenis Transaksi', 'Sumber', 'Tanggal Check In', 'Kategori', 'Nominal','Metode Bayar', 'Catatan', 'Petugas', 'aksi'],
+        'tableColumns' => ['DT_RowIndex', 'transaction_date', 'transaction_type', 'resource','checkin','account_name', 'amount','payment_method', 'description', 'created_by', 'action'],
     ];
 
     public function index(Request $request)
@@ -39,7 +39,18 @@ class FinancialTransactionController extends Controller
                 'account' => function ($q) {
                     $q->select('id', 'account_code', 'account_name', 'type', 'balance')->get();
                 },
-                'user']);
+                'booking' => function ($q) {
+                    $q->select('id','booking_code','guest_id')->get();
+                },
+                'booking.guest' => function ($q) {
+                    $q->select('id','nama_lengkap')->get();
+                },
+                'booking.bookingRooms' => function ($q) {
+                    $q->select('id','booking_id', 'checkin_date', 'checkout_date', 'room_id')->get();
+                },
+                'booking.bookingRooms.room' => function ($q) {
+                    $q->select('id','room_number')->get();
+                },'user']);
             $category = FinancialAccount::whereIn('id', [17, 18, 19, 20, 29, 21, 22, 25, 26, 3, 8, 11, 12, 13, 14])->get();
             $summary = FinancialTransaction::select(
                 DB::raw('SUM(CASE WHEN transaction_type = "income" THEN amount ELSE 0 END) as income'),
@@ -55,6 +66,7 @@ class FinancialTransactionController extends Controller
             }
             $list = $list->orderBy('transaction_date', 'DESC')->get();
             $summary = $summary->first();
+            
 
             $data = (object) [
                 'title' => 'Cash Flow',
@@ -103,12 +115,14 @@ class FinancialTransactionController extends Controller
                 'transaction_category' => 'required',
                 'transaction_type' => 'required',
                 'amount' => 'required',
+                'payment_method' => 'required',
                 'description' => 'nullable',
             ]);
             FinancialTransaction::create([
                 'transaction_date' => $request->transaction_date,
                 'financial_account_id' => $request->transaction_category,
                 'transaction_type' => $request->transaction_type,
+                'payment_method' => $request->payment_method,
                 'amount' => $request->amount,
                 'reference_type' => in_array($request->transaction_category, [3, 11, 12]) ? 'booking' : 'general',
                 'description' => $request->description ?? '-',
@@ -164,6 +178,7 @@ class FinancialTransactionController extends Controller
                 'transaction_date' => 'required',
                 'transaction_category' => 'required',
                 'transaction_type' => 'required',
+                'payment_method' => 'required',
                 'amount' => 'required',
                 'description' => 'nullable',
             ]);
@@ -172,6 +187,7 @@ class FinancialTransactionController extends Controller
                 'transaction_date' => $request->transaction_date,
                 'financial_account_id' => $request->transaction_category,
                 'transaction_type' => $request->transaction_type,
+                'payment_method' => $request->payment_method,
                 'amount' => $request->amount,
                 'reference_type' => in_array($request->transaction_category, [3, 11, 12]) ? 'booking' : 'general',
                 'description' => $request->description ?? '-',
@@ -228,6 +244,12 @@ class FinancialTransactionController extends Controller
             })
             ->addColumn('resource', function ($row) {
                 return $row->account->account_code == '1-100' ? 'Reservasi' : 'Lain-lain';
+            })
+            ->addColumn('checkin', function ($row) {
+                return $row->reference_type == 'booking' ? (empty($row->booking->bookingRooms) ? '-' : Helpers::tanggal($row->booking->bookingRooms[0]->checkin_date)) : '-';
+            })
+            ->addColumn('payment_method', function ($row) {
+                return $row->payment_method ?? '-';
             })
             ->addColumn('created_by', function ($row) {
                 return $row->user->name;
