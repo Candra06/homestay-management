@@ -447,6 +447,7 @@
                     $("#modal-edit").find("form").attr("action", route);
                     $("#modal-edit").find("#transaction_date").val(data.transaction_date);
                     $("#modal-edit").find("#transaction_type").val(data.transaction_type);
+                    $("#modal-edit").find("#payment_method").val(data.payment_method);
                     $("#modal-edit").find("#amount").val(data.amount);
                     $("#modal-edit").find("#amount_display").val(data.amount);
                     $("#modal-edit").find("#transaction_category").val(data.financial_account_id);
