@@ -309,18 +309,19 @@ class BookingController extends Controller
 
             if ($request->hasFile('identity_image')) {
                 $file = $request->file('identity_image');
-                $path = storage_path('app/public/guest');
-                $photo = 'guest/'.$this->compress($file, $path, 50);
+                $upl = $this->uploadToS3($file,'guests', 50);
                 $imagePaths = [
-                    'file_path' => $photo,
-                    'file_name' => basename($photo),
-                    'original_name' => $file->getClientOriginalName(),
-                    'file_size' => Storage::disk('public')->size($photo),
-                    'mime_type' => Storage::disk('public')->mimeType($photo),
-                ];
+                            'file_path'     =>$upl['file_path'],
+                            'file_name'     =>$upl['file_name'],
+                            'original_name' =>$upl['original_name'],
+                            'file_size'     =>$upl['file_size'],
+                            'mime_type'     =>$upl['mime_type'],
+                            'file_url'      =>$upl['file_url']
+                        ];
+
                 $inputAttachment = [
                     'reff_feature' => 'guests',
-                    'file_url' => $imagePaths['file_path'],
+                    'file_url' => $imagePaths['file_url'],
                     'file_name' => $imagePaths['file_name'],
                     'original_name' => $imagePaths['original_name'],
                     'mime_type' => $imagePaths['mime_type'],
@@ -541,8 +542,8 @@ class BookingController extends Controller
                     ->get();
 
                 foreach ($oldAttachments as $old) {
-                    if ($old->file_url && Storage::disk('public')->exists($old->file_url)) {
-                        Storage::disk('public')->delete($old->file_url);
+                    if ($old->file_url) {
+                        $this->deleteFile( $old->file_url);
                     }
                 }
 
@@ -551,18 +552,17 @@ class BookingController extends Controller
                     ->delete();
                 $inputAttachment = [];
                 $file = $request->file('identity_image');
-                $path = storage_path('app/public/guest');
-                $photo = 'guest/'.$this->compress($file, $path, 50);
+                $upl = $this->uploadToS3($file,'guests', 50);
                 $imagePaths = [
-                    'file_path' => $photo,
-                    'file_name' => basename($photo),
-                    'original_name' => $file->getClientOriginalName(),
-                    'file_size' => Storage::disk('public')->size($photo),
-                    'mime_type' => Storage::disk('public')->mimeType($photo),
+                    'file_path'     =>$upl['file_url'],
+                    'file_name'     =>$upl['file_name'],
+                    'original_name' =>$upl['original_name'],
+                    'file_size'     =>$upl['file_size'],
+                    'mime_type'     =>$upl['mime_type']
                 ];
                 $inputAttachment = [
                     'reff_feature' => 'guests',
-                    'file_url' => $imagePaths['file_path'],
+                    'file_url' => $imagePaths['file_url'],
                     'file_name' => $imagePaths['file_name'],
                     'original_name' => $imagePaths['original_name'],
                     'mime_type' => $imagePaths['mime_type'],
@@ -578,7 +578,7 @@ class BookingController extends Controller
                 ->with('success', 'Data berhasil diedit');
         } catch (\Throwable $th) {
             DB::rollback();
-            throw $th;
+
             $this->insertLog('Gagal mengedit data booking', $th);
 
             return redirect()->back()->with('error', 'Data gagal disimpan : '.$th->getMessage());

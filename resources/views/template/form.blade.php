@@ -144,7 +144,7 @@
                                             @php
                                                 $imgUrl = str_starts_with($att['file_url'], 'storage/')
                                                     ? asset($att['file_url'])
-                                                    : asset('storage/' . $att['file_url']);
+                                                    : $att['file_url'];
                                             @endphp
                                             <div class="position-relative d-inline-block border rounded bg-white p-1 me-2 mb-2 shadow-sm"
                                                 style="width: 105px; height: 105px;">

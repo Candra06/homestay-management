@@ -328,6 +328,19 @@
             $('#daterange').daterangepicker({
                 opens: 'left',
                 autoUpdateInput: false, // Biarkan kosong dulu sampai user memilih
+                 alwaysShowCalendars: true, // <--- Kunci utama agar kalender selalu tampil di sisi kanan
+                showCustomRangeLabel: true,
+                 ranges: {
+                    'Hari Ini': [moment(), moment()],
+                    '7 Hari Terakhir': [moment().subtract(6, 'days'), moment()],
+                    '30 Hari Terakhir': [moment().subtract(29, 'days'), moment()],
+                    'Minggu Ini': [moment().startOf('week'), moment().endOf('week')],
+                    'Bulan Ini': [moment().startOf('month'), moment().endOf('month')],
+                    'Bulan Lalu': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1,
+                        'month').endOf('month')],
+                    'Tahun Ini': [moment().startOf('year'), moment().endOf('year')],
+                    '1 Tahun Terakhir': [moment().subtract(1, 'year'), moment()]
+                },
                 locale: {
                     format: 'YYYY-MM-DD',
                     separator: ' s/d ',

@@ -137,38 +137,39 @@ class FacilityController extends Controller
     {
         DB::beginTransaction();
         $imagePaths = '';
-        if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $path = storage_path('app/public/facility');
-            $photo = 'facility/' . $this->compress($file, $path, 50);
-            $imagePaths = [
-                        'file_path'=>$photo,
-                        'file_name'=> basename($photo),
-                        'original_name'=>$file->getClientOriginalName(),
-                        'file_size'=>Storage::disk('public')->size($photo),
-                        'mime_type'=>Storage::disk('public')->mimeType($photo)
-                    ];
-        }
-        $input = [
-            'nama_fasilitas'=> $request->nama_fasilitas,
-            'type' =>$request->type,
-            'deskripsi' =>$request->deskripsi,
-            'icon' =>$request->icon,
-        ];
-        $facility = Facility::create($input);
-        if ($request->hasFile('image')) {
-            $inputAttachment = [
-                    'reff_feature' => 'facility',
-                    'file_url' => $imagePaths['file_path'],
-                    'file_name' => $imagePaths['file_name'],
-                    'original_name' => $imagePaths['original_name'],
-                    'mime_type' => $imagePaths['mime_type'],
-                    'reff_id' => $facility->id,
-                    'file_size' => $imagePaths['file_size'],
-                ];
-            Attachment::create($inputAttachment);
-        }
         try {
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+
+                $upl = $this->uploadToS3($file,'facility', 50);
+                $imagePaths = [
+                            'file_path'     =>$upl['file_path'],
+                            'file_name'     =>$upl['file_name'],
+                            'original_name' =>$upl['original_name'],
+                            'file_size'     =>$upl['file_size'],
+                            'mime_type'     =>$upl['mime_type'],
+                            'file_url'      =>$upl['file_url']
+                        ];
+            }
+            $input = [
+                'nama_fasilitas'=> $request->nama_fasilitas,
+                'type' =>$request->type,
+                'deskripsi' =>$request->deskripsi,
+                'icon' =>$request->icon,
+            ];
+            $facility = Facility::create($input);
+            if ($request->hasFile('image') && !empty($imagePaths)) {
+                $inputAttachment = [
+                        'reff_feature'  => 'facility',
+                        'file_url'      => $imagePaths['file_url'],
+                        'file_name'     => $imagePaths['file_name'],
+                        'original_name' => $imagePaths['original_name'],
+                        'mime_type'     => $imagePaths['mime_type'],
+                        'reff_id'       => $facility->id,
+                        'file_size'     => $imagePaths['file_size'],
+                    ];
+                Attachment::create($inputAttachment);
+            }
             DB::commit();
             return redirect(route($this->dataPage['route']['index']))->with('success', 'Berhasil menambah data fasilitas');
         } catch (\Throwable $th) {
@@ -225,16 +226,15 @@ class FacilityController extends Controller
             ];
             $facility->update($input);
             if ($request->hasFile('image')) {
-                $imagePaths = '';
+                $imagePaths = [];
                 $file = $request->file('image');
-                $path = storage_path('app/public/facility');
-                $photo = 'facility/' . $this->compress($file, $path, 50);
+                $upl = $this->uploadToS3($file,'facility', 50);
                 $imagePaths = [
-                    'file_path'=>$photo,
-                    'file_name'=> basename($photo),
-                    'original_name'=>$file->getClientOriginalName(),
-                    'file_size'=>Storage::disk('public')->size($photo),
-                    'mime_type'=>Storage::disk('public')->mimeType($photo)
+                    'file_path'     =>$upl['file_url'],
+                    'file_name'     =>$upl['file_name'],
+                    'original_name' =>$upl['original_name'],
+                    'file_size'     =>$upl['file_size'],
+                    'mime_type'     =>$upl['mime_type']
                 ];
             }
             if ($request->hasFile('image')) {
@@ -243,8 +243,8 @@ class FacilityController extends Controller
                     ->get();
 
                 foreach ($oldAttachments as $old) {
-                    if ($old->file_url && Storage::disk('public')->exists($old->file_url)) {
-                        Storage::disk('public')->delete($old->file_url);
+                    if ($old->file_url) {
+                        $this->deleteFile( $old->file_url);
                     }
                 }
 

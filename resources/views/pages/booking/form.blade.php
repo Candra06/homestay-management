@@ -123,7 +123,7 @@
                         <div class="col-md-6 card-room">
                             <div class="card">
                                 <div class="card-header pb-0 d-flex justify-content-between">
-                                    <h4 class="card-title mg-b-0 room-title">Kamar <span class="room-number">1</span></h4>
+                                    <h4 class="card-title mg-b-0 room-title">Kamar <span class="room-number-label">1</span></h4>
                                     <button class="btn btn-outline-primary btn-sm btn-add-room" type="button">
                                         <i class="fas fa-plus"></i> Tambah
                                     </button>
@@ -205,6 +205,8 @@
                         </div>
 
                     </div>
+
+
 
                     <div class="row">
                         {{-- Information --}}
@@ -456,6 +458,82 @@
                 </div>
 
             </form>
+
+            {{-- Template tersembunyi untuk clone kamar baru — di LUAR form agar tidak ikut validasi/submit --}}
+            <div id="room-card-template" style="display:none;" aria-hidden="true">
+                <div class="col-md-6 card-room">
+                    <div class="card">
+                        <div class="card-header pb-0 d-flex justify-content-between">
+                            <h4 class="card-title mg-b-0 room-title">Kamar <span class="room-number-label"></span></h4>
+                            <button class="btn btn-outline-danger btn-sm btn-remove-room" type="button" disabled>
+                                <i class="fas fa-trash"></i> Hapus
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="tx-12">Tanggal Check-in<span class="tx-danger">*</span></label>
+                                        <input type="date" name="check_in[]"
+                                            class="form-control form-control-sm check_in"
+                                            placeholder="Masukkan Tanggal Check-in" disabled>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="tx-12">Tanggal Check-out<span class="tx-danger">*</span></label>
+                                        <input type="date" name="check_out[]"
+                                            class="form-control form-control-sm check_out"
+                                            placeholder="Masukkan Tanggal Check-out" disabled>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="tx-12">Tipe Kamar<span class="tx-danger">*</span></label>
+                                        <select name="room_type[]" class="form-control form-control-sm room-type" disabled>
+                                            <option value="">Pilih Tipe Kamar</option>
+                                            @foreach ($data->roomType as $item)
+                                                <option value="{{ $item->id }}"
+                                                    data-price="{{ $item->base_price }}"
+                                                    data-name="{{ $item->type_name }}">{{ $item->type_name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="tx-12">Nomor Kamar<span class="tx-danger">*</span></label>
+                                        <select name="room_number[]" class="form-control form-control-sm room-number" disabled>
+                                            <option value="">Pilih Nomor Kamar</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label class="tx-12">Layanan Tambahan</label>
+                                        <select class="form-control form-control-sm additional_room"
+                                            name="additional_services[]" multiple="multiple"
+                                            data-placeholder="Pilih Layanan Tambahan" disabled>
+                                            @if (count($data->additionalRoom) > 0)
+                                                @foreach ($data->additionalRoom as $add)
+                                                    <option value="{{ $add->id }}"
+                                                        data-price="{{ $add->price }}"
+                                                        data-name="{{ $add->name }}">
+                                                        {{ $add->name }}</option>
+                                                @endforeach
+                                            @endif
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{-- End Template --}}
         </div>
     </div>
     {{-- @include('pages.booking.form-input') --}}
@@ -465,9 +543,9 @@
     <script src="{{ url('assets') }}/js/form-elements.js"></script>
     <script>
         window.onload = function() {
-            // Inisialisasi Select2
+            // Inisialisasi Select2 (exclude template tersembunyi)
             if ($('.select2').length > 0) {
-                $('.select2').select2();
+                $('.select2').not('#room-card-template .select2').select2();
             }
         };
         var guest = {};
@@ -485,7 +563,8 @@
             };
             updateRoomNumbers();
             $('.container-value-discount').hide();
-            $('.select2').select2();
+            // Inisialisasi Select2 (exclude template tersembunyi)
+            $('.select2').not('#room-card-template .select2').select2();
 
             $('.ota_container').hide();
 
@@ -557,42 +636,34 @@
 
             $(document).on('click', '.btn-add-room', function(e) {
                 e.preventDefault();
-                let $firstCard = $('.card-room').first();
-                let $clone = $firstCard.clone();
 
-                // --- MULAI PROSES PEMBERSIHAN JEJAK SELECT2 DI HASIL CLONE ---
+                // Clone dari template tersembunyi agar data pada card pertama tidak terpengaruh
+                let $template = $('#room-card-template .card-room');
+                let $clone = $template.clone(true, true);
 
-                // a. Hapus elemen span/div tambahan yang dibuat oleh Select2 sebelumnya
-                $clone.find('.select2-container').remove();
+                // Hapus atribut 'disabled' dari template agar field aktif di dalam form
+                $clone.find('input, select, button').removeAttr('disabled');
 
-                // b. Bersihkan tag <select> dari atribut bawaan Select2 agar kembali jadi select biasa
-                $clone.find('select').each(function() {
-                    $(this).removeClass('select2-hidden-accessible');
-                    $(this).removeAttr('data-select2-id tabindex aria-hidden');
-                });
-
-                // c. Bersihkan semua atribut ID select2 yang menempel pada <option> atau elemen lain
-                $clone.find('[data-select2-id]').removeAttr('data-select2-id');
-
-                // --- SELESAI PROSES PEMBERSIHAN ---
-
-                // Bersihkan nilai input form agar kosong
-                $clone.find('input').val('');
-                $clone.find('select:not([multiple])').prop('selectedIndex',
-                    0); // Dropdown biasa kembali ke default
-                $clone.find('select[multiple]').val([]).trigger('change'); // Kosongkan khusus multi-select
-
-                // Ubah tombol Tambah menjadi Hapus
-                let $btn = $clone.find('.card-header button');
-                $btn.removeClass('btn-outline-primary btn-add-room')
-                    .addClass('btn-outline-danger btn-remove-room')
-                    .html('<i class="fas fa-trash"></i> Hapus');
+                // Kembalikan atribut 'required' pada field wajib isi
+                $clone.find('.check_in').attr('required', true);
+                $clone.find('.check_out').attr('required', true);
+                $clone.find('.room-type').attr('required', true);
+                $clone.find('.room-number').attr('required', true);
 
                 // Masukkan elemen baru ke dalam Container
                 $('#room-container').append($clone);
 
-                // Inisialisasi ulang Select2 HANYA pada elemen yang baru ditambahkan
-                $clone.find('.select2').select2();
+                // Inisialisasi Select2 pada elemen layanan tambahan yang baru ditambahkan
+                $clone.find('.additional_room').select2({
+                    placeholder: 'Pilih Layanan Tambahan'
+                });
+
+                // Terapkan min date untuk check_in
+                let today = new Date().toISOString().split('T')[0];
+                let role = "{{ Auth::user()->roles->code }}";
+                if (['ADMIN', 'SUPERADMIN'].includes(role)) {
+                    $clone.find('.check_in').attr('min', today);
+                }
 
                 // Update penomoran
                 updateRoomNumbers();
@@ -714,15 +785,15 @@
             }
 
             $(document).on('click', '.btn-add', function() {
-                let $lastCard = $('.card-room').last();
+                let $lastCard = $('#room-container > .card-room').last();
                 $lastCard.find('.check_in').attr('min', today);
             });
         });
 
         function updateRoomNumbers() {
-            $('.card-room').each(function(index) {
+            $('#room-container > .card-room').each(function(index) {
                 let number = index + 1;
-                $(this).find('.room-number').text(number);
+                $(this).find('.room-number-label').text(number); // target span label saja, bukan select
                 $(this).find('.additional_room').prop('name', 'additional_room-' + index + '[]');
 
             });
@@ -732,7 +803,7 @@
             let subtotal = 0;
             let grandTotal = 0;
 
-            $('.card-room').each(function() {
+            $('#room-container > .card-room').each(function() {
                 let $roomCard = $(this);
 
                 let roomPrice = parseFloat($roomCard.find('.room-type option:selected').data('price')) || 0;
@@ -803,7 +874,7 @@
 
             rooms = [];
 
-            $('.card-room').each(function(index) {
+            $('#room-container > .card-room').each(function(index) {
                 let additional = [];
 
                 let date = {
@@ -1042,7 +1113,7 @@
             let today = new Date();
             today.setHours(0, 0, 0, 0); // Reset jam ke 00:00:00 agar perbandingan tanggal akurat
 
-            $('.card-room').each(function(index) {
+            $('#room-container > .card-room').each(function(index) {
                 let roomNum = index + 1; // Label kamar (Kamar 1, Kamar 2, dst.)
                 let card = $(this);
 

@@ -40,4 +40,5 @@ return [
     'user_whatsapp_id' => env('USER_WHATSAPP_ID'),
     'device_whatsapp_id' => env('DEVICE_WHATSAPP_ID'),
     'auth_key' => env('AUTH_KEY_GATEWAY'),
+    'base_storage' => env('AWS_URL'),
 ];
