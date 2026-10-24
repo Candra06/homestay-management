@@ -190,7 +190,15 @@
                         <div class="col-md-6">
                             <span class="text-secondary">Foto Identitas</span>
                             @if ($data->guest->attachment)
-                                <img src="{{ url('storage/' . $data->guest->attachment->file_url) }}"
+                                @php
+                                    $image = '';
+                                    if (str_contains($data->guest->attachment->file_url, 'https')) {
+                                        $image = $data->guest->attachment->file_url;
+                                    } else {
+                                        $image = url('storage/' . $data->guest->attachment->file_url);
+                                    }
+                                @endphp
+                                <img src="{{ $image }}"
                                     alt="{{ $data->guest->nama_lengkap }}" class="img-fluid">
                             @else
                                 <p>Tidak ada foto identitas</p>

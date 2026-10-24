@@ -325,7 +325,7 @@ class BookingController extends Controller
                     'file_name' => $imagePaths['file_name'],
                     'original_name' => $imagePaths['original_name'],
                     'mime_type' => $imagePaths['mime_type'],
-                    'reff_id' => $booking->id,
+                    'reff_id' => $guest->id,
                     'file_size' => $imagePaths['file_size'],
                 ];
                 Attachment::create($inputAttachment);
