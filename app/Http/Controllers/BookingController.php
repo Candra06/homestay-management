@@ -19,7 +19,6 @@ use App\Models\Payment;
 use App\Models\PaymentMethod;
 use App\Models\Rooms;
 use App\Models\RoomTypes;
-use App\Models\Voucher;
 use Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -67,7 +66,7 @@ class BookingController extends Controller
             $allRooms = Rooms::select('id', 'room_number')->orderBy('room_number', 'ASC')->get();
             $dataPage = $this->dataPage;
             $list = Booking::with('guest', 'bookingRooms', 'bookingRooms.room', 'userCreate')
-                    ->orderBy('created_at', 'DESC');
+                ->orderBy('created_at', 'DESC');
             $akses = request()->attributes->get('hakAkses');
 
             $data = (object) [
@@ -84,6 +83,7 @@ class BookingController extends Controller
             ];
             if (request()->ajax()) {
                 $list = $list->get();
+
                 return $this->ajax($list);
             }
 
@@ -134,7 +134,7 @@ class BookingController extends Controller
     {
 
         DB::beginTransaction();
-       
+
         try {
             $inputAttachment = [];
             $rules = [
@@ -164,7 +164,7 @@ class BookingController extends Controller
             // $guest = Guest::updateOrCreate([
             //     'identity_number' => $request->identity_number
             // ], $guestData);
-            
+
             $bookingData = [
                 'created_by' => Auth::user()->id,
                 'updated_by' => Auth::user()->id,
@@ -188,7 +188,7 @@ class BookingController extends Controller
                 'voucher_id' => $request->has('voucher_id') ? $request->voucher_id : null,
                 'discount_amount' => $request->has('discount_amount_value') ? ($request->discount_amount_value != null ? $request->discount_amount_value : 0) : 0,
             ];
-            
+
             $booking = Booking::create($bookingData);
 
             $bookingAddOnData = [];
@@ -239,7 +239,6 @@ class BookingController extends Controller
             foreach ($roomNumber as $key => $value) {
                 $roomNumbers[] = $value->room_number;
             }
-            
 
             BookingRoomAdditional::insert($bookingAddOnData);
             if ($request->has('additional_services') && count($request->additional_services) > 0) {
@@ -309,15 +308,15 @@ class BookingController extends Controller
 
             if ($request->hasFile('identity_image')) {
                 $file = $request->file('identity_image');
-                $upl = $this->uploadToS3($file,'guests', 50);
+                $upl = $this->uploadToS3($file, 'guests', 50);
                 $imagePaths = [
-                            'file_path'     =>$upl['file_path'],
-                            'file_name'     =>$upl['file_name'],
-                            'original_name' =>$upl['original_name'],
-                            'file_size'     =>$upl['file_size'],
-                            'mime_type'     =>$upl['mime_type'],
-                            'file_url'      =>$upl['file_url']
-                        ];
+                    'file_path' => $upl['file_path'],
+                    'file_name' => $upl['file_name'],
+                    'original_name' => $upl['original_name'],
+                    'file_size' => $upl['file_size'],
+                    'mime_type' => $upl['mime_type'],
+                    'file_url' => $upl['file_url'],
+                ];
 
                 $inputAttachment = [
                     'reff_feature' => 'guests',
@@ -370,7 +369,7 @@ class BookingController extends Controller
             'active' => 'booking',
             'bookingData' => $bookingData,
         ];
-        
+
         return view('pages.booking.detail-new', compact('data'));
     }
 
@@ -442,9 +441,9 @@ class BookingController extends Controller
                 $checkOut = new DateTime($request->check_out[$i]);
                 $nights = $checkIn->diff($checkOut)->days;
                 $additionalAddOn = $request->input("additional_room-{$i}", []);
-                $bookingRoomData=[
+                $bookingRoomData = [
                     'checkin_date' => $request->check_in[$i],
-                    'checkout_date'=> $request->check_out[$i],
+                    'checkout_date' => $request->check_out[$i],
                     'total_price' => $room->price_per_night * $nights,
                     'updated_at' => date('Y-m-d H:i:s'),
                 ];
@@ -475,21 +474,21 @@ class BookingController extends Controller
             BookingRoomAdditional::insert($bookingAddOnData);
 
             $bookingAdditionalData = [];
-            if ( $request->has('additional_services') && count($request->additional_services)>0) {
+            if ($request->has('additional_services') && count($request->additional_services) > 0) {
                 for ($i = 0; $i < count($request->additional_services); $i++) {
-                $bookingAdd = BookingAdditional::where('booking_id', $booking->id)->where('additional_id', $request->additional_services[$i])->first();
-                if (! $bookingAdd) {
-                    $add = Additional::where('id', $request->additional_services[$i])->first();
-                    $bookingAdditionalData[] = [
-                        'booking_id' => $booking->id,
-                        'additional_id' => $request->additional_services[$i],
-                        'price_per_additional' => $add->price,
-                        'total_price' => $add->price,
-                        'created_at' => date('Y-m-d H:i:s'),
-                    ];
+                    $bookingAdd = BookingAdditional::where('booking_id', $booking->id)->where('additional_id', $request->additional_services[$i])->first();
+                    if (! $bookingAdd) {
+                        $add = Additional::where('id', $request->additional_services[$i])->first();
+                        $bookingAdditionalData[] = [
+                            'booking_id' => $booking->id,
+                            'additional_id' => $request->additional_services[$i],
+                            'price_per_additional' => $add->price,
+                            'total_price' => $add->price,
+                            'created_at' => date('Y-m-d H:i:s'),
+                        ];
+                    }
                 }
-            }
-            BookingAdditional::insert($bookingAdditionalData);
+                BookingAdditional::insert($bookingAdditionalData);
             }
 
             $invoice = Invoice::where('booking_id', $booking->id)->first();
@@ -543,7 +542,7 @@ class BookingController extends Controller
 
                 foreach ($oldAttachments as $old) {
                     if ($old->file_url) {
-                        $this->deleteFile( $old->file_url);
+                        $this->deleteFile($old->file_url);
                     }
                 }
 
@@ -552,13 +551,13 @@ class BookingController extends Controller
                     ->delete();
                 $inputAttachment = [];
                 $file = $request->file('identity_image');
-                $upl = $this->uploadToS3($file,'guests', 50);
+                $upl = $this->uploadToS3($file, 'guests', 50);
                 $imagePaths = [
-                    'file_path'     =>$upl['file_url'],
-                    'file_name'     =>$upl['file_name'],
-                    'original_name' =>$upl['original_name'],
-                    'file_size'     =>$upl['file_size'],
-                    'mime_type'     =>$upl['mime_type']
+                    'file_path' => $upl['file_url'],
+                    'file_name' => $upl['file_name'],
+                    'original_name' => $upl['original_name'],
+                    'file_size' => $upl['file_size'],
+                    'mime_type' => $upl['mime_type'],
                 ];
                 $inputAttachment = [
                     'reff_feature' => 'guests',
@@ -571,7 +570,7 @@ class BookingController extends Controller
                 ];
                 Attachment::create($inputAttachment);
             }
-            
+
             DB::commit();
 
             return redirect('/booking')
@@ -871,7 +870,7 @@ class BookingController extends Controller
     {
         DB::beginTransaction();
         try {
-            $booking = Booking::with('bookingRooms','guest')->where('id', $id)->first();
+            $booking = Booking::with('bookingRooms', 'guest')->where('id', $id)->first();
             $bookingRoom = $booking->bookingRooms;
 
             $updateBooking = [
@@ -912,7 +911,7 @@ class BookingController extends Controller
     public function getBookedRooms(Request $request)
     {
         try {
-            
+
             $month = Carbon::parse($request->date)->format('m');
             $year = Carbon::parse($request->date)->format('Y');
             $booking = BookingRoom::with([

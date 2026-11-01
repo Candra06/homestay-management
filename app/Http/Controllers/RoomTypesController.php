@@ -502,18 +502,23 @@ class RoomTypesController extends Controller
     public function roomList($id)
     {
         try {
-            $type = RoomTypes::where('id', $id)->first();
+            $type = (object)[];
+            if($id != 'all'){
+                $type = RoomTypes::where('id', $id)->first();
+            }
+            $roomTypes = RoomTypes::select('id', 'type_name')->get();
             $dataPage = $this->dataPage;
             $data = (object) [
-                'title' => 'Ketersediaan Kamar '.$type->type_name,
+                'title' => 'Ketersediaan Kamar '.($id=='all'? 'Semua':$type->type_name),
                 'routeData' => route($dataPage['route']['index']),
-                'data' => $type,
+                // 'data' => $type,
+                'roomTypes' => $roomTypes,
             ];
 
             // return $data;
             return view('pages.room-types.list-room', compact('data'));
         } catch (\Throwable $th) {
-            // throw $th;
+            throw $th;
         }
     }
 
@@ -521,8 +526,12 @@ class RoomTypesController extends Controller
     {
         try {
             $targetDate = $request->input('date');
-
-            $rooms = Rooms::where('id_room_type', $id)->with([
+            $rooms = Rooms::query();
+            if ($id != 'all') {
+                $rooms->where('id_room_type', $id);
+            }
+            
+            $rooms = $rooms->with([
                 'bookings',
                 'roomType',
                 'bookings.booking' => function ($q) {

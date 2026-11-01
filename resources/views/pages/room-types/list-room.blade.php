@@ -35,12 +35,21 @@
             </div>
         </div>
         <div class="card-body pt-0">
-            <div class=" d-flex flex-row justify-content-between ps-0 ms-0">
+            <div class=" d-flex flex-row ps-0 ms-0">
                 <div class="form-group col-md-2 ps-0">
                     <label for="">Filter Tanggal</label>
                     <input type="date" id="filter-date" class="form-control" value="{{ date('Y-m-d') }}">
                 </div>
-
+                <div class="form-group col-md-2 ps-0">
+                    <label for="room_type_id">Tipe Kamar</label>
+                    <select name="room_type_id" id="room_type_id" class="form-control select2" required>
+                        <option value="">Pilih Tipe Kamar</option>
+                        <option value="all">Semua</option>
+                        @foreach ($data->roomTypes as $roomType)
+                            <option value="{{ $roomType->id }}">{{ $roomType->type_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
             <div id="loading">
                 <div class="d-flex justify-content-center">
@@ -97,13 +106,21 @@
         var urlParts = currentUrl.replace(/\/$/, "").split('/');
         var getId = urlParts[urlParts.length - 1];
         var currentDate = "{{ date('Y-m-d') }}";
+        var roomType = getId;
 
         $(document).ready(function() {
-            getRooms(getId, currentDate);
+            getRooms(roomType, currentDate);
 
             $('#filter-date').on('change', function() {
                 currentDate = $(this).val();
-                getRooms(getId, currentDate);
+                getRooms(roomType, currentDate);
+            });
+
+            $('#room_type_id').on('change', function() {
+                console.log($(this).val());
+
+                roomType = $(this).val();
+                getRooms(roomType, currentDate);
             });
         });
 
@@ -133,7 +150,7 @@
         function generateCard(data) {
             let html = '';
             let role = "{{ Auth::user()->roles->code }}";
-            
+
             data.forEach(item => {
                 let bgCard = "bg-success";
                 switch (item.status) {
@@ -163,6 +180,7 @@
                         <div class="card ${bgCard}">
                             <div class="card-body tx-white">
                                 <h3 class=" tx-center">${item.room_number}</h3>
+                                <h6 class=" tx-center">${item.room_type.type_name}</h6>
                                 <p class="tx-center mb-0">${item.status}</p>
                                 <p class="tx-center ${['Booked', 'Check-In'].includes(item.status) ? 'mb-0' : 'mb-1 pb-3'}">${['Booked', 'Check-In'].includes(item.status) ? item.booking_code : ''}</p>
                             </div>
@@ -176,6 +194,7 @@
                             <div class="card ${bgCard}">
                                 <div class="card-body tx-white">
                                     <h3 class=" tx-center">${item.room_number}</h3>
+                                    <h6 class=" tx-center">${item.room_type.type_name}</h6>
                                     <p class="tx-center mb-0">${item.status}</p>
                                     <p class="tx-center ${['Booked', 'Check-In'].includes(item.status) ? 'mb-0' : 'mb-1 pb-3'}">${['Booked', 'Check-In'].includes(item.status) ? item.booking_code : ''}</p>
                                 </div>

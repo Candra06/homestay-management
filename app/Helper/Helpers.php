@@ -1,13 +1,6 @@
 <?php
 namespace App\Helper;
 use Carbon\Carbon;
-use Illuminate\Support\Str;
-use Google\Client;
-use Illuminate\Support\Facades\Http;
-use App\Models\LogRequest;
-use Mike42\Escpos\Printer;
-use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
-use Spatie\Browsershot\Browsershot;
 
 class Helpers {
 
@@ -91,7 +84,6 @@ class Helpers {
     public static function sendEmail($email, $message) {
 
     }
-
     public static function sendWhatsapp($phone, $message) {
         try {
             
@@ -105,11 +97,7 @@ class Helpers {
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => 'POST',
-                // CURLOPT_HTTPHEADER => array(
-                //     'Content-Type: application/json',
-                //     'x-app-key: ' . config('services.app_key'),
-                //     'x-auth-key: ' . config('services.auth_key'),
-                // ),
+             
                 CURLOPT_POSTFIELDS =>
                     [
                         'appkey'   => config('services.app_key'),
@@ -127,66 +115,6 @@ class Helpers {
             return $th;
         }
     }
-
-    public static function generateQrDevice() {
-        try {
-            $curl = curl_init();
-            // return config('services.device_whatsapp_id');
-            $postFields = [
-                'iduser' => config('services.user_whatsapp_id'),
-                'device' => config('services.device_whatsapp_id')
-            ];
-
-            curl_setopt_array($curl, [
-                CURLOPT_URL => config('services.url_whatsapp')."/qr/",
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_POST => true,
-                CURLOPT_POSTFIELDS => $postFields,
-            ]);
-
-            $response = curl_exec($curl);
-
-            curl_close($curl);
-            return $response;
-        } catch (\Throwable $th) {
-            return $th;
-        }
-    }
-
-    public static function sendFcm($message) {
-        $file = base_path() . '/config.json';
-        $projectId = 'sukalelang-id';
-        $serviceAccountPath = $file;
-        $accessToken = Helpers::getAccessToken($serviceAccountPath);
-        $url = 'https://fcm.googleapis.com/v1/projects/' . $projectId . '/messages:send';
-        $headers = [
-        'Authorization: Bearer ' . $accessToken,
-        'Content-Type: application/json',
-        ];
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['message' => $message]));
-        $response = curl_exec($ch);
-        if ($response === false) {
-
-            throw new Exception('Curl error: ' . curl_error($ch));
-            return false;
-        }
-        curl_close($ch);
-        return true;
-    }
-
-    public static function getAccessToken($serviceAccountPath) {
-        $client = new Client();
-        $client->setAuthConfig($serviceAccountPath);
-        $client->addScope('https://www.googleapis.com/auth/firebase.messaging');
-        $client->useApplicationDefaultCredentials();
-        $token = $client->fetchAccessTokenWithAssertion();
-        return $token['access_token'];
-     }
 
 
     public static function fixphone($phone, $code = '62', $default = NULL)

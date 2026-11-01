@@ -267,10 +267,10 @@
             /* ---------- Room data ---------- */
             var ROOMS = @json($data);
             const baseUrl = "{{ asset('/storage/') }}/";
-            console.log(ROOMS);
+            const baseUrlS3 = '';
             ROOMS.attachments.forEach(function(attachment) {
                 GALLERY_SLOTS.push({
-                    icon: baseUrl + attachment.file_url,
+                    icon: str_contains(attachment.file_url, 'http') ? attachment.file_url : baseUrl + attachment.file_url,
                     label: attachment.file_url
                 });
             });
