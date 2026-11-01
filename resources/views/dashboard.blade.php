@@ -30,11 +30,11 @@
                         </div>
                         <div class="d-flex mb-0">
                             <div class="">
-                                <h3 class="mb-1 fw-bold">{{ $data->occupancyWeekly }}</h3>
+                                <h3 class="mb-1 fw-bold">{{ $data->occupancyWeekly->this_week }}</h3>
 
                             </div>
                         </div>
-                        <small class="mb-0  text-muted">Bulan lalu<span class="float-end text-muted">80</span></small>
+                        <small class="mb-0  text-muted">Bulan lalu<span class="float-end text-muted">{{ $data->occupancyWeekly->last_month }}</span></small>
                     </div>
                 </div>
             </div>
@@ -155,7 +155,7 @@
                         <div class="total-revenue">
                             <div>
                                 <h4 id="totalOccupancy">0</h4>
-                                <label><span class="bg-primary"></span>Transaksi Reservasi</label>
+                                <label><span class="bg-primary"></span>Reservasi</label>
                             </div>
 
                         </div>

@@ -16,10 +16,15 @@ class DashboardService
     {
         $start = Carbon::now()->startOfWeek()->format('Y-m-d');
         $end = Carbon::now()->endOfWeek()->format('Y-m-d');
+        $lastDate = Carbon::now()->startOfMonth()->subMonth()->format('m'); 
 
-        $data = Booking::where('created_at', '>', $start)
+        $thisWeek = Booking::where('created_at', '>', $start)
             ->where('created_at', '<', $end)->count();
-
+        $lastData = Booking::whereRaw('MONTH(created_at) = ?', [$lastDate])->count();
+        $data =(object)[
+            'this_week' => $thisWeek,
+            'last_month' => $lastData,
+        ];
         return $data;
 
     }
@@ -125,7 +130,7 @@ class DashboardService
 
         foreach ($period as $date) {
             $key = $date->format('Y-m'); // Contoh: "2025-12", "2026-01"
-            $monthName = $date->translatedFormat('Fs Y'); // Contoh: "Desember 2025", "Januari 2026"
+            $monthName = $date->translatedFormat('F Y'); // Contoh: "Desember 2025", "Januari 2026"
 
             // Ambil data transaksi di bulan tersebut berdasarkan key Y-m
             $monthlyData = $rawTransactions->get($key);
