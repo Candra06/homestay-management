@@ -198,8 +198,7 @@
                                         $image = url('storage/' . $data->guest->attachment->file_url);
                                     }
                                 @endphp
-                                <img src="{{ $image }}"
-                                    alt="{{ $data->guest->nama_lengkap }}" class="img-fluid">
+                                <img src="{{ $image }}" alt="{{ $data->guest->nama_lengkap }}" class="img-fluid">
                             @else
                                 <p>Tidak ada foto identitas</p>
                             @endif
@@ -239,7 +238,7 @@
                         <span>Diskon</span>
                         <span class="tx-semibold">{{ App\Helper\Helpers::rupiah($data->discount_amount * -1) }}</span>
                     </div>
-                    
+
                     <div class="d-flex mb-2 flex-row justify-content-between">
                         <span>Down Payment</span>
                         <span class="tx-semibold">{{ App\Helper\Helpers::rupiah($data->down_payment) }}</span>
@@ -255,7 +254,7 @@
                     @endphp
                     <div class="d-flex mb-2 flex-row justify-content-between">
                         <span> {{ $data->grand_total != $data->amount_paid ? 'Sisa Pembayaran' : 'Terbayar' }}</span>
-                        <span class="tx-semibold">{{ App\Helper\Helpers::rupiah($sisa)  }}</span>
+                        <span class="tx-semibold">{{ App\Helper\Helpers::rupiah($sisa) }}</span>
                     </div>
                     <hr>
                     <div class="d-flex mb-2 flex-row justify-content-between">
@@ -266,7 +265,7 @@
             </div>
         </div>
     </div>
-   
+
     <div class="modal fade" id="modal-payment">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content modal-content-demo">

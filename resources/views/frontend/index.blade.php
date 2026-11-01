@@ -7,10 +7,13 @@
         <!-- Slides -->
         <div id="heroSlider" class="absolute inset-0">
             @foreach ($data->facility as $index => $fac)
+                @php
+                    $img = $fac['image'] != null ? $fac['image'] : asset('assets/img/facility/default.png');
+                @endphp
                 <div class="hero-slide absolute inset-0" data-index="{{ $index }}" data-name="{{ $fac['name'] }}"
                     aria-hidden="true">
                     <div class="absolute inset-0 bg-gradient-to-br from-olive-800 via-olive-700 to-clay-600"></div>
-                    <img data-src="{{ asset('assets/img/facility/' . $fac['image']) }}" alt="{{ $fac['name'] }}"
+                    <img data-src="{{ asset('assets/img/facility/' . $img) }}" alt="{{ $fac['name'] }}"
                         class="hero-slide-img absolute inset-0 w-full h-full object-cover opacity-0">
                 </div>
             @endforeach

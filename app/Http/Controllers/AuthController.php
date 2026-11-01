@@ -2,17 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\FinancialAccount;
 use App\Models\PaymentConfirmation;
 use App\Models\User;
 use App\Models\RoomTypes;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Browsershot\Browsershot;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Hash;
+use App\Services\DashboardService;
 
 class AuthController extends Controller
 {
+    protected $dashboardService;
+    public function __construct(DashboardService $dashboardService)
+    {
+        $this->dashboardService = $dashboardService;
+    }
     public function login()
     {
         if (! Auth::user()) {
@@ -54,11 +62,54 @@ class AuthController extends Controller
     {
         try {
             $rolesCode = Auth::user()->roles;
-            $data = (object) [];
-           
+            $date = Carbon::now()->format('Y-m-d');
+            $category = FinancialAccount::whereIn('id', [17, 18, 19, 20, 29, 21, 22, 25, 26, 3, 8, 11, 12, 13, 14])->get();
+            $data = (object) [
+                'occupancyWeekly' => $this->dashboardService->getCountReservation(),
+                'checkInCheckOut' => $this->dashboardService->getCountCheckInCheckOut(),
+                'roomAvailable' => $this->dashboardService->getCountRoomAvailable($date),
+                'income' => $this->dashboardService->getCountIncome($date),
+                'finance' => $this->dashboardService->getNormalizedChartData(),
+                'occupancy' => $this->dashboardService->getNormalizedOccupancyChartData(),
+                'category' => $category,
+            ];
+            
             return view('dashboard', compact('data'));
         } catch (\Throwable $th) {
             throw $th;
+        }
+    }
+
+    public function getFinanceChart() {
+        try {
+            $data = $this->dashboardService->getNormalizedChartData();
+            return response()->json([
+                'success' =>true,
+                'message' => 'Berhasil memuat data',
+                'data'=>$data
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'success' =>false,
+                'message' => 'Gagal memuat data, err: '.$th->getMessage() ,
+                'data'=>[],
+            ], 500);
+        }
+    }
+    public function getOccupancyChart() {
+        try {
+            $data = $this->dashboardService->getNormalizedOccupancyChartData();
+            return response()->json([
+                'success' =>true,
+                'message' => 'Berhasil memuat data',
+                'data'=>$data
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'success' =>false,
+                'message' => 'Gagal memuat data, err: '.$th->getMessage() ,
+                'data'=>[],
+            ], 500);
         }
     }
 
@@ -94,48 +145,6 @@ class AuthController extends Controller
             ->make(true);
     }
 
-    public function convertImage()
-    {
-        try {
-            $data = [];
-            $query = PaymentConfirmation::with('product', 'product.report')->where('status', 'Done')->orderBy('id', 'DESC')->get();
-            // return $query;
-            foreach ($query as $q) {
-                $product = [];
-                foreach ($q->product as $p) {
-                    $tmpProduct = [
-                        'name' => $p->report[0]['unit_name'],
-                        'qty' => 1,
-                    ];
-                    array_push($product, $tmpProduct);
-                }
-                $tmp = [
-                    'resi' => $q->no_resi,
-                    'receiver_address' => $q->shipping_address,
-                    'reciever_name' => $q->customer_name,
-                    'reciever_city' => $q->shipping_city,
-                    'weight' => $q->total_weight,
-                    'items' => $product,
-                ];
-                array_push($data, $tmp);
-            }
-            $data = $data[0];
-            $html = view('template.resi-print', compact('data'))->render();
-            $path = storage_path('app/public/resi/'.$data['resi'].'.png');
-            Browsershot::html($html)
-                ->setNodeBinary("C:\Program Files\nodejs\node.exe")                                                // or where node.exe is
-                                                                                                               // adjust path if needed
-                ->setIncludePath("C:\Program Files\nodejs;C:\Users\rezaa\AppData\Roaming\npm;C:\Windows\System32") // required on Windows
-                ->noSandbox()
-                ->windowSize(400, 600)
-                ->save($path);
-
-            // return $data;
-            return view('template.resi-print', compact('data'));
-        } catch (\Throwable $th) {
-            throw $th;
-        }
-    }
 
     public function landingPage()
     {
@@ -161,6 +170,12 @@ class AuthController extends Controller
         // return $roomData;
         foreach ($roomData as $key => $room) {
             $fclt = [];
+            $img = '';
+            if (count($room->attachments) > 0) {
+                $img = str_contains($room->attachments[0]->file_url, 'http') ?  $room->attachments[0]->file_url : url('/').'/storage/'.$room->attachments[0]->file_url;
+            } else {
+                $img = 'assets/img/photos/default-image.png';
+            }
             foreach ($room->facilities as $key => $f) {
                 $fclt[] = $f->facility->nama_fasilitas;
             }
@@ -168,7 +183,7 @@ class AuthController extends Controller
                 'slug' => $room->slug,
                 'name' => $room->type_name,
                 'price' => $room->base_price,
-                'photo' => count($room->attachments) > 0 ? url('/').'/storage/'.$room->attachments[0]->file_url : url('/assets/img/photos/default-image.png'),
+                'photo' => $img,
                 'facility' => $fclt,
 
             ];
@@ -178,6 +193,7 @@ class AuthController extends Controller
             'facility' => $facility,
             'rooms' => $rooms,
         ];
+        
 
         return view('frontend.index', compact('data'));
     }

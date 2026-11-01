@@ -72,5 +72,9 @@ Route::group(["prefix" => "/", "middleware" => ["auth", CheckAccessMidleware::cl
 });
 Route::get('room-number/{floor}', [RoomsController::class, 'generateRoomNumber']);
 
+Route::get('/dashboard-finance', [AuthController::class,'getFinanceChart']);
+Route::get('/dashboard-occupancy', [AuthController::class,'getOccupancyChart']);
+    
+
 
 
