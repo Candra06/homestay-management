@@ -38,11 +38,11 @@
             <div class=" d-flex flex-row ps-0 ms-0">
                 <div class="form-group col-md-2 ps-0">
                     <label for="">Filter Tanggal</label>
-                    <input type="date" id="filter-date" class="form-control" value="{{ date('Y-m-d') }}">
+                    <input type="date" id="filter-date" class="form-control form-control-sm" value="{{ date('Y-m-d') }}">
                 </div>
                 <div class="form-group col-md-2 ps-0">
                     <label for="room_type_id">Tipe Kamar</label>
-                    <select name="room_type_id" id="room_type_id" class="form-control select2" required>
+                    <select name="room_type_id" id="room_type_id" class="form-control form-control-sm select2" required>
                         <option value="">Pilih Tipe Kamar</option>
                         <option value="all">Semua</option>
                         @foreach ($data->roomTypes as $roomType)
@@ -175,14 +175,14 @@
 
                 if (role == 'HOUSE_KEEPING') {
                     html += `
-                <div class="col-md-2">
+                <div class="col-md-2 pb-0 mb-0">
                     <a data-bs-effect="effect-scale" data-bs-toggle="modal" onclick="updateRoomStatus(${item.id},${item.room_number})" href="#modal-update">
-                        <div class="card ${bgCard}">
-                            <div class="card-body tx-white">
-                                <h3 class=" tx-center">${item.room_number}</h3>
-                                <h6 class=" tx-center">${item.room_type.type_name}</h6>
-                                <p class="tx-center mb-0">${item.status}</p>
-                                <p class="tx-center ${['Booked', 'Check-In'].includes(item.status) ? 'mb-0' : 'mb-1 pb-3'}">${['Booked', 'Check-In'].includes(item.status) ? item.booking_code : ''}</p>
+                        <div class="card ${bgCard} mb-1 pb-0">
+                            <div class="card-body p-2 tx-white">
+                                <h6 class=" tx-center mb-0 fw-bold">${item.room_number}</h6>
+                                <p class=" tx-center mb-0 fw-medium">${item.room_type.type_name}</p>
+                                <p class="tx-center tx-10 mb-0">${item.status}</p>
+                                <p class="tx-center tx-10 ${['Booked', 'Check-In'].includes(item.status) ? 'mb-0' : 'mb-0 pb-3'}">${['Booked', 'Check-In'].includes(item.status) ? item.booking_code : ''}</p>
                             </div>
                         </div>
                     </a>
@@ -190,13 +190,13 @@
                 `;
                 } else {
                     html += `
-                        <div class="col-md-2">
-                            <div class="card ${bgCard}">
-                                <div class="card-body tx-white">
-                                    <h3 class=" tx-center">${item.room_number}</h3>
-                                    <h6 class=" tx-center">${item.room_type.type_name}</h6>
-                                    <p class="tx-center mb-0">${item.status}</p>
-                                    <p class="tx-center ${['Booked', 'Check-In'].includes(item.status) ? 'mb-0' : 'mb-1 pb-3'}">${['Booked', 'Check-In'].includes(item.status) ? item.booking_code : ''}</p>
+                        <div class="col-md-2 pb-0 mb-0">
+                            <div class="card ${bgCard} mb-1 pb-0">
+                                <div class="card-body p-2 tx-white">
+                                    <h6 class=" tx-center mb-0 fw-bold">${item.room_number}</h6>
+                                    <p class=" tx-center mb-0 fw-medium">${item.room_type.type_name}</p>
+                                    <p class="tx-center tx-10 mb-0">${item.status}</p>
+                                    <p class="tx-center tx-10 ${['Booked', 'Check-In'].includes(item.status) ? 'mb-0' : 'mb-0 pb-3'}">${['Booked', 'Check-In'].includes(item.status) ? item.booking_code : ''}</p>
                                 </div>
                             </div>
                            
