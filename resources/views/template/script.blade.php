@@ -121,5 +121,22 @@
             $(this).parent().parent().addClass("bg-white");
         }
     })
+
+    function formatDate(dateString) {
+        if (!dateString) return '-';
+
+        const dateObj = new Date(dateString);
+
+        if (isNaN(dateObj.getTime())) return '-';
+
+        const options = {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+        };
+
+        // Menggunakan locale 'id-ID' agar sesuai standar Indonesia (misal: Nov)
+        return new Intl.DateTimeFormat('id-ID', options).format(dateObj);
+    }
 </script>
 @yield('script')

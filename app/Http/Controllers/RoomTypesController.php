@@ -535,8 +535,11 @@ class RoomTypesController extends Controller
                 'bookings',
                 'roomType',
                 'bookings.booking' => function ($q) {
-                    $q->select('id', 'booking_code', 'booking_status');
+                    $q->select('id', 'booking_code', 'booking_status', 'guest_id');
                 },
+                'bookings.booking.guest' => function ($q) {
+                    $q->select('id', 'nama_lengkap');
+                }
             ])
                 ->get()
                 ->map(function ($room) use ($targetDate) {

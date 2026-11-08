@@ -7,6 +7,46 @@
 @section('css')
     <link rel="stylesheet" href="{{ asset('assets') }}/plugins/sweet-alert/sweetalert.css">
     <link href="{{ asset('assets') }}/css/animate.css" rel="stylesheet">
+    <style>
+        .action-copy {
+            cursor: pointer;
+            z-index: 10;
+            pointer-events: auto;
+        }
+
+        .copy-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Desain Tooltip */
+        .custom-tooltip {
+            visibility: hidden;
+            background-color: #28a745;
+            /* Warna hijau sukses */
+            color: #fff;
+            text-align: center;
+            border-radius: 4px;
+            padding: 4px 8px;
+            position: absolute;
+            z-index: 10;
+            bottom: 125%;
+            /* Posisi di atas tombol */
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            font-size: 11px;
+            white-space: nowrap;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Kelas aktif untuk memunculkan tooltip */
+        .custom-tooltip.show {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
 @endsection
 
 @section('main')
@@ -99,6 +139,34 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="modal-history">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content modal-content-demo">
+                <div class="modal-header">
+                    <h6 class="modal-title">Riwayat Reservasi</h6><button aria-label="Close" class="close"
+                        data-bs-dismiss="modal" type="button"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-response">
+                        <table id="tb_history" class="table table-stripped">
+                            <thead>
+                                <tr>
+                                    <th>Kode Booking</th>
+                                    <th>Nama Tamu</th>
+                                    <th>Tanggal Check-In</th>
+                                    <th>Tanggal Check-Out</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @section('script')
     <script type="text/javascript">
@@ -175,31 +243,49 @@
 
                 if (role == 'HOUSE_KEEPING') {
                     html += `
-                <div class="col-md-2 pb-0 mb-0">
-                    <a data-bs-effect="effect-scale" data-bs-toggle="modal" onclick="updateRoomStatus(${item.id},${item.room_number})" href="#modal-update">
-                        <div class="card ${bgCard} mb-1 pb-0">
-                            <div class="card-body p-2 tx-white">
-                                <h6 class=" tx-center mb-0 fw-bold">${item.room_number}</h6>
-                                <p class=" tx-center mb-0 fw-medium">${item.room_type.type_name}</p>
-                                <p class="tx-center tx-10 mb-0">${item.status}</p>
-                                <p class="tx-center tx-10 ${['Booked', 'Check-In'].includes(item.status) ? 'mb-0' : 'mb-0 pb-3'}">${['Booked', 'Check-In'].includes(item.status) ? item.booking_code : ''}</p>
-                            </div>
+                        <div class="col-md-2 pb-0 mb-0">
+                            <a data-bs-effect="effect-scale" data-bs-toggle="modal" onclick="updateRoomStatus(${item.id},${item.room_number})" href="#modal-update">
+                                <div class="card ${bgCard} mb-1 pb-0">
+                                    <div class="card-body p-2 tx-white">
+                                        <h6 class=" tx-center mb-0 fw-bold">${item.room_number}</h6>
+                                        <p class=" tx-center mb-0 fw-medium">${item.room_type.type_name}</p>
+                                        <p class="tx-center tx-10 mb-0">${item.status}</p>
+                                        <p class="tx-center tx-10 ${['Booked', 'Check-In'].includes(item.status) ? 'mb-0' : 'mb-0 pb-3'}" id="">${['Booked', 'Check-In'].includes(item.status) ? item.booking_code : ''}${['Booked', 'Check-In'].includes(item.status) ?'<i class="fas fa-copy action-copy ms-1" data-copy="'+item.booking_code+'"></i>':''}</p>
+                                        <span class="custom-tooltip">Tersalin!</span>
+                                    </div>
+                                </div>
+                            </a>
                         </div>
-                    </a>
-                </div>
                 `;
                 } else {
+                    const bookings = JSON.stringify(item.bookings).replace(/"/g, '&quot;');
+                    
+                    
                     html += `
                         <div class="col-md-2 pb-0 mb-0">
+                            
                             <div class="card ${bgCard} mb-1 pb-0">
-                                <div class="card-body p-2 tx-white">
-                                    <h6 class=" tx-center mb-0 fw-bold">${item.room_number}</h6>
-                                    <p class=" tx-center mb-0 fw-medium">${item.room_type.type_name}</p>
-                                    <p class="tx-center tx-10 mb-0">${item.status}</p>
-                                    <p class="tx-center tx-10 ${['Booked', 'Check-In'].includes(item.status) ? 'mb-0' : 'mb-0 pb-3'}">${['Booked', 'Check-In'].includes(item.status) ? item.booking_code : ''}</p>
+                                    <div class="card-body p-2 tx-white">
+                                        <a data-bs-effect="effect-scale" class="text-white" data-bs-toggle="modal" onclick="bookingHistory(${bookings})" href="#modal-history" style="z-index: 1;">
+                                            <div>
+                                                <h6 class="tx-center mb-0 fw-bold">${item.room_number}</h6>
+                                                <p class="tx-center mb-0 fw-medium">${item.room_type.type_name}</p>
+                                                <p class="tx-center tx-10 mb-0">${item.status}</p>    
+                                            </div>
+                                        </a>
+                                        <p class="tx-center tx-10 ${['Booked', 'Check-In'].includes(item.status) ? 'mb-0' : 'mb-0 pb-3'}">
+                                            ${['Booked', 'Check-In'].includes(item.status) ? item.booking_code : ''}
+                                            
+                                            
+                                            ${['Booked', 'Check-In'].includes(item.status) ? `
+                                                            <span class="copy-wrapper">
+                                                                <i class="fas fa-copy action-copy ms-1" data-copy="${item.booking_code}"></i>
+                                                                <span class="custom-tooltip">Tersalin!</span>
+                                                            </span>
+                                                        ` : ''}
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                           
                         </div>
                         `;
                 }
@@ -207,10 +293,51 @@
             $('#room-list').html(html);
         }
 
+        document.addEventListener("click", function(event) {
+            const copyBtn = event.target.closest(".action-copy");
+
+            if (copyBtn) {
+                event.stopPropagation();
+                event.preventDefault();
+
+                const textToCopy = copyBtn.getAttribute("data-copy");
+                const wrapper = copyBtn.closest(".copy-wrapper");
+                const tooltip = wrapper ? wrapper.querySelector(".custom-tooltip") : null;
+
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    if (tooltip) {
+                        tooltip.classList.add("show");
+                        setTimeout(() => {
+                            tooltip.classList.remove("show");
+                        }, 1500);
+                    }
+                }).catch(err => {
+                    console.error("Gagal menyalin teks: ", err);
+                });
+            }
+        });
+
         function updateRoomStatus(roomId, roomNumber) {
             let url = "{{ url('room/update-status/') }}/" + roomId
             $("#modal-update").find("form").attr("action", url)
             $("#modal-update").find(".modal-title").text(`Update Status Kamar ${roomNumber}`)
+        }
+
+        function bookingHistory(data) {
+            let html = '';
+            data.forEach((item) => {
+                html += `
+                    <tr>
+                        <td class="tx-11">${item.booking.booking_code}</td>
+                        <td class="tx-11">${item.booking.guest.nama_lengkap}</td>
+                        <td class="tx-11">${formatDate(item.checkin_date)}</td>
+                        <td class="tx-11">${formatDate(item.checkout_date)}</td>
+                    </tr>
+                `
+            });
+            $('#tb_history > tbody').append(html);
+
+
         }
     </script>
 @endsection

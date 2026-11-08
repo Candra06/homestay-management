@@ -49,6 +49,7 @@ Route::group(["prefix" => "/", "middleware" => ["auth", CheckAccessMidleware::cl
     Route::put('room/update-status/{id}', [HousekeepingController::class, 'updateStatus']);
     
     Route::get('cashflow/export-excel', [FinancialTransactionController::class, 'exportExcel']);
+    Route::get('booking/export-excel', [BookingController::class, 'exportExcel']);
 
     Route::get('voucher/cek-code/{code}', [VoucherController::class, 'cekVoucher']);
 

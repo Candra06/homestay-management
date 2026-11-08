@@ -10,6 +10,7 @@ class FinancialTransaction extends Model
     use SoftDeletes;
 
     protected $table = 'financial_transactions';
+
     protected $fillable = [
         'financial_account_id',
         'transaction_date',
@@ -21,7 +22,7 @@ class FinancialTransaction extends Model
         'payment_method',
         'payment_method_id',
         'created_by',
-        'updated_by'
+        'updated_by',
     ];
 
     public function account()
@@ -54,4 +55,8 @@ class FinancialTransaction extends Model
         return $this->belongsTo(Booking::class, 'reference_id');
     }
 
+    public function attachment()
+    {
+        return $this->hasOne(Attachment::class, 'reff_id', 'id')->where('reff_feature', 'transaction');
+    }
 }

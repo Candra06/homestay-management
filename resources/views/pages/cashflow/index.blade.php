@@ -148,7 +148,7 @@
                         data-bs-dismiss="modal" type="button"><span aria-hidden="true">&times;</span></button>
                 </div>
                 <div class="modal-body">
-                    <form action="{{ url('/cashflow') }}" method="POST">
+                    <form action="{{ url('/cashflow') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="form-group">
                             <label for="transaction_date">Tanggal Transaksi<span class="tx-danger">*</span></label>
@@ -195,6 +195,10 @@
                             </select>
                         </div>
                         <div class="form-group">
+                            <label for="transaction_proof">Bukti Transaksi</label>
+                            <input type="file" name="transaction_proof" id="transaction_proof" class="form-control">
+                        </div>
+                        <div class="form-group">
                             <label for="description">Deskripsi</label>
                             <textarea name="description" id="description" class="form-control" placeholder="Masukkan Deskripsi"
                                 {{ old('description') }}></textarea>
@@ -215,7 +219,7 @@
                         data-bs-dismiss="modal" type="button"><span aria-hidden="true">&times;</span></button>
                 </div>
                 <div class="modal-body">
-                    <form action="" method="POST">
+                    <form action="" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
                         <div class="form-group">
@@ -257,6 +261,13 @@
                                     <option value="{{ $category->id }}">{{ $category->account_name }}</option>
                                 @endforeach
                             </select>
+                        </div>
+                        <div class="form-group" id="transaction_proof_form">
+                            <label for="transaction_proof">Bukti Transaksi</label>
+                            <input type="file" name="transaction_proof" id="transaction_proof" class="form-control">
+                            <a href="" id="transaction_proof_url" target="_blank">
+                                <img src="" alt="" id="transaction_proof_image" class="rounded-bottom mt-2" height="100">
+                            </a>
                         </div>
                         <div class="form-group">
                             <label for="description">Deskripsi</label>
@@ -450,13 +461,13 @@
         function editData(route, id) {
             let data;
             let url = route + '/' + id;
+            $("#modal-edit").find("#transaction_proof_form").hide();
             $.ajax({
                 url: route,
                 type: 'GET',
                 success: function(res) {
                     data = res.data;
-                    console.log(data);
-
+                    
                     $("#modal-edit").find("form").attr("action", route);
                     $("#modal-edit").find("#transaction_date").val(data.transaction_date);
                     $("#modal-edit").find("#transaction_type").val(data.transaction_type);
@@ -465,6 +476,11 @@
                     $("#modal-edit").find("#amount_display").val(data.amount);
                     $("#modal-edit").find("#transaction_category").val(data.financial_account_id);
                     $("#modal-edit").find("#description").val(data.description);
+                    if (data.attachment) {
+                        $("#modal-edit").find("#transaction_proof_form").show();
+                        $("#modal-edit").find("#transaction_proof_image").attr('src',data.attachment.file_url);
+                        $("#modal-edit").find("#transaction_proof_url").attr('href',data.attachment.file_url);
+                    }
                 },
                 error: function(xhr, status, error) {
                     console.log(xhr.responseJSON);
