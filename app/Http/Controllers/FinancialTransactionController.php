@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Exports\CashflowExport;
 use App\Helper\Helpers;
+use App\Models\Attachment;
 use App\Models\FinancialAccount;
 use App\Models\FinancialTransaction;
 use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
 use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -27,8 +27,8 @@ class FinancialTransactionController extends Controller
             'detail' => 'cashflow.detail',
             'delete' => 'cashflow.destroy',
         ],
-        'tableHead' => ['No', 'Tanggal Transaksi', 'Jenis Transaksi', 'Sumber', 'Tanggal Check In', 'Kategori', 'Nominal','Metode Bayar', 'Catatan', 'Petugas', 'aksi'],
-        'tableColumns' => ['DT_RowIndex', 'transaction_date', 'transaction_type', 'resource','checkin','account_name', 'amount','payment_method', 'description', 'created_by', 'action'],
+        'tableHead' => ['No', 'Tanggal Transaksi', 'Jenis Transaksi', 'Sumber', 'Tanggal Check In', 'Kategori', 'Nominal', 'Metode Bayar', 'Catatan', 'Petugas', 'aksi'],
+        'tableColumns' => ['DT_RowIndex', 'transaction_date', 'transaction_type', 'resource', 'checkin', 'account_name', 'amount', 'payment_method', 'description', 'created_by', 'action'],
     ];
 
     public function index(Request $request)
@@ -40,17 +40,21 @@ class FinancialTransactionController extends Controller
                     $q->select('id', 'account_code', 'account_name', 'type', 'balance')->get();
                 },
                 'booking' => function ($q) {
-                    $q->select('id','booking_code','guest_id')->get();
+                    $q->select('id', 'booking_code', 'guest_id')->get();
                 },
                 'booking.guest' => function ($q) {
-                    $q->select('id','nama_lengkap')->get();
+                    $q->select('id', 'nama_lengkap')->get();
                 },
                 'booking.bookingRooms' => function ($q) {
-                    $q->select('id','booking_id', 'checkin_date', 'checkout_date', 'room_id')->get();
+                    $q->select('id', 'booking_id', 'checkin_date', 'checkout_date', 'room_id')->get();
                 },
                 'booking.bookingRooms.room' => function ($q) {
-                    $q->select('id','room_number')->get();
-                },'user']);
+                    $q->select('id', 'room_number')->get();
+                },
+                'attachment' => function($q) {
+                    $q->select('id', 'reff_feature', 'file_name','file_url', 'reff_id')->get();
+                }, 
+                'user']);
             $category = FinancialAccount::whereIn('id', [17, 18, 19, 20, 29, 21, 22, 25, 26, 3, 8, 11, 12, 13, 14])->get();
             $summary = FinancialTransaction::select(
                 DB::raw('SUM(CASE WHEN transaction_type = "income" THEN amount ELSE 0 END) as income'),
@@ -67,7 +71,6 @@ class FinancialTransactionController extends Controller
             $list = $list->orderBy('transaction_date', 'DESC')->get();
             $summary = $summary->first();
             
-
             $data = (object) [
                 'title' => 'Cash Flow',
                 'createBtn' => $akses['access_create'] == 'Y',
@@ -118,7 +121,7 @@ class FinancialTransactionController extends Controller
                 'payment_method' => 'required',
                 'description' => 'nullable',
             ]);
-            FinancialTransaction::create([
+            $input = FinancialTransaction::create([
                 'transaction_date' => $request->transaction_date,
                 'financial_account_id' => $request->transaction_category,
                 'transaction_type' => $request->transaction_type,
@@ -128,6 +131,29 @@ class FinancialTransactionController extends Controller
                 'description' => $request->description ?? '-',
                 'created_by' => Auth::user()->id,
             ]);
+             if ($request->hasFile('transaction_proof')) {
+                $file = $request->file('transaction_proof');
+                $upl = $this->uploadToS3($file, 'transaction', 50);
+                $imagePaths = [
+                    'file_path' => $upl['file_path'],
+                    'file_name' => $upl['file_name'],
+                    'original_name' => $upl['original_name'],
+                    'file_size' => $upl['file_size'],
+                    'mime_type' => $upl['mime_type'],
+                    'file_url' => $upl['file_url'],
+                ];
+
+                $inputAttachment = [
+                    'reff_feature' => 'transaction',
+                    'file_url' => $imagePaths['file_url'],
+                    'file_name' => $imagePaths['file_name'],
+                    'original_name' => $imagePaths['original_name'],
+                    'mime_type' => $imagePaths['mime_type'],
+                    'reff_id' => $input->id,
+                    'file_size' => $imagePaths['file_size'],
+                ];
+                Attachment::create($inputAttachment);
+            }
             DB::commit();
 
             return redirect()->route($this->dataPage['route']['index'])
@@ -150,6 +176,9 @@ class FinancialTransactionController extends Controller
             'account' => function ($q) {
                 $q->select('id', 'account_code', 'account_name', 'type', 'balance')->get();
             },
+            'attachment' => function($q) {
+                $q->select('id', 'reff_feature', 'file_name','file_url', 'reff_id')->get();
+            }, 
             'user'])->where('id', $cashflow->id)->first();
 
         return response()->json([
@@ -194,7 +223,44 @@ class FinancialTransactionController extends Controller
                 'updated_by' => Auth::user()->id,
                 'updated_at' => date('Y-m-d H:i:s'),
             ]);
+            if ($request->hasFile('transaction_proof')) {
+                $oldAttachments = Attachment::where('reff_feature', 'transaction')
+                    ->where('reff_id', $cashflow->id)
+                    ->get();
+
+                foreach ($oldAttachments as $old) {
+                    if ($old->file_url) {
+                        $this->deleteFile( $old->file_url);
+                    }
+                }
+                $imagePaths = [];
+                $file = $request->file('transaction_proof');
+                $upl = $this->uploadToS3($file,'transaction', 50);
+                $imagePaths = [
+                    'file_path'     =>$upl['file_url'],
+                    'file_name'     =>$upl['file_name'],
+                    'original_name' =>$upl['original_name'],
+                    'file_size'     =>$upl['file_size'],
+                    'mime_type'     =>$upl['mime_type']
+                ];
+
+                Attachment::where('reff_feature', 'transaction')
+                    ->where('reff_id', $cashflow->id)
+                    ->delete();
+
+                $inputAttachment = [
+                        'reff_feature' => 'transaction',
+                        'file_url' => $imagePaths['file_path'],
+                        'file_name' => $imagePaths['file_name'],
+                        'original_name' => $imagePaths['original_name'],
+                        'mime_type' => $imagePaths['mime_type'],
+                        'reff_id' => $cashflow->id,
+                        'file_size' => $imagePaths['file_size'],
+                    ];
+                Attachment::create($inputAttachment);
+            }
             DB::commit();
+
             return redirect()->route($this->dataPage['route']['index'])
                 ->with('success', 'Data berhasil diupdate');
         } catch (\Throwable $th) {
@@ -216,7 +282,7 @@ class FinancialTransactionController extends Controller
             $cashflow->delete();
             DB::commit();
 
-           return redirect()->route($this->dataPage['route']['index'])
+            return redirect()->route($this->dataPage['route']['index'])
                 ->with('success', 'Data berhasil dihapus');
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -281,6 +347,7 @@ class FinancialTransactionController extends Controller
                 }
                 $actionBtn = $showEdit == false ? '' : '<button class="btn-sm me-2 btn modal-effect btn-warning" data-bs-toggle="modal" data-bs-effect="effect-scale" style="font-size:12px;" onclick="editData(\''.$detailRoute.'\',\''.$row->id.'\')" href="#modal-edit"><span class="fe fe-edit"></span></button>';
                 $actionBtn .= $showDelete == false ? '' : '<button class="btn-sm mr-2 modal-effect btn btn-danger" data-bs-effect="effect-scale" data-bs-toggle="modal" style="font-size:12px;" onclick="deleteData(\''.$deleteRoute.'\', \''.$message.'\')" href="#modal-delete"><span class="fe fe-trash"></span></button>';
+                $actionBtn .= $row->attachment ? '<button class="btn-sm ms-2 modal-effect btn btn-info" data-bs-effect="effect-scale" data-bs-toggle="modal" style="font-size:12px;" onclick="window.open(\''.$row->attachment->file_url.'\', \'_blank\')" href="#"><span class="fe fe-image"></span></button>' : '';
 
                 return $actionBtn;
             })
@@ -288,12 +355,15 @@ class FinancialTransactionController extends Controller
             ->make(true);
     }
 
-    public function exportExcel(Request $request){
+    public function exportExcel(Request $request)
+    {
         try {
             $fileName = 'data-cashflow-'.date('Y-m-d').'.xlsx';
+
             return Excel::download(new CashflowExport($request->start_date, $request->end_date), $fileName);
         } catch (\Throwable $th) {
             $this->insertLog('error cashflow', $th);
+
             return redirect()->route($this->dataPage['route']['index'])
                 ->with('error', 'Data gagal diexport, message : '.$th->getMessage());
         }

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('attachments', function (Blueprint $table) {
             $table->id();
-            $table->enum('reff_feature', ['room-types', 'rooms', 'guests', 'facility', 'gallery','additional'])->default('room-types');
+            $table->enum('reff_feature', ['room-types', 'rooms', 'guests', 'facility', 'gallery','additional','transaction','reservation'])->default('room-types');
             $table->string('file_url');
             $table->string('file_name');
             $table->string('original_name');

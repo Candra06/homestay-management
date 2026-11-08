@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\BookingExport;
 use App\Helper\Helpers;
 use App\Mail\InvoiceMail;
 use App\Models\Additional;
@@ -28,6 +29,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
 class BookingController extends Controller
@@ -68,7 +70,18 @@ class BookingController extends Controller
             $list = Booking::with('guest', 'bookingRooms', 'bookingRooms.room', 'userCreate')
                 ->orderBy('created_at', 'DESC');
             $akses = request()->attributes->get('hakAkses');
-
+            if (isset($request->start_date) && isset($request->end_date)) {
+                $list = $list->whereBetween('created_at', [$request->start_date, $request->end_date]);
+            }
+            if (isset($request->booking_status)) {
+                $list = $list->where('booking_status', $request->booking_status);
+            }
+            if (isset($request->payment_status)) {
+                $list = $list->where('payment_status', $request->payment_status);
+            }
+            if (isset($request->source)) {
+                $list = $list->where('book_reff', $request->source);
+            }
             $data = (object) [
                 'title' => 'Booking',
                 'subtitle' => 'Reservasi',
@@ -837,7 +850,6 @@ class BookingController extends Controller
             ];
             Payment::create($addPayment);
             $akun = FinancialAccount::where('account_code', '1-100')->first();
-            // return $akun;
             $addFinance[] = [
                 'financial_account_id' => $akun->id,
                 'transaction_date' => $request->tgl_bayar,
@@ -998,6 +1010,20 @@ class BookingController extends Controller
             $this->insertLog('Gagal input transaksi', $th);
 
             return false;
+        }
+    }
+
+    public function exportExcel(Request $request)
+    {
+        try {
+            $fileName = 'export-booking-'.date('Y-m-d').'.xlsx';
+            
+            return Excel::download(new BookingExport($request), $fileName);
+        } catch (\Throwable $th) {
+            $this->insertLog('error cashflow', $th);
+
+            return redirect()->route($this->dataPage['route']['index'])
+                ->with('error', 'Data gagal diexport, message : '.$th->getMessage());
         }
     }
 }

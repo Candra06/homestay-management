@@ -109,7 +109,8 @@
                     <a href="{{ $data->routeAdd }}" class="me-2"><button class="btn btn-sm btn-primary">
                             <i class="fa fa-plus me-1"></i> Tambah Reservasi</button></a>
                 @endif
-                <button class="btn btn-sm btn-success"><i class="fa fa-file-excel me-1"></i> Export Reservasi </button>
+                <button class="btn btn-sm btn-success" id="export-booking"><i class="fa fa-file-excel me-1"></i> Export
+                    Reservasi </button>
             </div>
         </div>
     </div>
@@ -250,7 +251,7 @@
             }, function(start, end, label) {
                 // Callback saat tanggal dipilih
                 $('#daterange').val(start.format('YYYY-MM-DD') + ' s/d ' + end.format('YYYY-MM-DD'));
-                console.log($('#daterange').val());
+                filter();
 
             });
 
@@ -259,6 +260,16 @@
                 $(this).val('');
                 $('#table').DataTable().ajax.reload()
             });
+        });
+
+        $('#booking_status').on('change', function() {
+            filter();
+        });
+        $('#payment_status').on('change', function() {
+            filter();
+        });
+        $('#source').on('change', function() {
+            filter();
         });
         $('#view-mode-toggle').on('click', function() {
             $(this).toggleClass('on');
@@ -391,7 +402,34 @@
             }
         });
         $("#table").DataTable({
-            ajax: '{{ $data->routeData }}',
+            ajax: {
+                url: '{{ $data->routeData }}',
+                data: function(d) {
+                    var daterange = $('#daterange').val();
+                    var bookingStatus = $('#booking_status').val();
+                    var paymentStatus = $('#payment_status').val();
+                    var source = $('#source').val();
+
+                    if (daterange) {
+                        var dates = daterange.split(
+                            ' s/d '); // Sesuaikan separator dengan settingan daterangepicker kamu
+                        d.start_date = dates[0];
+                        d.end_date = dates[1];
+                    }
+
+                    if (bookingStatus) {
+                        d.booking_status = bookingStatus;
+                    }
+
+                    if (paymentStatus) {
+                        d.payment_status = paymentStatus;
+                    }
+
+                    if (source) {
+                        d.source = source;
+                    }
+                }
+            },
             processing: true,
             serverSide: true,
             stateSave: true,
@@ -402,5 +440,77 @@
             $("#modal-delete").find("form").attr("action", route)
             $("#modal-delete").find(".message").text(message)
         }
+
+        function filter() {
+            $('#table').DataTable().ajax.reload();
+            let param = {
+                filter: true
+            };
+            var daterange = $('#daterange').val();
+            var bookingStatus = $('#booking_status').val();
+            var paymentStatus = $('#payment_status').val();
+            var source = $('#source').val();
+
+            if (daterange) {
+                var dates = daterange.split(
+                    ' s/d '); // Sesuaikan separator dengan settingan daterangepicker kamu
+                param.start_date = dates[0];
+                param.end_date = dates[1];
+            }
+
+            if (bookingStatus) {
+                param.booking_status = bookingStatus;
+            }
+
+            if (paymentStatus) {
+                param.payment_status = paymentStatus;
+            }
+
+            if (source) {
+                param.source = source;
+            }
+
+            $.ajax({
+                url: '{{ $data->routeData }}',
+                type: 'GET',
+                data: param,
+                success: function(response) {
+                    $('#table').DataTable().clear().rows.add(response).draw();
+                },
+                error: function(xhr, status, error) {
+                    console.error("Gagal memuat data booking:", error);
+                }
+            });
+        }
+
+        $('#export-booking').on('click', function(e) {
+            e.preventDefault();
+            var daterange = $('#daterange').val();
+            var bookingStatus = $('#booking_status').val();
+            var paymentStatus = $('#payment_status').val();
+            var source = $('#source').val();
+            var exportUrl = new URL("{{ url('/booking/export-excel') }}");
+
+            if (daterange) {
+                var dates = daterange.split(
+                    ' s/d '); // Sesuaikan separator dengan settingan daterangepicker kamu
+                exportUrl.searchParams.set('start_date', dates[0]);
+                exportUrl.searchParams.set('end_date', dates[1]);
+
+            }
+
+            if (bookingStatus) {
+                exportUrl.searchParams.set('booking_status', bookingStatus);
+            }
+
+            if (paymentStatus) {
+                exportUrl.searchParams.set('payment_status', paymentStatus);
+            }
+
+            if (source) {
+                exportUrl.searchParams.set('source', source);
+            }
+            window.location.href = exportUrl.toString();
+        })
     </script>
 @endsection
