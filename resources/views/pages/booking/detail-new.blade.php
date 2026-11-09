@@ -38,6 +38,10 @@
         $data = $data->bookingData;
         $room = [];
         $additional = [];
+        $showButton = false;
+        if (in_array(Auth::user()->roles->code, ['ADMIN', 'SUPER_ADMIN'])) {
+            $showButton = true;
+        }
         foreach ($data->bookingRooms as $value) {
             $checkIn = new DateTime($value->checkin_date);
             $checkOut = new DateTime($value->checkout_date);
@@ -87,14 +91,17 @@
         <div>
             <a class="btn btn-outline-primary me-1" href="{{ url('/booking') }}"><i class="fa fa-arrow-left"></i>
                 Kembali</a>
-            @if ($data->grand_total != $data->amount_paid)
+
+            @if ($data->grand_total != $data->amount_paid || $data->booking_status != 'Completed')
                 <a class="btn btn-primary me-1" ata-bs-effect="effect-scale" data-bs-toggle="modal" href="#modal-payment"><i
                         class="fa fa-money-bill"></i> Buat
                     Pelunasan</a>
-            @elseif ($data->grand_total == $data->amount_paid && $data->booking_status == 'Approved')
+            @endif
+            @if ($data->grand_total == $data->amount_paid && $data->booking_status == 'Approved')
                 <button type="button" id="btn-checkin-process" class="btn btn-info me-1"><i class="fa fa-check"></i> Check
                     In</button>
-            @elseif ($data->booking_status == 'Checked-In')
+            @endif
+            @if ($data->booking_status == 'Checked-In')
                 <button type="button" id="btn-checkout-process" class="btn btn-warning me-1"><i class="fe fe-log-out"></i>
                     Check Out</button>
             @endif
@@ -300,7 +307,10 @@
                                 <option value="">Pilih Metode Pembayaran</option>
                                 <option value="Bank Transfer">Transfer Bank</option>
                                 <option value="Cash">Tunai</option>
-                                <option value="QRIS">QRIS</option>
+                                <option value="QRIS BCA">QRIS BCA</option>
+                                <option value="QRIS BNI">QRIS BNI</option>
+                                <option value="Transfer BCA">Transfer BCA</option>
+                                <option value="Transfer BNI">Transfer BNI</option>
                             </select>
                         </div>
                         <div class="form-group">
