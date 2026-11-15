@@ -207,6 +207,7 @@ class BookingController extends Controller
             $bookingAddOnData = [];
             $invoiceItemData = [];
             $roomNumbers = [];
+            $totalPriceAddRoom = 0; // [REVISI] Penampung total nominal additional per-kamar (tiap kamar x malam)
             $roomTypes = RoomTypes::whereIn('id', $request->room_type)->get()->keyBy('id');
             for ($i = 0; $i < count($request->room_type); $i++) {
                 $price = $roomTypes->get($request->room_type[$i]);
@@ -233,18 +234,21 @@ class BookingController extends Controller
 
                 foreach ($additionalAddOn as $key => $add) {
                     $addInfo = Additional::where('id', $add)->first();
+                    $subtotalAdd = $addInfo->price * $nights;
+                    $totalPriceAddRoom += $subtotalAdd; // [REVISI] Akumulasi total biaya additional kamar
+
                     $bookingAddOnData[] = [
                         'booking_room_id' => $roomIns->id,
                         'additional_id' => $add,
                         'price_per_additional' => $addInfo->price,
-                        'total_price' => $addInfo->price * $nights,
+                        'total_price' => $subtotalAdd,
                     ];
                     $invoiceItemData[] = [
                         'invoice_id' => 0,
                         'item_name' => 'Additional '.$addInfo->name,
                         'quantity' => $nights,
                         'unit_price' => $addInfo->price,
-                        'total_price' => $addInfo->price * $nights,
+                        'total_price' => $subtotalAdd,
                     ];
                 }
             }
@@ -254,6 +258,9 @@ class BookingController extends Controller
             }
 
             BookingRoomAdditional::insert($bookingAddOnData);
+            
+            // [REVISI] Hitung total additional tiap booking (layanan umum guesthouse)
+            $totalPriceAddGeneral = 0;
             if ($request->has('additional_services') && count($request->additional_services) > 0) {
                 $bookingAdditionalData = [];
                 for ($i = 0; $i < count($request->additional_services); $i++) {
@@ -264,6 +271,7 @@ class BookingController extends Controller
                         'price_per_additional' => $add->price,
                         'total_price' => $add->price,
                     ];
+                    $totalPriceAddGeneral += $add->price; // [REVISI] Akumulasi total biaya additional general
                 }
                 BookingAdditional::insert($bookingAdditionalData);
             }
@@ -302,22 +310,92 @@ class BookingController extends Controller
                 'updated_by' => Auth::user()->id,
             ];
             Payment::create($paymentInput);
+            
+            // [REVISI] Pencatatan transaksi keuangan terpisah (Kamar, Additional Kamar, Additional Layanan)
+            // Uang kas riil yang masuk tidak di-double count.
+            $paidNow = ($request->dp_amount > 0) ? (float)$request->dp_amount : (float)$request->payment_amount;
+            $isPaidFull = ($request->payment_amount == $request->grand_total_value);
             $bodyTransaction = [];
-            $bodyTransaction[] = [
-                'financial_account_id' => 1,
-                'transaction_date' => $request->payment_date,
-                'transaction_type' => 'income',
-                'amount' => ($request->dp_amount > 0) ? $request->dp_amount : $request->payment_amount,
-                'description' => ($request->payment_amount == $request->grand_total_value ? 'Payment Full' : 'Down Payment').' - Booking '.$booking->booking_code.' Invoice No. '.$invoice->invoice_number.' atas nama '.$request->guest_name.'('.implode(',', $roomNumbers).')',
-                'reference_type' => 'booking',
-                'payment_method' => $request->payment_method,
-                'reference_id' => $booking->id,
-                'created_by' => Auth::user()->id,
-                'updated_by' => Auth::user()->id,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ];
-            $this->insertTransaction($bodyTransaction);
+
+            if ($paidNow > 0) {
+                if ($isPaidFull) {
+                    // 1. Transaksi Pendapatan Sewa Kamar (Net dari additional agar tidak double count)
+                    $roomAmount = $paidNow - $totalPriceAddRoom - $totalPriceAddGeneral;
+                    if ($roomAmount > 0) {
+                        $bodyTransaction[] = [
+                            'financial_account_id' => 1, // Akun 1-100: Kas Resepsionis / Pendapatan Kamar
+                            'transaction_date' => $request->payment_date,
+                            'transaction_type' => 'income',
+                            'amount' => $roomAmount,
+                            'description' => 'Pembayaran Kamar - Booking '.$booking->booking_code.' Invoice No. '.$invoice->invoice_number.' atas nama '.$request->guest_name.'('.implode(',', $roomNumbers).')',
+                            'reference_type' => 'booking',
+                            'payment_method' => $request->payment_method,
+                            'reference_id' => $booking->id,
+                            'created_by' => Auth::user()->id,
+                            'updated_by' => Auth::user()->id,
+                            'created_at' => Carbon::now(),
+                            'updated_at' => Carbon::now(),
+                        ];
+                    }
+
+                    // 2. Transaksi Pendapatan Additional Per Kamar (Record terpisah untuk fasilitas kamar)
+                    if ($totalPriceAddRoom > 0) {
+                        $bodyTransaction[] = [
+                            'financial_account_id' => 12, // Akun 4-120: Pendapatan Additional
+                            'transaction_date' => $request->payment_date,
+                            'transaction_type' => 'income',
+                            'amount' => $totalPriceAddRoom,
+                            'description' => 'Additional Kamar - Booking '.$booking->booking_code.' a/n '.$request->guest_name.'('.implode(',', $roomNumbers).')',
+                            'reference_type' => 'booking',
+                            'payment_method' => $request->payment_method,
+                            'reference_id' => $booking->id,
+                            'created_by' => Auth::user()->id,
+                            'updated_by' => Auth::user()->id,
+                            'created_at' => Carbon::now(),
+                            'updated_at' => Carbon::now(),
+                        ];
+                    }
+
+                    // 3. Transaksi Pendapatan Additional Tiap Booking (Record terpisah untuk layanan umum)
+                    if ($totalPriceAddGeneral > 0) {
+                        $bodyTransaction[] = [
+                            'financial_account_id' => 12, // Akun 4-120: Pendapatan Additional
+                            'transaction_date' => $request->payment_date,
+                            'transaction_type' => 'income',
+                            'amount' => $totalPriceAddGeneral,
+                            'description' => 'Additional Layanan - Booking '.$booking->booking_code.' a/n '.$request->guest_name.'('.implode(',', $roomNumbers).')',
+                            'reference_type' => 'booking',
+                            'payment_method' => $request->payment_method,
+                            'reference_id' => $booking->id,
+                            'created_by' => Auth::user()->id,
+                            'updated_by' => Auth::user()->id,
+                            'created_at' => Carbon::now(),
+                            'updated_at' => Carbon::now(),
+                        ];
+                    }
+                } else {
+                    // Jika Down Payment (DP), dicatat sebagai uang muka sewa kamar. Pelunasan additional diakui saat paymentBooking().
+                    $bodyTransaction[] = [
+                        'financial_account_id' => 1,
+                        'transaction_date' => $request->payment_date,
+                        'transaction_type' => 'income',
+                        'amount' => $paidNow,
+                        'description' => 'Down Payment - Booking '.$booking->booking_code.' Invoice No. '.$invoice->invoice_number.' atas nama '.$request->guest_name.'('.implode(',', $roomNumbers).')',
+                        'reference_type' => 'booking',
+                        'payment_method' => $request->payment_method,
+                        'reference_id' => $booking->id,
+                        'created_by' => Auth::user()->id,
+                        'updated_by' => Auth::user()->id,
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                    ];
+                }
+
+                // Simpan seluruh record transaksi ke tabel financial_transactions
+                if (!empty($bodyTransaction)) {
+                    $this->insertTransaction($bodyTransaction);
+                }
+            }
 
             if ($request->hasFile('identity_image')) {
                 $file = $request->file('identity_image');
@@ -535,15 +613,100 @@ class BookingController extends Controller
                 'updated_by' => Auth::user()->id,
                 'updated_at' => date('Y-m-d H:i:s'),
             ];
-            $transaction = FinancialTransaction::where('reference_type', 'booking')
+            // [REVISI] 1. Hapus transaksi keuangan lama milik booking ini agar tersinkronisasi bersih (mencegah duplikasi data usang saat edit)
+            FinancialTransaction::where('reference_type', 'booking')
                 ->where('reference_id', $booking->id)
-                ->first();
-            if ($transaction) {
-                FinancialTransaction::where('id', $transaction->id)->update([
-                    'amount' => ($request->dp_amount > 0) ? $request->dp_amount : $request->payment_amount,
-                    'updated_by' => Auth::user()->id,
-                    'updated_at' => date('Y-m-d H:i:s'),
-                ]);
+                ->delete();
+
+            // [REVISI] 2. Hitung ulang total additional kamar & layanan umum dari data terbaru hasil edit
+            $roomIds = BookingRoom::where('booking_id', $booking->id)->pluck('id');
+            $totalPriceAddRoom = BookingRoomAdditional::whereIn('booking_room_id', $roomIds)->sum('total_price');
+            $totalPriceAddGeneral = BookingAdditional::where('booking_id', $booking->id)->sum('total_price');
+            $roomNumbers = Rooms::whereIn('id', $request->room_number)->pluck('room_number')->toArray();
+
+            // [REVISI] 3. Susun ulang transaksi keuangan baru sesuai perubahan data
+            $paidNow = ($request->dp_amount > 0) ? (float)$request->dp_amount : (float)$request->payment_amount;
+            $isPaidFull = ($request->payment_amount == $request->grand_total_value);
+            $bodyTransaction = [];
+
+            if ($paidNow > 0) {
+                if ($isPaidFull) {
+                    // Transaksi Kamar (setelah dikurangi additional agar tidak double count)
+                    $roomAmount = $paidNow - $totalPriceAddRoom - $totalPriceAddGeneral;
+                    if ($roomAmount > 0) {
+                        $bodyTransaction[] = [
+                            'financial_account_id' => 1, // Akun 1-100: Kas Resepsionis / Kamar
+                            'transaction_date' => $request->payment_date ?? date('Y-m-d'),
+                            'transaction_type' => 'income',
+                            'amount' => $roomAmount,
+                            'description' => 'Pembayaran Kamar - Booking '.$booking->booking_code.' a/n '.$request->guest_name.' ('.implode(',', $roomNumbers).')',
+                            'reference_type' => 'booking',
+                            'payment_method' => $request->payment_method ?? $booking->payment_method,
+                            'reference_id' => $booking->id,
+                            'created_by' => Auth::user()->id,
+                            'updated_by' => Auth::user()->id,
+                            'created_at' => Carbon::now(),
+                            'updated_at' => Carbon::now(),
+                        ];
+                    }
+
+                    // Transaksi Additional Per Kamar
+                    if ($totalPriceAddRoom > 0) {
+                        $bodyTransaction[] = [
+                            'financial_account_id' => 12, // Akun 4-120: Pendapatan Additional
+                            'transaction_date' => $request->payment_date ?? date('Y-m-d'),
+                            'transaction_type' => 'income',
+                            'amount' => $totalPriceAddRoom,
+                            'description' => 'Additional Kamar - Booking '.$booking->booking_code.' a/n '.$request->guest_name.' ('.implode(',', $roomNumbers).')',
+                            'reference_type' => 'booking',
+                            'payment_method' => $request->payment_method ?? $booking->payment_method,
+                            'reference_id' => $booking->id,
+                            'created_by' => Auth::user()->id,
+                            'updated_by' => Auth::user()->id,
+                            'created_at' => Carbon::now(),
+                            'updated_at' => Carbon::now(),
+                        ];
+                    }
+
+                    // Transaksi Additional Tiap Booking (Layanan)
+                    if ($totalPriceAddGeneral > 0) {
+                        $bodyTransaction[] = [
+                            'financial_account_id' => 12, // Akun 4-120: Pendapatan Additional
+                            'transaction_date' => $request->payment_date ?? date('Y-m-d'),
+                            'transaction_type' => 'income',
+                            'amount' => $totalPriceAddGeneral,
+                            'description' => 'Additional Layanan - Booking '.$booking->booking_code.' a/n '.$request->guest_name.' ('.implode(',', $roomNumbers).')',
+                            'reference_type' => 'booking',
+                            'payment_method' => $request->payment_method ?? $booking->payment_method,
+                            'reference_id' => $booking->id,
+                            'created_by' => Auth::user()->id,
+                            'updated_by' => Auth::user()->id,
+                            'created_at' => Carbon::now(),
+                            'updated_at' => Carbon::now(),
+                        ];
+                    }
+                } else {
+                    // Transaksi Down Payment jika belum lunas
+                    $bodyTransaction[] = [
+                        'financial_account_id' => 1,
+                        'transaction_date' => $request->payment_date ?? date('Y-m-d'),
+                        'transaction_type' => 'income',
+                        'amount' => $paidNow,
+                        'description' => 'Down Payment - Booking '.$booking->booking_code.' a/n '.$request->guest_name.' ('.implode(',', $roomNumbers).')',
+                        'reference_type' => 'booking',
+                        'payment_method' => $request->payment_method ?? $booking->payment_method,
+                        'reference_id' => $booking->id,
+                        'created_by' => Auth::user()->id,
+                        'updated_by' => Auth::user()->id,
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                    ];
+                }
+
+                // Simpan transaksi hasil re-sync
+                if (!empty($bodyTransaction)) {
+                    $this->insertTransaction($bodyTransaction);
+                }
             }
 
             Booking::where('id', $booking->id)->update($bodyBooking);
@@ -850,22 +1013,76 @@ class BookingController extends Controller
             ];
             Payment::create($addPayment);
             $akun = FinancialAccount::where('account_code', '1-100')->first();
-            $addFinance[] = [
-                'financial_account_id' => $akun->id,
-                'transaction_date' => $request->tgl_bayar,
-                'transaction_type' => 'income',
-                'amount' => $request->amount,
-                'description' => 'Pelunasan Reservasi No. '.$booking->booking_code.' Invoice No. '.$invoice->invoice_number.' atas nama '.$guest->nama_lengkap.'('.implode(',', $roomNumbers).')',
-                'reference_type' => 'booking',
-                'reference_id' => $booking->id,
-                'payment_method' => $request->payment_method,
-                'created_by' => Auth::user()->id,
-                'updated_by' => Auth::user()->id,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ];
+            
+            // [REVISI] 1. Ambil total additional kamar & layanan umum yang terdaftar pada booking ini
+            $roomIds = $rooms->pluck('id');
+            $totalAddRoom = BookingRoomAdditional::whereIn('booking_room_id', $roomIds)->sum('total_price');
+            $totalAddGeneral = BookingAdditional::where('booking_id', $id)->sum('total_price');
 
-            $this->insertTransaction($addFinance);
+            // [REVISI] 2. Alokasikan uang pelunasan: sisa uang setelah additional adalah pelunasan sewa kamar
+            $totalPelunasan = (float)$request->amount;
+            $pelunasanKamar = $totalPelunasan - $totalAddRoom - $totalAddGeneral;
+
+            $addFinance = [];
+
+            // 1. Transaksi Pelunasan Sewa Kamar
+            if ($pelunasanKamar > 0) {
+                $addFinance[] = [
+                    'financial_account_id' => $akun->id, // Akun 1-100: Kas Resepsionis / Kamar
+                    'transaction_date' => $request->tgl_bayar,
+                    'transaction_type' => 'income',
+                    'amount' => $pelunasanKamar,
+                    'description' => 'Pelunasan Kamar - Booking '.$booking->booking_code.' Invoice No. '.$invoice->invoice_number.' atas nama '.$guest->nama_lengkap.'('.implode(',', $roomNumbers).')',
+                    'reference_type' => 'booking',
+                    'reference_id' => $booking->id,
+                    'payment_method' => $request->payment_method,
+                    'created_by' => Auth::user()->id,
+                    'updated_by' => Auth::user()->id,
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+                ];
+            }
+
+            // 2. Transaksi Pelunasan Additional Per Kamar (Record terpisah)
+            if ($totalAddRoom > 0) {
+                $addFinance[] = [
+                    'financial_account_id' => 12, // Akun 4-120: Pendapatan Additional
+                    'transaction_date' => $request->tgl_bayar,
+                    'transaction_type' => 'income',
+                    'amount' => $totalAddRoom,
+                    'description' => 'Pelunasan Additional Kamar - Booking '.$booking->booking_code.' a/n '.$guest->nama_lengkap.'('.implode(',', $roomNumbers).')',
+                    'reference_type' => 'booking',
+                    'reference_id' => $booking->id,
+                    'payment_method' => $request->payment_method,
+                    'created_by' => Auth::user()->id,
+                    'updated_by' => Auth::user()->id,
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+                ];
+            }
+
+            // 3. Transaksi Pelunasan Additional Tiap Booking / Layanan (Record terpisah)
+            if ($totalAddGeneral > 0) {
+                $addFinance[] = [
+                    'financial_account_id' => 12, // Akun 4-120: Pendapatan Additional
+                    'transaction_date' => $request->tgl_bayar,
+                    'transaction_type' => 'income',
+                    'amount' => $totalAddGeneral,
+                    'description' => 'Pelunasan Additional Layanan - Booking '.$booking->booking_code.' a/n '.$guest->nama_lengkap.'('.implode(',', $roomNumbers).')',
+                    'reference_type' => 'booking',
+                    'reference_id' => $booking->id,
+                    'payment_method' => $request->payment_method,
+                    'created_by' => Auth::user()->id,
+                    'updated_by' => Auth::user()->id,
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+                ];
+            }
+
+            // Simpan transaksi pelunasan terpisah ke financial_transactions
+            if (!empty($addFinance)) {
+                $this->insertTransaction($addFinance);
+            }
 
             DB::commit();
 

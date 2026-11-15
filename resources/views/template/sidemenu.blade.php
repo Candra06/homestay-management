@@ -38,7 +38,7 @@
                 src="{{ asset('assets/img/brand/logo.png') }}"class="main-logo" alt="logo"></a>
 
         <a class="logo-icon mobile-logo icon-light active" href="{{ url('/dashboard') }}"><img
-                src="../../backdoor-sukalelang/assets/img/brand/logo-apps.png" class="logo-icon" alt="logo"></a>
+                src="{{ asset('assets/img/brand/logo-apps.png') }}" class="logo-icon" alt="logo"></a>
 
     </div>
     <div class="main-sidemenu">

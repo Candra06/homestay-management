@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\FinancialAccount;
+use App\Models\FinancialTransaction;
 use App\Models\PaymentConfirmation;
 use App\Models\User;
 use App\Models\RoomTypes;
@@ -75,6 +76,54 @@ class AuthController extends Controller
             ];
             
             return view('dashboard', compact('data'));
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
+
+    public function dashboardFinance(Request $request) {
+        try {            
+            // Panggil fungsi-fungsi financial report dari DashboardService
+            $history = FinancialTransaction::with([
+                'account' => function ($q) {
+                    $q->select('id', 'account_code', 'account_name', 'type', 'balance')->get();
+                },
+                'booking' => function ($q) {
+                    $q->select('id', 'booking_code', 'guest_id')->get();
+                },
+                'booking.guest' => function ($q) {
+                    $q->select('id', 'nama_lengkap')->get();
+                },
+                'booking.bookingRooms' => function ($q) {
+                    $q->select('id', 'booking_id', 'checkin_date', 'checkout_date', 'room_id')->get();
+                },
+                'booking.bookingRooms.room' => function ($q) {
+                    $q->select('id', 'room_number')->get();
+                },
+                'attachment' => function($q) {
+                    $q->select('id', 'reff_feature', 'file_name','file_url', 'reff_id')->get();
+                }, 
+                'user'])
+                ->orderBy('transaction_date', 'DESC')
+                ->limit(10)
+                ->get();
+            $data = (object) [
+                'summary'          => $this->dashboardService->getFinancialReportSummary($request->start_date,$request->end_date),
+                'cashFlowIncomeExpense'     => $this->dashboardService->getIncomeExpenseTrend6Months($request->start_date,$request->end_date),
+                'cashFlowMonthly' => $this->dashboardService->getCashFlowMonthly12Months($request->start_date,$request->end_date),
+                'history' => $history,
+            ];
+            // return $data;
+            // Jika request AJAX (misal saat user mengganti daterange filter)
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Berhasil memuat data laporan keuangan',
+                    'data'    => $data,
+                ]);
+            }
+
+            return view('pages.dashboard.finance', compact('data'));
         } catch (\Throwable $th) {
             throw $th;
         }
