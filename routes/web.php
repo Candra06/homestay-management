@@ -37,6 +37,7 @@ Route::get('/print', [AuthController::class,'showReceipt']);
 Route::post('/login',[AuthController::class,'submitLogin']);
 Route::group(["prefix" => "/", "middleware" => ["auth", CheckAccessMidleware::class]], function () {
     Route::get('/dashboard', [AuthController::class,'dashboard']);
+    Route::get('/financial-report', [AuthController::class,'dashboardFinance']);
     Route::get('/logout', [AuthController::class,'logout']);
 
     Route::post('booking/payment/{id}', [BookingController::class, 'paymentBooking'])->name('booking.payment');
@@ -52,6 +53,7 @@ Route::group(["prefix" => "/", "middleware" => ["auth", CheckAccessMidleware::cl
     Route::get('booking/export-excel', [BookingController::class, 'exportExcel']);
 
     Route::get('voucher/cek-code/{code}', [VoucherController::class, 'cekVoucher']);
+    
 
     Route::resource('employee', EmployeeController::class);
     Route::resource('menu', MenuController::class);
