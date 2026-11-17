@@ -92,16 +92,16 @@
             <a class="btn btn-outline-primary me-1" href="{{ url('/booking') }}"><i class="fa fa-arrow-left"></i>
                 Kembali</a>
 
-            @if ($data->grand_total != $data->amount_paid || $data->booking_status != 'Completed')
+            @if ($data->grand_total != $data->amount_paid || $data->booking_status != 'Completed' || $showButton)
                 <a class="btn btn-primary me-1" ata-bs-effect="effect-scale" data-bs-toggle="modal" href="#modal-payment"><i
                         class="fa fa-money-bill"></i> Buat
                     Pelunasan</a>
             @endif
-            @if ($data->grand_total == $data->amount_paid && $data->booking_status == 'Approved')
+            @if ($data->grand_total == $data->amount_paid && $data->booking_status == 'Approved' || $showButton)
                 <button type="button" id="btn-checkin-process" class="btn btn-info me-1"><i class="fa fa-check"></i> Check
                     In</button>
             @endif
-            @if ($data->booking_status == 'Checked-In')
+            @if ($data->booking_status == 'Checked-In' || $showButton)
                 <button type="button" id="btn-checkout-process" class="btn btn-warning me-1"><i class="fe fe-log-out"></i>
                     Check Out</button>
             @endif
