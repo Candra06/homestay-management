@@ -1102,7 +1102,8 @@ class BookingController extends Controller
             $booking = Booking::with('bookingRooms', 'guest')->where('id', $id)->first();
             $bookingRoom = $booking->bookingRooms;
             
-            if ($type== 'checkin'&& $bookingRoom[0]->checkin_date != Carbon::now()->format('Y-m-d')) {
+            if (!in_array(Auth::user()->roles->code, ['ADMIN', 'SUPER_ADMIN'])) {
+                if ($type== 'checkin'&& $bookingRoom[0]->checkin_date != Carbon::now()->format('Y-m-d')) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Tanggal Check-In belum terpenuhi',
@@ -1117,6 +1118,7 @@ class BookingController extends Controller
                     'error' => 'Failed update booking',
                     
                 ]);
+            }
             }
 
             $updateBooking = [
