@@ -1125,6 +1125,12 @@ class BookingController extends Controller
                 'checkedin_at' => $type == 'checkin' ? Carbon::now() : $booking->checkedin_at,
                 'updated_at' => Carbon::now(),
             ];
+            if ($type == 'checkin') {
+                $updateBooking['checkedin_at'] = Carbon::now();
+            }
+            if ($type == 'checkout') {
+                $updateBooking['checkouted_at'] = Carbon::now();
+            }
             Booking::where('id', $id)->update($updateBooking);
             foreach ($bookingRoom as $key => $value) {
                 Rooms::where('id', $value->room_id)->update([
