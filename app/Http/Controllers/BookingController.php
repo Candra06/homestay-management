@@ -1104,21 +1104,21 @@ class BookingController extends Controller
             
             if (!in_array(Auth::user()->roles->code, ['ADMIN', 'SUPER_ADMIN'])) {
                 if ($type== 'checkin'&& $bookingRoom[0]->checkin_date != Carbon::now()->format('Y-m-d')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Tanggal Check-In belum terpenuhi',
-                    'error' => 'Failed update booking',
-                    
-                ]);
-            }
-            if ($type== 'checkout'&& $bookingRoom[0]->checkout_date != Carbon::now()->format('Y-m-d')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Tanggal Check-Out belum terpenuhi',
-                    'error' => 'Failed update booking',
-                    
-                ]);
-            }
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Tanggal Check-In belum terpenuhi',
+                        'error' => 'Failed update booking',
+                        
+                    ]);
+                }
+                if ($type== 'checkout'&& $bookingRoom[0]->checkout_date != Carbon::now()->format('Y-m-d')) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Tanggal Check-Out belum terpenuhi',
+                        'error' => 'Failed update booking',
+                        
+                    ]);
+                }
             }
 
             $updateBooking = [
@@ -1131,7 +1131,7 @@ class BookingController extends Controller
                 $updateBooking['checkedin_at'] = Carbon::now();
             }
             if ($type == 'checkout') {
-                $updateBooking['checkouted_at'] = Carbon::now();
+                $updateBooking['checkedout_at'] = Carbon::now();
             }
             Booking::where('id', $id)->update($updateBooking);
             foreach ($bookingRoom as $key => $value) {
